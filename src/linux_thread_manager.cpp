@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <signal.h>
 
+#include <atomic>
 #include <cassert>
 #include <cinttypes>
 #include <condition_variable>
@@ -43,6 +44,7 @@
 #define DBGUTIL_INVALID_THREAD_ID ((os_thread_id_t) - 1)
 #define DBGUTIL_INVALID_REQUEST_TYPE ((uint32_t)-1)
 #define DBGUTIL_JUMP_START_TIMEOUT_MILLIS 100
+#define DBGUTIL_JUMP_START_POLL_FREQ_MILLIS 10
 
 #ifdef DBGUTIL_MINGW
 #define SIG_JUMP_START 1
@@ -193,8 +195,7 @@ static uint32_t sRequestHandlerCount = 0;
 
 // global lock for all global data structures
 static std::mutex sLock;
-static std::condition_variable sJumpStartCV;
-static uint64_t sJumpStartCount = 0;
+static std::atomic<uint64_t> sJumpStartCount = 0;
 
 static uint32_t allocSlot() {
     for (uint32_t i = 0; i < DBGUTIL_MAX_THREADS; ++i) {
@@ -286,9 +287,9 @@ static LinuxThreadManager::RequestHandler getRequestHandler(uint32_t requestType
 }
 
 static void captureThreadStart() {
+    // NOTE: no need to lock (caller already locked, be it this thread or another thread)
     os_thread_id_t threadId = OsUtil::getCurrentThreadId();
     LOG_DEBUG(sLogger, "Capturing thread %" PRItid " start", threadId);
-    std::unique_lock<std::mutex> lock(sLock);
 
     // need to allocate slot for placing stack trace
     uint32_t slotId = allocSlot();
@@ -304,9 +305,9 @@ static void captureThreadStart() {
             threadId = DBGUTIL_INVALID_THREAD_ID;
         }
     }
-    LOG_DEBUG(sLogger, "Jump start count: %" PRIu64, sJumpStartCount);
-    ++sJumpStartCount;
-    sJumpStartCV.notify_one();
+    LOG_DEBUG(sLogger, "Jump start count: %" PRIu64,
+              sJumpStartCount.load(std::memory_order_relaxed));
+    sJumpStartCount.fetch_add(1, std::memory_order_relaxed);
 }
 
 static void captureThreadEnd() {
@@ -335,7 +336,7 @@ public:
     ~CaptureThreadId() { captureThreadEnd(); }
 
     void jumpStart() {
-        LOG_DEBUG(sLogger, "Jump starting thread tracking");
+        LOG_DEBUG(sLogger, "Jump starting thread tracking: %" PRItid, OsUtil::getCurrentThreadId());
         captureThreadStart();
     }
 
@@ -348,6 +349,9 @@ static thread_local CaptureThreadId sCaptureThreadId;
 
 #ifndef DBGUTIL_MINGW
 static bool jumpStartThreadTracking(os_thread_id_t osThreadId, uint32_t& slotId) {
+    // NOTE: we lock here also on behalf of signaled thread
+    std::unique_lock<std::mutex> lock(sLock);
+
     // for current thread we do it directly without sending a signal
     if (osThreadId == OsUtil::getCurrentThreadId()) {
         sCaptureThreadId.jumpStart();
@@ -355,8 +359,8 @@ static bool jumpStartThreadTracking(os_thread_id_t osThreadId, uint32_t& slotId)
     }
 
     // jump start
-    std::unique_lock<std::mutex> lock(sLock);
-    uint64_t targetCount = sJumpStartCount + 1;
+    LOG_DEBUG(sLogger, "Attempting to jump start thread %" PRItid, osThreadId);
+    uint64_t targetCount = sJumpStartCount.load(std::memory_order_relaxed) + 1;
     if (tgkill(getpid(), osThreadId, SIG_JUMP_START) == -1) {
         LOG_SYS_ERROR(sLogger, tgkill, "Failed to send jump-start signal to thread %" PRItid,
                       osThreadId);
@@ -366,11 +370,25 @@ static bool jumpStartThreadTracking(os_thread_id_t osThreadId, uint32_t& slotId)
     // wait, but for how long? how can we be sure?
     // TODO: this requires a better strategy
     LOG_DEBUG(sLogger, "Waiting for jump start count %" PRIu64, targetCount);
-    if (!sJumpStartCV.wait_for(lock, std::chrono::milliseconds(DBGUTIL_JUMP_START_TIMEOUT_MILLIS),
-                               [targetCount]() { return sJumpStartCount == targetCount; })) {
+    uint32_t attempts = DBGUTIL_JUMP_START_TIMEOUT_MILLIS / DBGUTIL_JUMP_START_POLL_FREQ_MILLIS;
+    LOG_DEBUG(sLogger, "Waiting for %u millis for %u times, total %u millis",
+              DBGUTIL_JUMP_START_POLL_FREQ_MILLIS, attempts, DBGUTIL_JUMP_START_TIMEOUT_MILLIS);
+    for (uint32_t i = 0; i < attempts + 1000; ++i) {
+        if (sJumpStartCount.load(std::memory_order_relaxed) < targetCount) {
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(DBGUTIL_JUMP_START_POLL_FREQ_MILLIS));
+        } else {
+            break;
+        }
+    }
+    LOG_DEBUG(sLogger, "Waiting DONE");
+
+    // check if timed out
+    if (sJumpStartCount.load(std::memory_order_relaxed) < targetCount) {
         LOG_TRACE(sLogger, "Jump start for thread %" PRItid " timed out", osThreadId);
         return false;
     }
+    LOG_DEBUG(sLogger, "Jump start SUCCESS");
 
     // try again
     LOG_DEBUG(sLogger, "Jump start for thread %" PRItid " succeeded, trying again", osThreadId);
@@ -426,9 +444,13 @@ static void execCurrentThreadRequest() {
 
 static void signalHandler(int sigNum) {
     if (sigNum == SIG_JUMP_START) {
+        LOG_DEBUG(sLogger, "Signal handler: Jump starting thread tracking: %" PRItid,
+                  OsUtil::getCurrentThreadId());
         sCaptureThreadId.jumpStart();
         // captureThreadStart();
     } else if (sigNum == SIG_EXEC_REQUEST) {
+        LOG_DEBUG(sLogger, "Signal handler: Executing thread request: %" PRItid,
+                  OsUtil::getCurrentThreadId());
         execCurrentThreadRequest();
     } else {
         LOG_WARN(sLogger, "Unexpected signal number %d (ignored)", sigNum);

@@ -71,7 +71,7 @@ void registerLogger(Logger& logger, const char* loggerName) {
 }
 
 bool canLog(const Logger& logger, LogSeverity severity) {
-    return severity >= sLogSeverity && severity >= logger.m_severity;
+    return severity >= sLogSeverity || severity >= logger.m_severity;
 }
 
 void logMsg(const Logger& logger, LogSeverity severity, const char* fmt, ...) {
