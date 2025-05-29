@@ -3,6 +3,7 @@
 #ifdef DBGUTIL_LINUX
 
 #include <algorithm>
+#include <cassert>
 #include <cinttypes>
 #include <cstring>
 
@@ -550,14 +551,14 @@ private:
 
 ElfReaderFactory* ElfReaderFactory::sInstance = nullptr;
 
-static DbgUtilErr initElfReader() {
+DbgUtilErr initElfReader() {
     registerLogger(sLogger, "elf_reader");
     ElfReaderFactory::createInstance();
     setImageReaderFactory(ElfReaderFactory::getInstance());
     return DBGUTIL_ERR_OK;
 }
 
-static DbgUtilErr termElfReader() {
+DbgUtilErr termElfReader() {
     setImageReaderFactory(nullptr);
     ElfReaderFactory::destroyInstance();
     return DBGUTIL_ERR_OK;

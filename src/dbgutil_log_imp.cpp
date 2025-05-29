@@ -8,6 +8,7 @@
 
 #include <cassert>
 #include <cstdarg>
+#include <cstring>
 #include <vector>
 
 #include "dbgutil_common.h"

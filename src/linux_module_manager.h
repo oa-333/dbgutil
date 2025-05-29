@@ -38,8 +38,6 @@ private:
 
     static LinuxModuleManager* sInstance;
 
-    elog::ELogLogger* m_logger;
-
     /** @brief Refreshes the module list. */
     DbgUtilErr refreshOsModuleList(void* address = nullptr, OsModuleInfo* moduleInfo = nullptr);
 

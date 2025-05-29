@@ -3,11 +3,12 @@
 #ifdef DBGUTIL_LINUX
 #include <dlfcn.h>
 
+#include <cassert>
 #include <cstdio>
 #include <iterator>
 #include <sstream>
+#include <unordered_map>
 
-#include "app_life_cycle.h"
 #include "dbgutil_log_imp.h"
 #include "os_util.h"
 
@@ -25,6 +26,8 @@
 // OsModuleManager)?
 
 namespace dbgutil {
+
+static Logger sLogger;
 
 LinuxModuleManager* LinuxModuleManager::sInstance = nullptr;
 
@@ -45,9 +48,7 @@ void LinuxModuleManager::destroyInstance() {
     sInstance = nullptr;
 }
 
-LinuxModuleManager::LinuxModuleManager() {
-    m_logger = elog::ELogSystem::getSharedLogger("csi.common.linux_module_manager");
-}
+LinuxModuleManager::LinuxModuleManager() {}
 
 DbgUtilErr LinuxModuleManager::refreshModuleList() { return refreshOsModuleList(); }
 
@@ -71,7 +72,7 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
     std::vector<std::string> lines;
     DbgUtilErr rc = OsUtil::readEntireFileToLines("/proc/self/maps", lines);
     if (rc != DBGUTIL_ERR_OK) {
-        ELOG_DEBUG_EX(m_logger, "Failed to read /proc/self/maps: %s", errorCodeToStr(rc));
+        LOG_DEBUG(sLogger, "Failed to read /proc/self/maps: %s", errorCodeToStr(rc));
         return rc;
     }
 
@@ -92,7 +93,7 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
     ModuleMap moduleMap;
 
     for (std::string& line : lines) {
-        ELOG_DEBUG_EX(m_logger, "Processing proc-maps line: %s", line.c_str());
+        LOG_DEBUG(sLogger, "Processing proc-maps line: %s", line.c_str());
         DbgUtilErr rc = parseProcLine(line, imagePath, addrLo, addrHi);
         if (rc == DBGUTIL_ERR_NOT_FOUND) {
             continue;
@@ -100,8 +101,8 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
         if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
-        ELOG_DEBUG_EX(m_logger, "Collected module info: %p-%p %s", (void*)addrLo, (void*)addrHi,
-                      imagePath.c_str());
+        LOG_DEBUG(sLogger, "Collected module info: %p-%p %s", (void*)addrLo, (void*)addrHi,
+                  imagePath.c_str());
 
         std::pair<ModuleMap::iterator, bool> itrRes = moduleMap.insert(ModuleMap::value_type(
             imagePath, OsModuleInfo(imagePath.c_str(), (void*)addrLo, addrHi - addrLo)));
@@ -115,8 +116,8 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
         uint64_t currHi = currLo + modInfo.m_size;
         uint64_t newLo = std::min(currLo, addrLo);
         uint64_t size = std::max(currHi, addrHi) - newLo;
-        ELOG_DEBUG_EX(m_logger, "Merged module info: %p-%p %s", (void*)newLo, (void*)(newLo + size),
-                      imagePath.c_str());
+        LOG_DEBUG(sLogger, "Merged module info: %p-%p %s", (void*)newLo, (void*)(newLo + size),
+                  imagePath.c_str());
 
         // we need to remove the module and insert a new one instead
         moduleMap.erase(itrRes.first);
@@ -137,8 +138,8 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
     bool moduleFound = false;
     for (const auto& entry : moduleMap) {
         const OsModuleInfo& modInfo = entry.second;
-        ELOG_DEBUG_EX(m_logger, "Adding module info: %p-%p %s", modInfo.m_loadAddress, modInfo.to(),
-                      modInfo.m_modulePath.c_str());
+        LOG_DEBUG(sLogger, "Adding module info: %p-%p %s", modInfo.m_loadAddress, modInfo.to(),
+                  modInfo.m_modulePath.c_str());
         addModuleInfo(modInfo);
         if (moduleInfo != nullptr && address != nullptr && modInfo.contains(address)) {
             *moduleInfo = modInfo;
@@ -158,11 +159,10 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
         // loaded modules, so in this case we resort to dladdr()
         Dl_info dlinfo = {};
         if (dladdr(address, &dlinfo) == 0) {
-            ELOG_DEBUG_EX(m_logger, "Address %p could not be matched with a loaded module",
-                          address);
+            LOG_DEBUG(sLogger, "Address %p could not be matched with a loaded module", address);
         } else {
-            ELOG_DEBUG_EX(m_logger, "dladdr() returned: module %s at %p, sym name %s",
-                          dlinfo.dli_fname, dlinfo.dli_fbase, dlinfo.dli_sname);
+            LOG_DEBUG(sLogger, "dladdr() returned: module %s at %p, sym name %s", dlinfo.dli_fname,
+                      dlinfo.dli_fbase, dlinfo.dli_sname);
             moduleInfo->m_loadAddress = dlinfo.dli_fbase;
             if (dlinfo.dli_fname != nullptr) {
                 moduleInfo->m_modulePath = dlinfo.dli_fname;
@@ -182,7 +182,7 @@ DbgUtilErr LinuxModuleManager::getCurrentProcessImagePath(std::string& path) {
         return rc;
     }
     path = &buf[0];
-    ELOG_DEBUG_EX(m_logger, "Current process image path is: %s", path.c_str());
+    LOG_DEBUG(sLogger, "Current process image path is: %s", path.c_str());
     return DBGUTIL_ERR_OK;
 }
 
@@ -196,15 +196,15 @@ DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& ima
     // line format is: <address-range> <mode> <offset> <id-pair> <inode-id> <file-path>
     // in some cases last token is missing
     if (tokens.size() == 5) {
-        ELOG_DEBUG_EX(m_logger, "Skipping line with no module");
+        LOG_DEBUG(sLogger, "Skipping line with no module");
         return DBGUTIL_ERR_NOT_FOUND;
     }
     if (tokens.size() == 1) {
-        ELOG_DEBUG_EX(m_logger, "Skipping line with one token");
+        LOG_DEBUG(sLogger, "Skipping line with one token");
         return DBGUTIL_ERR_NOT_FOUND;
     }
     if (tokens.size() != 6) {
-        ELOG_DEBUG_EX(m_logger, "Line has invalid token count %u, aborting", tokens.size());
+        LOG_DEBUG(sLogger, "Line has invalid token count %u, aborting", tokens.size());
         return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
@@ -212,7 +212,7 @@ DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& ima
     std::string addrRange = tokens[0];
     std::string::size_type dashPos = addrRange.find('-');
     if (dashPos == std::string::npos) {
-        ELOG_DEBUG_EX(m_logger, "Invalid address range: %s", addrRange.c_str());
+        LOG_DEBUG(sLogger, "Invalid address range: %s", addrRange.c_str());
         return DBGUTIL_ERR_DATA_CORRUPT;
     }
     try {
@@ -220,19 +220,19 @@ DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& ima
         std::string addrPart1 = addrRange.substr(0, dashPos);
         addrLo = std::stoull(addrPart1, &pos, 16);
         if (pos != dashPos) {
-            ELOG_DEBUG_EX(m_logger, "Invalid start of range: %s", addrPart1.c_str());
+            LOG_DEBUG(sLogger, "Invalid start of range: %s", addrPart1.c_str());
             return DBGUTIL_ERR_DATA_CORRUPT;
         }
 
         std::string addrPart2 = addrRange.substr(dashPos + 1);
         addrHi = std::stoull(addrPart2, &pos, 16);
         if (pos != (addrRange.length() - dashPos - 1)) {
-            ELOG_DEBUG_EX(m_logger, "Invalid end of range: %s", addrPart2.c_str());
+            LOG_DEBUG(sLogger, "Invalid end of range: %s", addrPart2.c_str());
             return DBGUTIL_ERR_DATA_CORRUPT;
         }
     } catch (std::exception& e) {
-        ELOG_SYS_ERROR_EX(m_logger, stoull, "Failed to parse address range %s: %s",
-                          addrRange.c_str(), e.what());
+        LOG_SYS_ERROR(sLogger, stoull, "Failed to parse address range %s: %s", addrRange.c_str(),
+                      e.what());
         return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
@@ -240,6 +240,7 @@ DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& ima
 }
 
 DbgUtilErr initLinuxModuleManager() {
+    registerLogger(sLogger, "linux_module_manager");
     LinuxModuleManager::createInstance();
     setModuleManager(LinuxModuleManager::getInstance());
     return DBGUTIL_ERR_OK;

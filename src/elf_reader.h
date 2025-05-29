@@ -34,7 +34,6 @@ private:
     std::vector<char> m_symTab;
     uint64_t m_symTabSize;
     uint64_t m_symEntrySize;
-    elog::ELogLogger* m_logger;
 
     DbgUtilErr verifyHeader();
     DbgUtilErr readElf();

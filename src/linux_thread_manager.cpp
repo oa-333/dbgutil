@@ -521,7 +521,8 @@ DbgUtilErr LinuxThreadManager::visitThreads(ThreadListener* listener) {
         try {
             osThreadId = std::stol(taskIdName, &pos);
         } catch (std::exception& e) {
-            LOG_SYS_ERROR(std::stoull, "Failed to convert Linux task name %s to integer value: %s",
+            LOG_SYS_ERROR(sLogger, std::stoull,
+                          "Failed to convert Linux task name %s to integer value: %s",
                           taskIdName.c_str(), e.what());
             return DBGUTIL_ERR_SYSTEM_FAILURE;
         }

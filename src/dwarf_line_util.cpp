@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <climits>
 #include <iomanip>
 #include <sstream>
 
