@@ -302,7 +302,7 @@ DbgUtilErr OsUtil::writeFile(int fd, const char* buf, uint32_t len, uint32_t& by
 #else
     ssize_t res = write(fd, buf, len);
 #endif
-    if (res == ((ssize_t)-1)) {
+    if (res == -1) {
         if (sysErr != nullptr) {
             *sysErr = errno;
         }
@@ -321,7 +321,7 @@ DbgUtilErr OsUtil::readFile(int fd, char* buf, uint32_t len, uint32_t& bytesRead
 #else
     ssize_t res = read(fd, buf, len);
 #endif
-    if (res == ((ssize_t)-1)) {
+    if (res == -1) {
         if (sysErr != nullptr) {
             *sysErr = errno;
         }
