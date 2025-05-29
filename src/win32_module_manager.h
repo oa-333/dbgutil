@@ -1,0 +1,62 @@
+#ifndef __WIN32_MODULE_MANAGER_H__
+#define __WIN32_MODULE_MANAGER_H__
+
+#include "dbgutil_common.h"
+
+#ifdef DBGUTIL_WINDOWS
+#include "dbgutil_log_imp.h"
+#include "os_module_manager.h"
+
+#ifdef DBGUTIL_MINGW
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
+namespace dbgutil {
+
+class Win32ModuleManager : public OsModuleManager {
+public:
+    /** @brief Creates the singleton instance of the module manager for Windows platform. */
+    static DbgUtilErr createInstance();
+
+    /** @brief Retrieves a reference to the single instance of the module manager. */
+    static Win32ModuleManager* getInstance();
+
+    /** @brief Destroys the singleton instance of the module manager. */
+    static void destroyInstance();
+
+    /** @brief Refreshes the module list. */
+    DbgUtilErr refreshModuleList() final;
+
+    inline HANDLE getProcessHandle() { return m_processHandle; }
+
+protected:
+    /**
+     * @brief Searches for the module containing the given address (OS-specific implementation).
+     * @param address The address to search.
+     * @param[out] moduleInfo The resulting module information.
+     * @return OsModuleInfo* The module containing the address, or null if none was found.
+     */
+    DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
+
+private:
+    Win32ModuleManager();
+    ~Win32ModuleManager();
+
+    static Win32ModuleManager* sInstance;
+
+    HANDLE m_processHandle;
+
+    DbgUtilErr initProcessHandle();
+
+    DbgUtilErr getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo);
+};
+
+extern DbgUtilErr initWin32ModuleManager();
+extern DbgUtilErr termWin32ModuleManager();
+
+}  // namespace dbgutil
+
+#endif  // DBGUTIL_WINDOWS
+
+#endif  // __WIN32_MODULE_MANAGER_H__

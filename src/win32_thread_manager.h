@@ -1,0 +1,51 @@
+#ifndef __WIN32_THREAD_MANAGER_H__
+#define __WIN32_THREAD_MANAGER_H__
+
+#include "dbg_util_def.h"
+
+#ifdef DBGUTIL_WINDOWS
+
+#include "dbgutil_common.h"
+#include "os_thread_manager.h"
+
+namespace dbgutil {
+
+class Win32ThreadManager : public OsThreadManager {
+public:
+    /** @brief Creates the singleton instance of the module manager for Windows platform. */
+    static void createInstance();
+
+    /** @brief Retrieves a reference to the single instance of the module manager. */
+    static Win32ThreadManager* getInstance();
+
+    /** @brief Destroys the singleton instance of the module manager. */
+    static void destroyInstance();
+
+    /** @brief Initializes the symbol engine. */
+    DbgUtilErr initialize();
+
+    /** @brief Destroys the symbol engine. */
+    DbgUtilErr terminate();
+
+    /**
+     * @brief Walks the call stack from possibly the given context point.
+     * @param listener The stack frame listener.
+     * @param context The call context. Pass null to capture current thread call stack.
+     */
+    DbgUtilErr visitThreads(ThreadListener* listener) final;
+
+private:
+    Win32ThreadManager() {}
+    ~Win32ThreadManager() {}
+
+    static Win32ThreadManager* sInstance;
+};
+
+extern DbgUtilErr initWin32ThreadManager();
+extern DbgUtilErr termWin32ThreadManager();
+
+}  // namespace dbgutil
+
+#endif  // DBGUTIL_WINDOWS
+
+#endif  // __WIN32_THREAD_MANAGER_H__

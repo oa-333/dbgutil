@@ -1,0 +1,28 @@
+#ifndef __DBGUTIL_ERR_H__
+#define __DBGUTIL_ERR_H__
+
+// error codes
+#define DBGUTIL_ERR_OK 0
+#define DBGUTIL_ERR_NOMEM 1
+#define DBGUTIL_ERR_INVALID_ARGUMENT 2
+#define DBGUTIL_ERR_INVALID_STATE 3
+#define DBGUTIL_ERR_RESOURCE_LIMIT 3
+#define DBGUTIL_ERR_SYSTEM_FAILURE 4
+#define DBGUTIL_ERR_NOT_FOUND 5
+#define DBGUTIL_ERR_INTERNAL_ERROR 6
+#define DBGUTIL_ERR_EOF 13
+#define DBGUTIL_ERR_ALREADY_EXISTS 7
+#define DBGUTIL_ERR_ACCESS_DENIED 8
+#define DBGUTIL_ERR_END_OF_STREAM 14
+#define DBGUTIL_ERR_NOT_IMPLEMENTED 9
+#define DBGUTIL_ERR_DATA_CORRUPT 10
+#define DBGUTIL_ERR_RESOURCE_BUSY 11
+
+namespace dbgutil {
+
+/** @typedef Error type. */
+typedef int DbgUtilErr;
+
+}  // namespace dbgutil
+
+#endif  // __DBGUTIL_ERR_H__

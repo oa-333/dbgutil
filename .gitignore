@@ -1,0 +1,11 @@
+**/*.o
+**/*.obj
+**/*.lib
+**/*.exp
+**/*.ilk
+**/*.dep
+**/*.dll
+**/*.so
+**/*.pdb
+**/*.a
+cmake_build/**

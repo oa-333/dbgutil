@@ -1,0 +1,327 @@
+#ifndef __DBG_STACK_TRACE_H__
+#define __DBG_STACK_TRACE_H__
+
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "dbg_util_def.h"
+#include "os_stack_trace.h"
+#include "os_symbol_engine.h"
+#include "os_thread_manager.h"
+
+namespace dbgutil {
+
+/** @brief Stack entry formatter interface. */
+class DBGUTIL_API StackEntryFormatter {
+public:
+    /**
+     * @brief Formats a stack trace entry
+     * @param frame Frame index.
+     * @param addr The function address.
+     * @param symbolInfo The frame symbol information.
+     * @return std::string The formatted stack entry string.
+     */
+    virtual std::string formatStackEntry(int frame, void* addr, const SymbolInfo& symbolInfo) = 0;
+};
+
+/** @brief Default formatter implementation. */
+class DBGUTIL_API DefaultStackEntryFormatter : public StackEntryFormatter {
+public:
+    std::string formatStackEntry(int frame, void* addr, const SymbolInfo& symbolInfo) override;
+};
+
+/** @brief Stack entry printer interface. */
+class DBGUTIL_API StackEntryPrinter {
+public:
+    virtual void onBeginStackTrace(os_thread_id_t threadId) = 0;
+    virtual void onEndStackTrace() = 0;
+    virtual void onStackEntry(const char* stackEntry) = 0;
+};
+
+/** @brief stack entry printer to a file. */
+class DBGUTIL_API FileStackEntryPrinter : public StackEntryPrinter {
+public:
+    FileStackEntryPrinter(FILE* fileHandle) : m_fileHandle(fileHandle) {}
+    void onBeginStackTrace(os_thread_id_t threadId) override {
+        fprintf(m_fileHandle, "[Thread %" PRItid " stack trace]\n", threadId);
+    }
+    void onEndStackTrace() override {}
+    void onStackEntry(const char* stackEntry) { fprintf(m_fileHandle, "%s\n", stackEntry); }
+
+private:
+    FILE* m_fileHandle;
+};
+
+/** @brief stack entry printer to standard error stream. */
+class DBGUTIL_API StderrStackEntryPrinter : public FileStackEntryPrinter {
+public:
+    StderrStackEntryPrinter() : FileStackEntryPrinter(stderr) {};
+};
+
+/** @brief stack entry printer to standard output stream. */
+class DBGUTIL_API StdoutStackEntryPrinter : public FileStackEntryPrinter {
+public:
+    StdoutStackEntryPrinter() : FileStackEntryPrinter(stdout) {};
+};
+
+#if 0
+// TODO: move this to elog after migration is done
+/** @brief Stack entry printer to log. */
+class DBGUTIL_API LogStackEntryPrinter : public StackEntryPrinter {
+public:
+    LogStackEntryPrinter(ELogLevel logLevel, const char* title)
+        : m_logLevel(logLevel), m_title(title) {}
+    void onBeginStackTrace(os_thread_id_t threadId) override {
+        ELOG_BEGIN(m_logLevel, "%s:\n[Thread %" PRItid " stack trace]", m_title.c_str(), threadId);
+    }
+    void onEndStackTrace() override { ELOG_END(); }
+    void onStackEntry(const char* stackEntry) { ELOG_APPEND("%s\n", stackEntry); }
+
+private:
+    std::string m_title;
+    ELogLevel m_logLevel;
+};
+#endif
+
+/** @brief Stack entry printer to string. */
+class DBGUTIL_API StringStackEntryPrinter : public StackEntryPrinter {
+public:
+    StringStackEntryPrinter() {}
+    void onBeginStackTrace(os_thread_id_t threadId) override {
+        m_s << "[Thread " << threadId << " stack trace]" << std::endl;
+    }
+    void onEndStackTrace() override {}
+    void onStackEntry(const char* stackEntry) { m_s << stackEntry << std::endl; }
+    std::string getStackTrace() { return m_s.str(); }
+
+private:
+    std::stringstream m_s;
+};
+
+/** @brief Stack entry printer to multiple printers. */
+class DBGUTIL_API MultiStackEntryPrinter : public StackEntryPrinter {
+public:
+    MultiStackEntryPrinter(StackEntryPrinter* printer1, StackEntryPrinter* printer2) {
+        m_printers.push_back(printer1);
+        m_printers.push_back(printer2);
+    }
+
+    inline void addPrinter(StackEntryPrinter* printer) { m_printers.push_back(printer); }
+
+    void onBeginStackTrace(os_thread_id_t threadId) override {
+        for (StackEntryPrinter* printer : m_printers) {
+            printer->onBeginStackTrace(threadId);
+        }
+    }
+
+    void onEndStackTrace() override {
+        for (StackEntryPrinter* printer : m_printers) {
+            printer->onEndStackTrace();
+        }
+    }
+
+    void onStackEntry(const char* stackEntry) {
+        for (StackEntryPrinter* printer : m_printers) {
+            printer->onStackEntry(stackEntry);
+        }
+    }
+
+private:
+    std::vector<StackEntryPrinter*> m_printers;
+};
+
+/**
+ * @brief Retrieves raw stack trace of a thread by context. Context is either captured by calling
+ * thread, or is passed by OS through an exception/signal handler.
+ * @param[out] stackTrace The resulting stack trace.
+ * @param context[opt] OS-specific thread context. Pass null to print current thread call stack.
+ * @return DbgUtilErr The operation result.
+ */
+inline DbgUtilErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nullptr) {
+    return getStackTraceProvider()->getStackTrace(context, stackTrace);
+}
+
+/**
+ * @brief Converts raw stack frames to resolved stack frames in string form.
+ * @param stackTrace The raw stack trace.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @param threadId[opt] Optional thread id.
+ * @return std::string The resulting resolved stack trace string.
+ */
+extern DBGUTIL_API std::string rawStackTraceToString(RawStackTrace& stackTrace, int skip = 0,
+                                                     StackEntryFormatter* formatter = nullptr,
+                                                     os_thread_id_t threadId = 0);
+
+/**
+ * @brief Prints stack trace by a given context. Context is either captured by calling thread, or is
+ * passed by OS through an exception/signal handler.
+ * @param context[opt] OS-specific thread context. Pass null to print current thread call stack.
+ * @param skip[opt] The number of frames to skip.
+ * @param printer[opt] Stack entry printer. Pass null to print to standard error stream.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+extern DBGUTIL_API void printStackTraceContext(void* context = nullptr, int skip = 0,
+                                               StackEntryPrinter* printer = nullptr,
+                                               StackEntryFormatter* formatter = nullptr);
+
+/**
+ * @brief Prints current stack trace. If no argument is passed, then the stack trace is printed to
+ * the standard error stream, using default stack entry formatting.
+ * @param skip[opt] The number of frames to skip.
+ * @param printer[opt] Stack entry printer. Pass null to print to standard error stream.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void printStackTrace(int skip = 0, StackEntryPrinter* printer = nullptr,
+                            StackEntryFormatter* formatter = nullptr) {
+    printStackTraceContext(nullptr, skip, printer, formatter);
+}
+
+/**
+ * @brief Dumps stack trace to error stream.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void dumpStackTrace(int skip = 0, StackEntryFormatter* formatter = nullptr) {
+    printStackTrace(skip, nullptr, formatter);
+}
+
+/**
+ * @brief Dumps stack trace from context to error stream. Context is either captured by calling
+ * thread, or is passed by OS through an exception/signal handler.
+ * @param context[opt] OS-specific thread context. Pass null to dump current thread call stack.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void dumpStackTraceContext(void* context, int skip = 0,
+                                  StackEntryFormatter* formatter = nullptr) {
+    printStackTraceContext(context, skip, nullptr, formatter);
+}
+
+#if 0
+/**
+ * @brief Prints stack trace to log with the given log level.
+ * @param logLevel The log level.
+ * @param title The title to print (will be followed by a colon).
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void logStackTrace(ELogLevel logLevel, const char* title, int skip,
+                          StackEntryFormatter* formatter = nullptr) {
+    LogStackEntryPrinter printer(logLevel, title);
+    printStackTrace(skip, &printer, formatter);
+}
+
+/**
+ * @brief Prints stack trace to log with the given log level. Context is either captured by calling
+ * thread, or is passed by OS through an exception/signal handler.
+ * @param context[opt] OS-specific thread context. Pass null to log current thread call stack.
+ * @param logLevel The log level.
+ * @param title The title to print (will be followed by a colon).
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void logStackTraceContext(void* context, ELogLevel logLevel, const char* title, int skip,
+                                 StackEntryFormatter* formatter = nullptr) {
+    LogStackEntryPrinter printer(logLevel, title);
+    printStackTraceContext(context, skip, &printer, formatter);
+}
+#endif
+
+/**
+ * @brief Formats stack trace to string.
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @return std::string The resulting resolved stack trace string.
+ */
+inline std::string stackTraceToString(int skip, StackEntryFormatter* formatter = nullptr) {
+    StringStackEntryPrinter printer;
+    printStackTrace(skip, &printer, formatter);
+    return printer.getStackTrace();
+}
+
+/**
+ * @brief Formats stack trace from context to string. Context is either captured by calling thread,
+ * or is passed by OS through an exception/signal handler.
+ * @param context[opt] OS-specific thread context. Pass null to print current thread call stack.
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @return std::string The resulting resolved stack trace string.
+ */
+inline std::string stackTraceContextToString(void* context, int skip,
+                                             StackEntryFormatter* formatter = nullptr) {
+    StringStackEntryPrinter printer;
+    printStackTraceContext(context, skip, &printer, formatter);
+    return printer.getStackTrace();
+}
+
+/** @typedef Raw stack trace of all threads. */
+typedef std::vector<std::pair<ThreadId, RawStackTrace>> AppRawStackTrace;
+
+/**
+ * @brief Retrieves raw stack trace of all currently running threads in the application.
+ * @param[out] appStackTrace The resulting stack traces for all threads.
+ */
+extern DBGUTIL_API DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace);
+
+/**
+ * @brief Converts application raw stack frames to resolved stack frames in string form.
+ * @param appStackTrace The raw stack trace.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @return std::string The resulting resolved stack trace string.
+ */
+extern DBGUTIL_API std::string appRawStackTraceToString(AppRawStackTrace& appStackTrace,
+                                                        int skip = 0,
+                                                        StackEntryFormatter* formatter = nullptr);
+
+/**
+ * @brief Prints stack trace of all running threads. If no argument is passed, then the stack trace
+ * is printed to the standard error stream, using default stack entry formatting.
+ * @param skip[opt] The number of frames to skip.
+ * @param printer[opt] Stack entry printer. Pass null to print to standard error stream.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+extern DBGUTIL_API void printAppStackTrace(int skip = 0, StackEntryPrinter* printer = nullptr,
+                                           StackEntryFormatter* formatter = nullptr);
+
+/**
+ * @brief Dumps stack trace of all running threads to error stream.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void dumpAppStackTrace(int skip = 0, StackEntryFormatter* formatter = nullptr) {
+    printAppStackTrace(skip, nullptr, formatter);
+}
+
+#if 0
+/**
+ * @brief Prints stack trace of all running threads to log with the given log level.
+ * @param logLevel The log level.
+ * @param title The title to print (will be followed by a colon).
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ */
+inline void logAppStackTrace(ELogLevel logLevel, const char* title, int skip,
+                             StackEntryFormatter* formatter = nullptr) {
+    LogStackEntryPrinter printer(logLevel, title);
+    printAppStackTrace(skip, &printer, formatter);
+}
+#endif
+
+/**
+ * @brief Formats stack trace of all running threads to string.
+ * @param skip The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @return std::string The resulting resolved stack trace string.
+ */
+inline std::string appStackTraceToString(int skip, StackEntryFormatter* formatter = nullptr) {
+    StringStackEntryPrinter printer;
+    printStackTrace(skip, &printer, formatter);
+    return printer.getStackTrace();
+}
+
+}  // namespace dbgutil
+
+#endif  // __DBG_STACK_TRACE_H__
