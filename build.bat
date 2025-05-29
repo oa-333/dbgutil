@@ -12,7 +12,7 @@ REM -i|--install-dir <INSTALL_DIR>
 REM set default values
 SET PLATFORM=WINDOWS
 SET BUILD_TYPE=Debug
-SET INSTALL_DIR=C:\install\csi
+SET INSTALL_DIR=C:\install\dbgutil
 echo [DEBUG] Parsing args
 :GET_OPTS
 echo DEBUG: processing option "%1" "%2"
