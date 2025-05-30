@@ -76,7 +76,7 @@ DbgUtilErr Win32ThreadManager::visitThreads(ThreadVisitor* visitor) {
     // associated with the specified process
     do {
         if (te32.th32OwnerProcessID == currPid) {
-            LOG_TRACE(sLogger, "Traversing thread %lu", te32.th32OwnerProcessID);
+            LOG_TRACE(sLogger, "Traversing thread %lu", te32.th32ThreadID);
             visitor->onThread(te32.th32ThreadID);
         }
     } while (Thread32Next(hThreadSnap, &te32));

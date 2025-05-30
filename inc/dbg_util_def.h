@@ -55,9 +55,13 @@ typedef unsigned long os_thread_id_t;
 typedef long os_thread_id_t;
 #define PRItid "ld"
 #endif
+#define PRItidx "lx"
 
 /** @typedef Platform-independent UTM time type. */
 typedef unsigned long long app_time_t;
+
+/** @brief Retrieves current thread identifier. */
+extern DBGUTIL_API os_thread_id_t getCurrentThreadId();
 
 }  // namespace dbgutil
 

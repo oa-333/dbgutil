@@ -151,4 +151,6 @@ DbgUtilErr termLinuxDbgUtil() {
     return DBGUTIL_ERR_OK;
 }
 
+os_thread_id_t getCurrentThreadId() { return OsUtil::getCurrentThreadId(); }
+
 }  // namespace dbgutil
