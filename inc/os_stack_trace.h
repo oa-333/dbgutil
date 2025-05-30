@@ -43,7 +43,7 @@ public:
      * @param[out] stackTrace The resulting stack trace.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr getThreadStackTrace(const ThreadId& threadId, RawStackTrace& stackTrace) = 0;
+    virtual DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) = 0;
 
     /**
      * @brief Retrieves stack trace of a thread by context.

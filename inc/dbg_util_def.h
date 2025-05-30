@@ -59,15 +59,6 @@ typedef long os_thread_id_t;
 /** @typedef Platform-independent UTM time type. */
 typedef unsigned long long app_time_t;
 
-/** @struct Thread identification. */
-struct DBGUTIL_API ThreadId {
-    /** @var The official thread identifier in the operating system. */
-    os_thread_id_t m_osThreadId;
-
-    /** @var Any additional data required to identify the thread (e.g. pthread_t handle). */
-    void* m_threadData;
-};
-
 }  // namespace dbgutil
 
 #endif  // __DBGUTIL_DEF_H__

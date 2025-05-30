@@ -33,7 +33,7 @@ public:
      * @param[out] stackTrace The resulting stack trace.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr getThreadStackTrace(const ThreadId& threadId, RawStackTrace& stackTrace) final;
+    DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
 
 private:
     Win32StackTraceProvider() {}

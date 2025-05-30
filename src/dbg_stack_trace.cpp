@@ -151,12 +151,12 @@ void printStackTraceContext(void* context, int skip, StackEntryPrinter* printer,
 
 DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
     // get all thread ids, for each thread, get its stack trace, except for current thread
-    class StackTraceCollector : public ThreadListener {
+    class StackTraceCollector : public ThreadVisitor {
     public:
         StackTraceCollector(AppRawStackTrace& appStackTrace)
             : m_appStackTrace(appStackTrace), m_result(DBGUTIL_ERR_OK) {}
 
-        void onThread(const ThreadId& threadId) final {
+        void onThread(os_thread_id_t threadId) final {
             RawStackTrace rawStackTrace;
             DbgUtilErr rc = getStackTraceProvider()->getThreadStackTrace(threadId, rawStackTrace);
             if (rc == DBGUTIL_ERR_OK) {
@@ -185,8 +185,7 @@ std::string appRawStackTraceToString(AppRawStackTrace& appStackTrace, int skip /
                                      StackEntryFormatter* formatter /* = nullptr */) {
     std::stringstream res;
     for (auto& stackTrace : appStackTrace) {
-        res << rawStackTraceToString(stackTrace.second, skip, formatter,
-                                     stackTrace.first.m_osThreadId);
+        res << rawStackTraceToString(stackTrace.second, skip, formatter, stackTrace.first);
         res << std::endl;
     }
     return res.str();
@@ -207,7 +206,7 @@ void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = null
         }
 
         for (auto& stackTrace : appStackTrace) {
-            printer->onBeginStackTrace(stackTrace.first.m_osThreadId);
+            printer->onBeginStackTrace(stackTrace.first);
             PrintFrameListener listener(skip, printer, formatter);
             for (void* frame : stackTrace.second) {
                 listener.onStackFrame(frame);

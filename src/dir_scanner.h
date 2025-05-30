@@ -9,7 +9,7 @@
 namespace dbgutil {
 
 /** @enum Directory entry type constants. */
-enum class DirEntryType {
+enum class DirEntryType : uint32_t {
     /** @var Entry type is a regular file. */
     DET_FILE,
 

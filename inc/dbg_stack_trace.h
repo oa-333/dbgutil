@@ -257,7 +257,7 @@ inline std::string stackTraceContextToString(void* context, int skip,
 }
 
 /** @typedef Raw stack trace of all threads. */
-typedef std::vector<std::pair<ThreadId, RawStackTrace>> AppRawStackTrace;
+typedef std::vector<std::pair<os_thread_id_t, RawStackTrace>> AppRawStackTrace;
 
 /**
  * @brief Retrieves raw stack trace of all currently running threads in the application.

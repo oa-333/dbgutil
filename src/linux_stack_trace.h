@@ -20,12 +20,6 @@ public:
     /** @brief Destroys the singleton instance of the stack-trace provider. */
     static void destroyInstance();
 
-    /** @brief Initializes the stack trace provider. */
-    DbgUtilErr initialize();
-
-    /** @brief Terminates the stack trace provider. */
-    DbgUtilErr terminate();
-
     /**
      * @brief Walks the call stack from possibly the given context point.
      * @param listener The stack frame listener.
@@ -39,7 +33,7 @@ public:
      * @param[out] stackTrace The resulting stack trace.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr getThreadStackTrace(const ThreadId& threadId, RawStackTrace& stackTrace) final;
+    DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
 
 private:
     LinuxStackTraceProvider() {}

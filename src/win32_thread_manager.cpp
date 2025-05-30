@@ -51,7 +51,7 @@ DbgUtilErr Win32ThreadManager::initialize() { return DBGUTIL_ERR_OK; }
 DbgUtilErr Win32ThreadManager::terminate() { return DBGUTIL_ERR_OK; }
 
 // this implementation is available also for MinGW, as it might interact with non-gcc modules
-DbgUtilErr Win32ThreadManager::visitThreads(ThreadListener* listener) {
+DbgUtilErr Win32ThreadManager::visitThreads(ThreadVisitor* visitor) {
     // take a snapshot of all running threads
     HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (hThreadSnap == INVALID_HANDLE_VALUE) {
@@ -77,8 +77,7 @@ DbgUtilErr Win32ThreadManager::visitThreads(ThreadListener* listener) {
     do {
         if (te32.th32OwnerProcessID == currPid) {
             LOG_TRACE(sLogger, "Traversing thread %lu", te32.th32OwnerProcessID);
-            ThreadId threadId = {te32.th32ThreadID, nullptr};
-            listener->onThread(threadId);
+            visitor->onThread(te32.th32ThreadID);
         }
     } while (Thread32Next(hThreadSnap, &te32));
 

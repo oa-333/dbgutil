@@ -12,6 +12,17 @@
 
 namespace dbgutil {
 
+/** @brief An active executor used for executing some operation on a target thread context. */
+class ThreadExecutor {
+public:
+    virtual ~ThreadExecutor() {}
+
+    virtual DbgUtilErr execRequest() = 0;
+
+protected:
+    ThreadExecutor() {}
+};
+
 class LinuxThreadManager : public OsThreadManager {
 public:
     /** @brief Creates the singleton instance of the module manager for Windows platform. */
@@ -30,11 +41,11 @@ public:
     DbgUtilErr terminate();
 
     /**
-     * @brief Walks the call stack from possibly the given context point.
-     * @param listener The stack frame listener.
-     * @param context The call context. Pass null to capture current thread call stack.
+     * @brief Traverses all running threads.
+     * @param visitor The thread visitor.
+     * @return The operation result.
      */
-    DbgUtilErr visitThreads(ThreadListener* listener) final;
+    DbgUtilErr visitThreads(ThreadVisitor* visitor) final;
 
     /**
      * @brief Retrieves thread handle by id.
@@ -42,36 +53,20 @@ public:
      * @param threadHandle The resulting thread handle.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr getThreadHandle(const ThreadId& threadId, pthread_t& threadHandle);
-
-    /** @typedef Request handler type. */
-    typedef DbgUtilErr (*RequestHandler)(void* data);
+    DbgUtilErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
 
     /**
-     * @brief Registers a thread request handler, that will execute posted requests on the
-     * destination thread context.
-     * @param requestType The request type id.
-     * @param handler The handler.
-     * @return DbgUtilErr The operation result.
-     */
-    DbgUtilErr registerThreadRequestHandler(uint32_t requestType, RequestHandler handler);
-
-    /**
-     * @brief Unregisters a thread request handler.
-     * @param requestType The request type id.
-     * @return DbgUtilErr The operation result.
-     */
-    DbgUtilErr unregisterThreadRequestHandler(uint32_t requestType);
-
-    /**
-     * @brief Posts a request to be executed by the destination thread (non-blocking call).
+     * @brief Requests to execute an operation on another thread (blocking call).
      * @param threadId The destination thread id.
-     * @param requestType The request type id.
-     * @param data The request data.
-     * @param[out] requestResult The request execution result in case a request was pending.
-     * @return DbgUtilErr The operation result.
+     * @param executor The request executor.
+     * @param[out] requestResult The request execution result (valid only if entire function
+     * result is ok).
+     * @return DbgUtilErr The operation result. This refers only to the ability to post the
+     * operation to be executed on the target thread, and then collecting the result. The actual
+     * result of the operation being executed on the target thread, is returned via the @ref
+     * opResult out parameter.
      */
-    DbgUtilErr execThreadRequest(const ThreadId& threadId, uint32_t requestType, void* requestData,
+    DbgUtilErr execThreadRequest(os_thread_id_t hreadId, ThreadExecutor* executor,
                                  DbgUtilErr& requestResult);
 
 private:

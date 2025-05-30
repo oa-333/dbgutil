@@ -28,11 +28,11 @@ public:
     DbgUtilErr terminate();
 
     /**
-     * @brief Walks the call stack from possibly the given context point.
-     * @param listener The stack frame listener.
-     * @param context The call context. Pass null to capture current thread call stack.
+     * @brief Traverses all running threads.
+     * @param visitor The thread visitor.
+     * @return The operation result.
      */
-    DbgUtilErr visitThreads(ThreadListener* listener) final;
+    DbgUtilErr visitThreads(ThreadVisitor* visitor) final;
 
 private:
     Win32ThreadManager() {}

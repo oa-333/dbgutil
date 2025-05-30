@@ -8,10 +8,10 @@
 
 namespace dbgutil {
 
-/** @brief A thread listener used to traverse all threads. */
-class DBGUTIL_API ThreadListener {
+/** @brief A thread visitor used to traverse all threads. */
+class DBGUTIL_API ThreadVisitor {
 public:
-    virtual ~ThreadListener() {}
+    virtual ~ThreadVisitor() {}
 
     /**
      * @brief Handles a visited thread.
@@ -19,10 +19,10 @@ public:
      * @param osData Any additional OS-specific thread-related information. On Linux this can be
      * cast directly to pthread_t.
      */
-    virtual void onThread(const ThreadId& threadId) = 0;
+    virtual void onThread(os_thread_id_t threadId) = 0;
 
 protected:
-    ThreadListener() {}
+    ThreadVisitor() {}
 };
 
 class DBGUTIL_API OsThreadManager {
@@ -32,11 +32,11 @@ public:
     virtual ~OsThreadManager() {}
 
     /**
-     * @brief Walks the call stack from possibly the given context point.
-     * @param listener The stack frame listener.
-     * @param context The call context. Pass null to capture current thread call stack.
+     * @brief Traverses all running threads.
+     * @param visitor The thread visitor.
+     * @return The operation result.
      */
-    virtual DbgUtilErr visitThreads(ThreadListener* listener) = 0;
+    virtual DbgUtilErr visitThreads(ThreadVisitor* visitor) = 0;
 
 protected:
     OsThreadManager() {}
