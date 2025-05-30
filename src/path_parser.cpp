@@ -12,6 +12,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void PathParser::initLogger() { registerLogger(sLogger, "path_parser"); }
+void PathParser::termLogger() { unregisterLogger(sLogger); }
 
 DbgUtilErr PathParser::canonicalizePathComponents(const char* path,
                                                   std::vector<std::string>& components) {

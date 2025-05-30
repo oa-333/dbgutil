@@ -34,6 +34,7 @@ public:
     virtual ~OsImageReader() {}
 
     static void initLogger();
+    static void termLogger();
 
     /**
      * @brief Opens the binary image file for reading.

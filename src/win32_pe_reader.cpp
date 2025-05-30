@@ -468,6 +468,7 @@ extern DbgUtilErr initWin32PEReader() {
 extern DbgUtilErr termWin32PEReader() {
     setImageReaderFactory(nullptr);
     Win32PEReaderFactory::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

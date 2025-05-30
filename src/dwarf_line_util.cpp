@@ -15,6 +15,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void DwarfLineUtil::initLogger() { registerLogger(sLogger, "dwarf_line_util"); }
+void DwarfLineUtil::termLogger() { unregisterLogger(sLogger); }
 
 std::string DwarfLineStateMachine::toString() const {
     std::stringstream s;

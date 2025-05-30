@@ -15,6 +15,7 @@ static Logger sLogger;
 static OsImageReaderFactory* sFactory = nullptr;
 
 void OsImageReader::initLogger() { registerLogger(sLogger, "os_image_reader"); }
+void OsImageReader::termLogger() { unregisterLogger(sLogger); }
 
 OsImageReader::OsImageReader()
     : m_fileSizeBytes(0), m_moduleBase(nullptr), m_is64Bit(false), m_isExe(false), m_relocBase(0) {}

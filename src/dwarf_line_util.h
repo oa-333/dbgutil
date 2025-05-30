@@ -66,6 +66,7 @@ public:
     ~DwarfLineUtil() {}
 
     static void initLogger();
+    static void termLogger();
 
     DbgUtilErr getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
                            FixedInputStream& is, SymbolInfo& symbolInfo);

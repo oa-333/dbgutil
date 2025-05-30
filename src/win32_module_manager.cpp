@@ -164,6 +164,7 @@ DbgUtilErr initWin32ModuleManager() {
 DbgUtilErr termWin32ModuleManager() {
     setModuleManager(nullptr);
     Win32ModuleManager::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

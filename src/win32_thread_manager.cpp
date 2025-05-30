@@ -108,6 +108,7 @@ DbgUtilErr termWin32ThreadManager() {
         return rc;
     }
     Win32ThreadManager::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

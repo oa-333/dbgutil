@@ -286,6 +286,7 @@ DbgUtilErr termLinuxExceptionHandler() {
 #else
     linuxUnregisterExceptionHandler();
 #endif
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

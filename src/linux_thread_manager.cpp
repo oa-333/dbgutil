@@ -650,6 +650,7 @@ DbgUtilErr termLinuxThreadManager() {
         return rc;
     }
     LinuxThreadManager::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

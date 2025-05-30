@@ -12,6 +12,7 @@ namespace dbgutil {
 class DBGUTIL_API PathParser {
 public:
     static void initLogger();
+    static void termLogger();
 
     /**
      * @brief Canonicalizes a path.

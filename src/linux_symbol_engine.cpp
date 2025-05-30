@@ -262,6 +262,7 @@ DbgUtilErr initLinuxSymbolEngine() {
 DbgUtilErr termLinuxSymbolEngine() {
     setSymbolEngine(nullptr);
     LinuxSymbolEngine::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

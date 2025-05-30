@@ -13,6 +13,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void DwarfUtil::initLogger() { registerLogger(sLogger, "dwarf_util"); }
+void DwarfUtil::termLogger() { unregisterLogger(sLogger); }
 
 DwarfUtil::DwarfUtil() {}
 

@@ -77,6 +77,14 @@ DbgUtilErr initDbgUtil(LogHandler* logHandler, LogSeverity severity) {
 }
 
 DbgUtilErr termDbgUtil() {
+    PathParser::termLogger();
+    BufferedFileReader::termLogger();
+    DirScanner::termLogger();
+    DwarfLineUtil::termLogger();
+    DwarfUtil::termLogger();
+    OsImageReader::termLogger();
+    OsUtil::termLogger();
+
 #if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(termLinuxDbgUtil);
 #endif

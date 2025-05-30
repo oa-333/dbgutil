@@ -249,6 +249,7 @@ DbgUtilErr initLinuxModuleManager() {
 DbgUtilErr termLinuxModuleManager() {
     setModuleManager(nullptr);
     LinuxModuleManager::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

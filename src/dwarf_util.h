@@ -18,6 +18,7 @@ public:
     DwarfUtil();
 
     static void initLogger();
+    static void termLogger();
 
     DbgUtilErr open(const DwarfData& dwarfData, void* moduleBase, bool is664Bit, bool isExe);
 

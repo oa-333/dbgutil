@@ -53,6 +53,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void OsUtil::initLogger() { registerLogger(sLogger, "os_util"); }
+void OsUtil::termLogger() { unregisterLogger(sLogger); }
 
 os_thread_id_t OsUtil::getCurrentThreadId() {
 #ifdef DBGUTIL_WINDOWS

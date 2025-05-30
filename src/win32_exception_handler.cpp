@@ -71,6 +71,7 @@ DbgUtilErr termWin32ExceptionHandler() {
     if (getenv("MSYSTEM") == nullptr) {
         win32UnregisterExceptionHandler();
     }
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

@@ -262,6 +262,7 @@ DbgUtilErr termWin32SymbolEngine() {
         return rc;
     }
     Win32SymbolEngine::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

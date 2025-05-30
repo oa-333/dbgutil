@@ -40,6 +40,7 @@ protected:
 class DBGUTIL_API DirScanner {
 public:
     static void initLogger();
+    static void termLogger();
 
     /**
      * @brief Scans for directory entries (files or directories).

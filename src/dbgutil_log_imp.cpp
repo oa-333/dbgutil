@@ -70,6 +70,8 @@ void registerLogger(Logger& logger, const char* loggerName) {
     logger.m_severity = sLogHandler->onRegisterLogger(sLogSeverity, loggerName, logger.m_loggerId);
 }
 
+void unregisterLogger(Logger& logger) { sLogHandler->onUnregisterLogger(logger.m_loggerId); }
+
 bool canLog(const Logger& logger, LogSeverity severity) {
     return severity >= sLogSeverity || severity >= logger.m_severity;
 }

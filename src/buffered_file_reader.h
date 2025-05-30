@@ -14,6 +14,7 @@ public:
     ~BufferedFileReader() {}
 
     static void initLogger();
+    static void termLogger();
 
     /** @brief The default buffer size. */
     static const uint32_t DEFAULT_BUFFER_SIZE;

@@ -16,6 +16,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void DirScanner::initLogger() { registerLogger(sLogger, "dir_scanner"); }
+void DirScanner::termLogger() { unregisterLogger(sLogger); }
 
 #ifdef DBGUTIL_MSVC
 static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visitor) {

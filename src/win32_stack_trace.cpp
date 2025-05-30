@@ -120,6 +120,7 @@ DbgUtilErr termWin32StackTrace() {
     setStackTraceProvider(nullptr);
 #endif
     Win32StackTraceProvider::destroyInstance();
+    unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
 

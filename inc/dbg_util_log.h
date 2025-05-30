@@ -46,6 +46,9 @@ public:
     virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName,
                                          uint32_t loggerId) = 0;
 
+    /** @brief Unregisters a previously registered logger. */
+    virtual void onUnregisterLogger(uint32_t loggerId) = 0;
+
     /**
      * @brief Notifies a logger is logging a message.
      * @param severity The log message severity.

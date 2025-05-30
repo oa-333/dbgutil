@@ -21,6 +21,8 @@ extern void setLogSeverity(LogSeverity severity);
 
 extern void registerLogger(Logger& logger, const char* loggerName);
 
+extern void unregisterLogger(Logger& logger);
+
 extern bool canLog(const Logger& logger, LogSeverity severity);
 
 extern void logMsg(const Logger& logger, LogSeverity severity, const char* fmt, ...);

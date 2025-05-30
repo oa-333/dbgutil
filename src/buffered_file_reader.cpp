@@ -13,6 +13,7 @@ namespace dbgutil {
 static Logger sLogger;
 
 void BufferedFileReader::initLogger() { registerLogger(sLogger, "buffered_file_reader"); }
+void BufferedFileReader::termLogger() { unregisterLogger(sLogger); }
 
 const uint32_t BufferedFileReader::DEFAULT_BUFFER_SIZE = 4096;
 

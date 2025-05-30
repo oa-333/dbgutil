@@ -71,6 +71,7 @@ typedef pthread_spinlock_t csi_spinlock_t;
 class DBGUTIL_API OsUtil {
 public:
     static void initLogger();
+    static void termLogger();
 
     /** @brief Retrieves current thread identifier (non-pseudo number). */
     static os_thread_id_t getCurrentThreadId();
