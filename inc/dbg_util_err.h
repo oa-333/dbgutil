@@ -1,5 +1,5 @@
-#ifndef __DBGUTIL_ERR_H__
-#define __DBGUTIL_ERR_H__
+#ifndef __DBG_UTIL_ERR_H__
+#define __DBG_UTIL_ERR_H__
 
 // error codes
 #define DBGUTIL_ERR_OK 0
@@ -25,4 +25,4 @@ typedef int DbgUtilErr;
 
 }  // namespace dbgutil
 
-#endif  // __DBGUTIL_ERR_H__
+#endif  // __DBG_UTIL_ERR_H__

@@ -9,7 +9,7 @@
 namespace dbgutil {
 
 /** @brief A syntactical path parsing utility class. */
-class DBGUTIL_API PathParser {
+class PathParser {
 public:
     static void initLogger();
     static void termLogger();

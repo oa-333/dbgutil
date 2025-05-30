@@ -18,7 +18,7 @@ enum class DirEntryType : uint32_t {
 };
 
 /** @struct Single directory entry information. */
-struct DBGUTIL_API DirEntryInfo {
+struct DirEntryInfo {
     /** @brief Bare entry name (no containing directory prefix). */
     std::string m_name;
 
@@ -26,7 +26,7 @@ struct DBGUTIL_API DirEntryInfo {
     DirEntryType m_type;
 };
 
-class DBGUTIL_API DirEntryVisitor {
+class DirEntryVisitor {
 public:
     virtual ~DirEntryVisitor() {}
 
@@ -37,7 +37,7 @@ protected:
 };
 
 /** @class Utility class for scanning directory files. */
-class DBGUTIL_API DirScanner {
+class DirScanner {
 public:
     static void initLogger();
     static void termLogger();

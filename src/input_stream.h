@@ -6,7 +6,7 @@
 namespace dbgutil {
 
 /** @brief Base abstract class for input stream objects. */
-class DBGUTIL_API InputStream {
+class InputStream {
 public:
     /** @brief Resets the input stream (drops all buffers). */
     virtual void reset() = 0;

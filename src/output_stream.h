@@ -6,7 +6,7 @@
 namespace dbgutil {
 
 /** @brief Base abstract class for output stream objects. */
-class DBGUTIL_API OutputStream {
+class OutputStream {
 public:
     /**
      * @brief Writes a value.

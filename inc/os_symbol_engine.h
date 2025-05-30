@@ -10,7 +10,7 @@
 namespace dbgutil {
 
 /** @brief Symbol infomation. */
-struct SymbolInfo {
+struct DBGUTIL_API SymbolInfo {
     /** @brief The containing module's base address in memory. */
     void* m_moduleBaseAddress;
 

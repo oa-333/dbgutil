@@ -8,7 +8,7 @@
 namespace dbgutil {
 
 /** @brief A buffered file reader. */
-class DBGUTIL_API BufferedFileReader {
+class BufferedFileReader {
 public:
     BufferedFileReader();
     ~BufferedFileReader() {}

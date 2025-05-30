@@ -8,7 +8,7 @@
 namespace dbgutil {
 
 /** @brief Input stream over a given fixed buffer. */
-class DBGUTIL_API FixedInputStream : public InputStream {
+class FixedInputStream : public InputStream {
 public:
     /**
      * @brief Construct a new fixed input stream object.

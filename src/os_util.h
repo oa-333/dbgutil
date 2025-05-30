@@ -68,7 +68,7 @@ typedef pthread_spinlock_t csi_spinlock_t;
 #endif
 
 /** @brief Various OS utilities (platform independent). */
-class DBGUTIL_API OsUtil {
+class OsUtil {
 public:
     static void initLogger();
     static void termLogger();

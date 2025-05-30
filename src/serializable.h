@@ -32,7 +32,7 @@
 namespace dbgutil {
 
 /** @brief Serializable interface. */
-class DBGUTIL_API Serializable {
+class Serializable {
 public:
     virtual ~Serializable() {}
 

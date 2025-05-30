@@ -1,5 +1,5 @@
-#ifndef __DBGUTIL_DEF_H__
-#define __DBGUTIL_DEF_H__
+#ifndef __DBG_UTIL_DEF_H__
+#define __DBG_UTIL_DEF_H__
 
 // Windows/MSVC
 #ifdef _MSC_VER
@@ -61,4 +61,4 @@ typedef unsigned long long app_time_t;
 
 }  // namespace dbgutil
 
-#endif  // __DBGUTIL_DEF_H__
+#endif  // __DBG_UTIL_DEF_H__

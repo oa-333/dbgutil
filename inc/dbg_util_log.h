@@ -1,7 +1,9 @@
-#ifndef __DBGUTIL_LOG_H__
-#define __DBGUTIL_LOG_H__
+#ifndef __DBG_UTIL_LOG_H__
+#define __DBG_UTIL_LOG_H__
 
 #include <cinttypes>
+
+#include "dbg_util_def.h"
 
 namespace dbgutil {
 
@@ -33,7 +35,7 @@ enum LogSeverity {
 };
 
 /** @class Log handler for handling log messages coming from the Debug Utilities library. */
-class LogHandler {
+class DBGUTIL_API LogHandler {
 public:
     /**
      * @brief Notifies that a logger has been registered.
@@ -58,6 +60,12 @@ public:
     virtual void onMsg(LogSeverity severity, uint32_t loggerId, const char* msg) = 0;
 };
 
+/** @brief Configures global log severity */
+extern DBGUTIL_API void setLogSeverity(LogSeverity severity);
+
+/** @brief Configures log severity of a specific logger. */
+extern DBGUTIL_API void setLoggerSeverity(uint32_t loggerId, LogSeverity severity);
+
 }  // namespace dbgutil
 
-#endif  // __DBGUTIL_LOG_H__
+#endif  // __DBG_UTIL_LOG_H__

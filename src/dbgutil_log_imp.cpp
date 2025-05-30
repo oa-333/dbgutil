@@ -39,6 +39,16 @@ static LogHandler* sLogHandler = nullptr;
 static LogSeverity sLogSeverity = LS_INFO;
 static std::vector<Logger*> sLoggers;
 
+void setLogHandler(LogHandler* logHandler) { sLogHandler = logHandler; }
+
+void setLogSeverity(LogSeverity severity) { sLogSeverity = severity; }
+
+void setLoggerSeverity(uint32_t loggerId, LogSeverity severity) {
+    if (loggerId < sLoggers.size() && sLoggers[loggerId] != nullptr) {
+        sLoggers[loggerId]->m_severity = severity;
+    }
+}
+
 /** @brief Queries whether a multi-part log message is being constructed. */
 static bool isLogging() { return sLogData.m_msgBuilder.getOffset() > 0; }
 
@@ -59,10 +69,6 @@ static void appendMsg(const char* msg) {
     }
 }
 
-void setLogHandler(LogHandler* logHandler) { sLogHandler = logHandler; }
-
-void setLogSeverity(LogSeverity severity) { sLogSeverity = severity; }
-
 void registerLogger(Logger& logger, const char* loggerName) {
     logger.m_loggerId = sLoggers.size();
     sLoggers.push_back(&logger);
@@ -70,7 +76,22 @@ void registerLogger(Logger& logger, const char* loggerName) {
     logger.m_severity = sLogHandler->onRegisterLogger(sLogSeverity, loggerName, logger.m_loggerId);
 }
 
-void unregisterLogger(Logger& logger) { sLogHandler->onUnregisterLogger(logger.m_loggerId); }
+void unregisterLogger(Logger& logger) {
+    sLogHandler->onUnregisterLogger(logger.m_loggerId);
+    if (logger.m_loggerId < sLoggers.size()) {
+        sLoggers[logger.m_loggerId] = nullptr;
+        uint32_t maxLoggerId = 0;
+        for (int i = sLoggers.size() - 1; i >= 0; --i) {
+            if (sLoggers[i] != nullptr) {
+                maxLoggerId = i;
+                break;
+            }
+        }
+        if (maxLoggerId + 1 < sLoggers.size()) {
+            sLoggers.resize(maxLoggerId + 1);
+        }
+    }
+}
 
 bool canLog(const Logger& logger, LogSeverity severity) {
     return severity <= sLogSeverity || severity <= logger.m_severity;
