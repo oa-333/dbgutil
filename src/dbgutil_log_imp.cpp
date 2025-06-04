@@ -23,8 +23,11 @@ struct LogData {
     const Logger* m_logger;
     LogSeverity m_severity;
     LogMsgBuilder m_msgBuilder;
+    LogData* m_next;
 
-    LogData() { reset(); }
+    LogData(LogData* next = nullptr) : m_logger(nullptr), m_severity(LS_INFO), m_next(next) {
+        m_msgBuilder.reset();
+    }
 
     inline void reset(const Logger* logger = nullptr, LogSeverity severity = LS_INFO) {
         m_logger = logger;
@@ -33,13 +36,38 @@ struct LogData {
     }
 };
 
-static thread_local LogData sLogData;
+static thread_local LogData sLogDataHead;
+static thread_local LogData* sLogData = &sLogDataHead;
 
 static LogHandler* sLogHandler = nullptr;
 static LogSeverity sLogSeverity = LS_INFO;
 static std::vector<Logger*> sLoggers;
 
-void setLogHandler(LogHandler* logHandler) { sLogHandler = logHandler; }
+static void pushLogData() {
+    LogData* logData = new (std::nothrow) LogData(sLogData);
+    if (logData != nullptr) {
+        sLogData = logData;
+    }
+}
+
+static void popLogData() {
+    if (sLogData != &sLogDataHead) {
+        LogData* next = sLogData->m_next;
+        delete sLogData;
+        sLogData = next;
+    }
+}
+
+void initLog(LogHandler* logHandler, LogSeverity severity) {
+    sLogHandler = logHandler;
+    sLogSeverity = severity;
+}
+
+void termLog() {
+    while (sLogData != &sLogDataHead) {
+        popLogData();
+    }
+}
 
 void setLogSeverity(LogSeverity severity) { sLogSeverity = severity; }
 
@@ -50,22 +78,22 @@ void setLoggerSeverity(uint32_t loggerId, LogSeverity severity) {
 }
 
 /** @brief Queries whether a multi-part log message is being constructed. */
-static bool isLogging() { return sLogData.m_msgBuilder.getOffset() > 0; }
+static bool isLogging() { return sLogData->m_msgBuilder.getOffset() > 0; }
 
 static void appendMsgV(const char* fmt, va_list ap) {
     va_list apCopy;
     va_copy(apCopy, ap);
     uint32_t requiredBytes = (vsnprintf(nullptr, 0, fmt, apCopy) + 1);
-    if (sLogData.m_msgBuilder.ensureBufferLength(requiredBytes)) {
-        sLogData.m_msgBuilder.appendV(fmt, ap);
+    if (sLogData->m_msgBuilder.ensureBufferLength(requiredBytes)) {
+        sLogData->m_msgBuilder.appendV(fmt, ap);
     }
     va_end(apCopy);
 }
 
 static void appendMsg(const char* msg) {
     uint32_t requiredBytes = (strlen(msg) + 1);
-    if (sLogData.m_msgBuilder.ensureBufferLength(requiredBytes)) {
-        sLogData.m_msgBuilder.append(msg);
+    if (sLogData->m_msgBuilder.ensureBufferLength(requiredBytes)) {
+        sLogData->m_msgBuilder.append(msg);
     }
 }
 
@@ -100,34 +128,23 @@ bool canLog(const Logger& logger, LogSeverity severity) {
 void logMsg(const Logger& logger, LogSeverity severity, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    if (!isLogging()) {
-        sLogData.reset(&logger, severity);
-        appendMsgV(fmt, ap);
-        finishLog();
-    } else {
-        fprintf(stderr,
-                "Attempt to log message while previous start-log call has not finished yet: ");
-        vfprintf(stderr, fmt, ap);
-        fputs("\n", stderr);
-        fflush(stderr);
+    if (isLogging()) {
+        pushLogData();
     }
+    sLogData->reset(&logger, severity);
+    appendMsgV(fmt, ap);
+    finishLog();
     va_end(ap);
 }
 
 void startLog(const Logger& logger, LogSeverity severity, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    if (!isLogging()) {
-        sLogData.reset(&logger, severity);
-        appendMsgV(fmt, ap);
-    } else {
-        fprintf(
-            stderr,
-            "Attempt to start log message while previous start-log call has not finished yet: ");
-        vfprintf(stderr, fmt, ap);
-        fputs("\n", stderr);
-        fflush(stderr);
+    if (isLogging()) {
+        pushLogData();
     }
+    sLogData->reset(&logger, severity);
+    appendMsgV(fmt, ap);
     va_end(ap);
 }
 
@@ -160,9 +177,10 @@ void appendLogNoFormat(const char* msg) {
 void finishLog() {
     if (isLogging()) {
         // NOTE: new line character at the end of the line is added by log handler if at all
-        const char* logMsg = sLogData.m_msgBuilder.finalize();
-        sLogHandler->onMsg(sLogData.m_severity, sLogData.m_logger->m_loggerId, logMsg);
-        sLogData.reset();
+        const char* logMsg = sLogData->m_msgBuilder.finalize();
+        sLogHandler->onMsg(sLogData->m_severity, sLogData->m_logger->m_loggerId, logMsg);
+        sLogData->reset();
+        popLogData();
     } else {
         fprintf(stderr, "attempt to end log message without start-log being issued first\n");
     }

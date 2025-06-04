@@ -54,8 +54,7 @@ static DbgUtilErr termLinuxDbgUtil();
     }
 
 DbgUtilErr initDbgUtil(LogHandler* logHandler, LogSeverity severity) {
-    setLogHandler(logHandler);
-    setLogSeverity(severity);
+    initLog(logHandler, severity);
 
 #if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(initWin32DbgUtil);
@@ -92,6 +91,8 @@ DbgUtilErr termDbgUtil() {
 #if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(termWin32DbgUtil);
 #endif
+
+    termLog();
     return DBGUTIL_ERR_OK;
 }
 

@@ -15,7 +15,7 @@ SET BUILD_TYPE=Debug
 SET INSTALL_DIR=C:\install\dbgutil
 echo [DEBUG] Parsing args
 :GET_OPTS
-echo DEBUG: processing option "%1" "%2"
+echo [DEBUG] processing option "%1" "%2"
 IF /I "%1" == "-v" SET VERBOSE=1
 IF /I "%1" == "--verbose" SET VERBOSE=1
 IF /I "%1" == "-d" SET BUILD_TYPE=Debug
@@ -35,49 +35,55 @@ IF NOT "%1" == "" GOTO GET_OPTS
 echo [DEBUG] Args parsed, options left: %*
 
 REM set normal options
-echo [INFO] Build type: $BUILD_TYPE
-echo [INFO] Install dir: $INSTALL_DIR
+echo [INFO] Build type: %BUILD_TYPE%
+echo [INFO] Install dir: %INSTALL_DIR%
 SET OPTS=-DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
 IF "%VERBOSE%" == "1" SET OPTS=%OPTS% -DCMAKE_VERBOSE_MAKEFILE=ON
 echo [DEBUG] Current options: %OPTS%
 
 REM prepare build directory
-SET BUILD_DIR=cmake_build\%PLATFORM%-%BUILD_TYPE%
-echo INFO: Using build directory: %BUILD_DIR%
+SET BUILD_DIR=cmake_build\%PLATFORM%
+echo [INFO] Using build directory: %BUILD_DIR%
 if not exist %BUILD_DIR% (
     mkdir %BUILD_DIR%
 )
 if errorlevel 1 (
-    echo ERROR: failed to create build directory %BUILD_DIR%
+    echo [ERROR] failed to create build directory %BUILD_DIR%
     goto HANDLE_ERROR
 )
 
 pushd %BUILD_DIR% > NUL
 
+REM print cmake info
+echo [INFO] CMake version:
+cmake --version
+
 REM configure phase
-echo INFO: Executing build command cmake %OPTS% ..\..\
+echo [INFO] Executing build command cmake %OPTS% ..\..\
 echo [INFO] Configuring project
 cmake %OPTS% ..\..\
 if errorlevel 1 (
-    echo ERROR: Configure phase failed, see errors above, aborting
+    echo [ERROR] Configure phase failed, see errors above, aborting
     popd > NUL
     goto HANDLE_ERROR
 )
 
 REM build phase
+REM NOTE: On windows MSVC (multi-config system), the configuration to build should be specified in build command
 echo [INFO] Building
-cmake --build . -j
+echo [INFO] Executing command: cmake --build . -j --verbose --config %BUILD_TYPE%
+cmake --build . -j --verbose --config %BUILD_TYPE%
 if errorlevel 1 (
-    echo ERROR: Build phase failed, see errors above, aborting
+    echo [ERROR] Build phase failed, see errors above, aborting
     popd > NUL
     goto HANDLE_ERROR
 )
 
 REM install phase
 echo [INFO] Installing
-cmake --install .
+cmake --install . --verbose --config %BUILD_TYPE%
 if errorlevel 1 (
-    echo ERROR: Install phase failed, see errors above, aborting
+    echo [ERROR] Install phase failed, see errors above, aborting
     popd > NUL
     goto HANDLE_ERROR
 )
@@ -86,5 +92,5 @@ popd > NUL
 exit /b 0
 
 :HANDLE_ERROR
-echo Build failed, see errors above, aborting
+echo [ERROR] Build failed, see errors above, aborting
 exit /b 1

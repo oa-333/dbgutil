@@ -65,8 +65,24 @@ DbgUtilErr Win32SymbolEngine::initialize() {
     // get the containing directory
     rc = PathParser::getParentPath(mainModuleInfo.m_modulePath.c_str(), m_processDir);
     if (rc != DBGUTIL_ERR_OK) {
+        LOG_ERROR(sLogger, "Failed to extract parent path from module '%s': %s",
+                  mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
         return rc;
     }
+    LOG_TRACE(sLogger, "Process directory is: %s", m_processDir.c_str());
+
+    // get process name
+    rc = PathParser::getFileName(mainModuleInfo.m_modulePath.c_str(), m_processName);
+    if (rc != DBGUTIL_ERR_OK) {
+        LOG_ERROR(sLogger, "Failed to extract file name from module '%s': %s",
+                  mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
+        return rc;
+    }
+    std::string::size_type lastDotPos = m_processName.find_last_of('.');
+    if (lastDotPos != std::string::npos) {
+        m_processName = m_processName.substr(0, lastDotPos);
+    }
+    LOG_TRACE(sLogger, "Process name is: %s", m_processName.c_str());
 
     // initialize the symbol engine
     if (!SymInitialize(m_processHandle, m_processDir.c_str(), TRUE)) {
@@ -75,6 +91,7 @@ DbgUtilErr Win32SymbolEngine::initialize() {
         m_processHandle = INVALID_HANDLE_VALUE;
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
+    LOG_TRACE(sLogger, "Symbol engine initialized");
 
     // set symbol engine options
     DWORD symOptions = SymGetOptions();
@@ -135,8 +152,9 @@ DbgUtilErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
 
     // get symbol info
     if (!SymGetSymFromAddr64(m_processHandle, (DWORD64)symAddress, &displacement, sym)) {
-        LOG_SYS_ERROR(sLogger, SymGetSymFromAddr64,
-                      "Failed to get debug symbol for address 0x%" PRIx64, symAddress);
+        DWORD rc = GetLastError();
+        LOG_TRACE(sLogger, "Failed to get debug symbol for address 0x%" PRIx64 " (error code: %u)",
+                  symAddress, rc);
         free(sym);
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }

@@ -15,7 +15,9 @@ struct Logger {
     LogSeverity m_severity;
 };
 
-extern void setLogHandler(LogHandler* logHandler);
+extern void initLog(LogHandler* logHandler, LogSeverity severity);
+
+extern void termLog();
 
 extern void registerLogger(Logger& logger, const char* loggerName);
 
