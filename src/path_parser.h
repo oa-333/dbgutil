@@ -15,7 +15,8 @@ public:
     static void termLogger();
 
     /**
-     * @brief Canonicalizes a path.
+     * @brief Canonicalizes a path. A canonical path is a normalized absolute path (see @ref
+     * normalizePath() and @ref isAbsolutePath()).
      * @param path The file or directory path.
      * @param[out] canonPath The resulting canonical path.
      * @return E_OK If the operation succeeded.
@@ -30,8 +31,24 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static DbgUtilErr canonicalizePathComponents(const char* path,
-                                                 std::vector<std::string>& components);
+    static DbgUtilErr canonicalizePath(const char* path, std::vector<std::string>& components);
+    /**
+     * @brief Normalizes a path. A normalized path does not contain . and .. references.
+     * @param path The file or directory path.
+     * @param[out] canonPath The resulting normalized path.
+     * @return E_OK If the operation succeeded.
+     * @return E_INVALID_ARGUMENT If the provided path is illegal.
+     */
+    static DbgUtilErr normalizePath(const char* path, std::string& canonPath);
+
+    /**
+     * @brief Normalizes a path, but instead return the normalized path components.
+     * @param path The file or directory path.
+     * @param[out] components The resulting normalized path components.
+     * @return E_OK If the operation succeeded.
+     * @return E_INVALID_ARGUMENT If the provided path is illegal.
+     */
+    static DbgUtilErr normalizePath(const char* path, std::vector<std::string>& components);
 
     /**
      * @brief Queries whether a path is syntactically legal. This includes both path syntax check
@@ -101,10 +118,13 @@ public:
      * @param basePath The base path.
      * @param subPath The sub-path.
      * @param[out] path The resulting path.
+     * @param canonicalize[opt] Optionally specifies whether to canonicalize the path, including
+     * path legality checks (default is true).
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static DbgUtilErr composePath(const char* basePath, const char* subPath, std::string& path);
+    static DbgUtilErr composePath(const char* basePath, const char* subPath, std::string& path,
+                                  bool canonicalize = true);
 
     /**
      * @brief Composes a path from separate components.

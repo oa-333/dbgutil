@@ -23,10 +23,12 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
     // prepare search pattern
     std::string searchPattern = dirPath;
     searchPattern += "\\*";
+    LOG_TRACE(sLogger, "Visiting dir %s entries, using pattern: %s", dirPath,
+              searchPattern.c_str());
 
     // begin search for files
     WIN32_FIND_DATA findFileData = {};
-    HANDLE hFind = FindFirstFile(dirPath, &findFileData);
+    HANDLE hFind = FindFirstFile(searchPattern.c_str(), &findFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, FindFirstFile, "Failed to search for files in directory: %s",
                         dirPath);
@@ -35,6 +37,7 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
 
     // collect all entries
     do {
+        LOG_TRACE(sLogger, "Checking dir entry: %s", findFileData.cFileName);
         if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE ||
             findFileData.dwFileAttributes & FILE_ATTRIBUTE_NORMAL ||
             findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -47,6 +50,7 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
             if (!isDir || !isTrivialDir) {
                 DirEntryInfo entryInfo = {findFileData.cFileName,
                                           isDir ? DirEntryType::DET_DIR : DirEntryType::DET_FILE};
+                LOG_TRACE(sLogger, "Reporting dir entry: %s", findFileData.cFileName);
                 visitor->onDirEntry(entryInfo);
             }
         }

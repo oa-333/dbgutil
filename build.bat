@@ -42,7 +42,7 @@ IF "%VERBOSE%" == "1" SET OPTS=%OPTS% -DCMAKE_VERBOSE_MAKEFILE=ON
 echo [DEBUG] Current options: %OPTS%
 
 REM prepare build directory
-SET BUILD_DIR=cmake_build\%PLATFORM%
+SET BUILD_DIR=cmake_build\%PLATFORM%-%BUILD_TYPE%
 echo [INFO] Using build directory: %BUILD_DIR%
 if not exist %BUILD_DIR% (
     mkdir %BUILD_DIR%
@@ -61,7 +61,7 @@ cmake --version
 REM configure phase
 echo [INFO] Executing build command cmake %OPTS% ..\..\
 echo [INFO] Configuring project
-cmake %OPTS% ..\..\
+cmake %OPTS% ..\..\ -G "Ninja"
 if errorlevel 1 (
     echo [ERROR] Configure phase failed, see errors above, aborting
     popd > NUL
