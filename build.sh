@@ -8,6 +8,9 @@ PLATFORM=$(uname -s)
 # -r|--release
 # -w|--rel-with-debug-info
 # -i|--install-dir <INSTALL_DIR>
+# -c|--clean
+# -r|--rebuild (no reconfigure)
+# -g|--reconfigure
 
 # set default values
 BUILD_TYPE=Debug
@@ -17,9 +20,13 @@ if [ "$OS" = "Msys" ]; then
 else
     INSTALL_DIR=~/install/dbgutil
 fi
+VERBOSE=0
+CLEAN=0
+REBUILD=0
+RE_CONFIG=0
 
 # parse options
-TEMP=$(getopt -o vdrwc:i: -l verbose,debug,release,rel-with-debug-info,conn:,install-dir: -- "$@")
+TEMP=$(getopt -o vdrwcrgi: -l verbose,debug,release,rel-with-debug-info,clean,rebuild,reconfigure,install-dir: -- "$@")
 eval set -- "$TEMP"
 
 declare -a CONNS=()
@@ -30,6 +37,9 @@ while true; do
     -r | --release ) BUILD_TYPE=Release; shift ;;
     -w | --rel-with-debug-info ) BUILD_TYPE=RelWithDebInfo; shift ;;
     -i | --install-dir) INSTALL_DIR="$2"; shift 2 ;;
+    -c | --clean) CLEAN=1; shift ;;
+    -r | --rebuild) REBUILD=1; CLEAN=1; shift ;;
+    -g | --reconfigure) RE_CONFIG=1; REBUILD=1; CLEAN=1; shift ;;
     -- ) shift; break ;;
     * ) echo "ERROR: Invalid option $1, aborting"; exit 1; break ;;
   esac
@@ -39,7 +49,7 @@ done
 echo "[INFO] Build type: $BUILD_TYPE"
 echo "[INFO] Install dir: $INSTALL_DIR"
 OPTS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
-if [ $VERBOSE==1 ]; then
+if [ $VERBOSE -eq 1 ]; then
     OPTS+=" -DCMAKE_VERBOSE_MAKEFILE=ON"
 fi
 
@@ -48,6 +58,26 @@ BUILD_DIR=cmake_build/${PLATFORM}-${BUILD_TYPE}
 echo "[INFO] Using build directory: '$BUILD_DIR'"
 mkdir -p $BUILD_DIR
 pushd $BUILD_DIR > /dev/null
+
+if [ $CLEAN -eq 1 ]; then
+    echo "[INFO] Running target clean"
+    cmake --build . -j --verbose --target clean
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Clean failed, see errors above, aborting"
+        popd > /dev/null
+        exit 1
+    fi
+    if [ $REBUILD -eq 0 ]; then
+        popd > /dev/null
+        exit 0
+    fi
+fi
+
+# Run fresh if re-configure is requested
+if [ $RE_CONFIG -eq 1 ]; then 
+    echo "[INFO] Forcing fresh configuration"
+    OPTS="--fresh $OPTS"
+fi
 
 # configure phase
 echo "[INFO] Configuring project"
