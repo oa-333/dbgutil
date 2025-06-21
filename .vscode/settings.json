@@ -67,7 +67,9 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "fstream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "bitset": "cpp",
+        "csignal": "cpp"
     },
     "cSpell.words": [
         "dbgutil",

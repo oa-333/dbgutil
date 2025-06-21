@@ -12,23 +12,36 @@
 
 namespace dbgutil {
 
+/** @brief A fully resolved single stack entry. */
+struct StackEntry {
+    /** @brief The stack frame index (required if stack trace is partial or reordered). */
+    uint32_t m_frameIndex;  // zero means innermost
+
+    /** @brief The frame address. */
+    void* m_frameAddress;
+
+    /** @brief Resolved entry debug information. */
+    SymbolInfo m_entryInfo;
+};
+
+/** @typedef A fully resolved stack trace. */
+typedef std::vector<StackEntry> StackTrace;
+
 /** @brief Stack entry formatter interface. */
 class DBGUTIL_API StackEntryFormatter {
 public:
     /**
      * @brief Formats a stack trace entry
-     * @param frame Frame index.
-     * @param addr The function address.
-     * @param symbolInfo The frame symbol information.
+     * @param stackEntry The stack entry.
      * @return std::string The formatted stack entry string.
      */
-    virtual std::string formatStackEntry(int frame, void* addr, const SymbolInfo& symbolInfo) = 0;
+    virtual std::string formatStackEntry(const StackEntry& stackEntry) = 0;
 };
 
 /** @brief Default formatter implementation. */
 class DBGUTIL_API DefaultStackEntryFormatter : public StackEntryFormatter {
 public:
-    std::string formatStackEntry(int frame, void* addr, const SymbolInfo& symbolInfo) override;
+    std::string formatStackEntry(const StackEntry& stackEntry) override;
 };
 
 /** @brief Stack entry printer interface. */
@@ -37,6 +50,14 @@ public:
     virtual void onBeginStackTrace(os_thread_id_t threadId) = 0;
     virtual void onEndStackTrace() = 0;
     virtual void onStackEntry(const char* stackEntry) = 0;
+};
+
+/** @brief Stack entry printer that does nothing. */
+class DBGUTIL_API NullEntryPrinter : public StackEntryPrinter {
+public:
+    void onBeginStackTrace(os_thread_id_t threadId) final {}
+    void onEndStackTrace() final {}
+    void onStackEntry(const char* stackEntry) final {}
 };
 
 /** @brief stack entry printer to a file. */
@@ -143,6 +164,31 @@ inline DbgUtilErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nu
 }
 
 /**
+ * @brief Converts raw stack frames to resolved stack frames.
+ * @param rawStackTrace The raw stack trace.
+ * @param[out] stackTrace The resulting resolved stack trace.
+ * @return DbgUtilErr The operation result.
+ */
+extern DBGUTIL_API DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace,
+                                                   StackTrace& stackTrace);
+
+/**
+ * @brief Retrieves a fully resolved stack trace of a thread by an optional context. Context is
+ * either captured by calling thread, or is passed by OS through an exception/signal handler.
+ * @param[out] stackTrace The resulting resolved stack trace.
+ * @param context[opt] OS-specific thread context. Pass null to capture current thread call stack.
+ * @return DbgUtilErr The operation result.
+ */
+inline DbgUtilErr getStackTrace(StackTrace& stackTrace, void* context = nullptr) {
+    RawStackTrace rawStackTrace;
+    DbgUtilErr err = getRawStackTrace(rawStackTrace, context);
+    if (err != DBGUTIL_ERR_OK) {
+        return err;
+    }
+    return resolveRawStackTrace(rawStackTrace, stackTrace);
+}
+
+/**
  * @brief Converts raw stack frames to resolved stack frames in string form.
  * @param stackTrace The raw stack trace.
  * @param skip[opt] The number of frames to skip.
@@ -179,7 +225,7 @@ inline void printStackTrace(int skip = 0, StackEntryPrinter* printer = nullptr,
 }
 
 /**
- * @brief Dumps stack trace to error stream.
+ * @brief Dumps stack trace to standard error stream.
  * @param skip[opt] The number of frames to skip.
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  */
@@ -188,8 +234,8 @@ inline void dumpStackTrace(int skip = 0, StackEntryFormatter* formatter = nullpt
 }
 
 /**
- * @brief Dumps stack trace from context to error stream. Context is either captured by calling
- * thread, or is passed by OS through an exception/signal handler.
+ * @brief Dumps stack trace from context to standard error stream. Context is either captured by
+ * calling thread, or is passed by OS through an exception/signal handler.
  * @param context[opt] OS-specific thread context. Pass null to dump current thread call stack.
  * @param skip[opt] The number of frames to skip.
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.

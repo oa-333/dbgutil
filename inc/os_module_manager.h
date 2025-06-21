@@ -160,6 +160,8 @@ private:
 
     bool m_mainModuleValid;
     OsModuleInfo m_mainModule;
+
+    DbgUtilErr searchModule(const char* name, OsModuleInfo& moduleInfo);
 };
 
 /** @brief Installs a module manager implementation. */

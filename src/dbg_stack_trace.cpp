@@ -18,15 +18,16 @@ namespace dbgutil {
 #define FILE_ALIGN 40
 #define LIB_ALIGN 30
 
-std::string DefaultStackEntryFormatter::formatStackEntry(int frame, void* addr,
-                                                         const SymbolInfo& symbolInfo) {
+std::string DefaultStackEntryFormatter::formatStackEntry(const StackEntry& stackEntry) {
     // format frame address
     std::stringstream s;
     s << std::setw(SYM_ALIGN) << std::right;
-    s << frame << "# " << std::hex << addr << " " << std::dec;
+    s << stackEntry.m_frameIndex << "# " << std::hex << stackEntry.m_frameAddress << " "
+      << std::dec;
 
     // format function name if available
     s << std::setw(FILE_ALIGN) << std::left;
+    const SymbolInfo& symbolInfo = stackEntry.m_entryInfo;
     if (symbolInfo.m_symbolName.empty()) {
         s << "N/A";
     } else {
@@ -93,11 +94,13 @@ public:
         }
 
         // get frame debug info
-        SymbolInfo symbolInfo;
-        (void)getSymbolEngine()->getSymbolInfo(frameAddress, symbolInfo);
+        StackEntry stackEntry;
+        stackEntry.m_frameIndex = m_frameIndex++;
+        stackEntry.m_frameAddress = frameAddress;
+        (void)getSymbolEngine()->getSymbolInfo(frameAddress, stackEntry.m_entryInfo);
 
         // format stack frame entry string
-        std::string entry = m_formatter->formatStackEntry(m_frameIndex++, frameAddress, symbolInfo);
+        std::string entry = m_formatter->formatStackEntry(stackEntry);
 
         // print stack entry
         m_printer->onStackEntry(entry.c_str());
@@ -109,6 +112,18 @@ private:
     StackEntryFormatter* m_formatter;
     int m_frameIndex;
 };
+
+DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackTrace) {
+    uint32_t frameIndex = 0;
+    for (void* frameAddress : rawStackTrace) {
+        StackEntry stackEntry;
+        stackEntry.m_frameIndex = frameIndex++;
+        stackEntry.m_frameAddress = frameAddress;
+        (void)getSymbolEngine()->getSymbolInfo(frameAddress, stackEntry.m_entryInfo);
+        stackTrace.emplace_back(stackEntry);
+    }
+    return DBGUTIL_ERR_OK;
+}
 
 std::string rawStackTraceToString(RawStackTrace& stackTrace, int skip /* = 0 */,
                                   StackEntryFormatter* formatter /* = nullptr */,

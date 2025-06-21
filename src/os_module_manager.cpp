@@ -38,28 +38,22 @@ DbgUtilErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& modu
 
 DbgUtilErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& moduleInfo,
                                             bool shouldRefreshModuleList /* = false */) {
-    // perform search under read lock
-    {
-        std::shared_lock<std::shared_mutex> lock(m_lock);
-        for (const OsModuleInfo& modInfo : m_moduleSet) {
-            if (modInfo.m_modulePath.find(name) != std::string::npos) {
-                moduleInfo = modInfo;
-                return DBGUTIL_ERR_OK;
-            }
-        }
+    DbgUtilErr rc = searchModule(name, moduleInfo);
+    if (rc == DBGUTIL_ERR_OK) {
+        return rc;
     }
 
     if (!shouldRefreshModuleList) {
         return DBGUTIL_ERR_NOT_FOUND;
     }
 
-    DbgUtilErr rc = refreshModuleList();
+    rc = refreshModuleList();
     if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
-    // run search again, this time with refresh set to false
-    return getModuleByName(name, moduleInfo, false);
+    // run search again
+    return searchModule(name, moduleInfo);
 }
 
 DbgUtilErr OsModuleManager::getMainModule(OsModuleInfo& moduleInfo) {
@@ -103,6 +97,20 @@ void OsModuleManager::setMainModule(const OsModuleInfo& moduleInfo) {
         m_mainModule = moduleInfo;
         m_mainModuleValid = true;
     }
+}
+
+DbgUtilErr OsModuleManager::searchModule(const char* name, OsModuleInfo& moduleInfo) {
+    // thread-safe search
+    {
+        std::shared_lock<std::shared_mutex> lock(m_lock);
+        for (const OsModuleInfo& modInfo : m_moduleSet) {
+            if (modInfo.m_modulePath.find(name) != std::string::npos) {
+                moduleInfo = modInfo;
+                return DBGUTIL_ERR_OK;
+            }
+        }
+    }
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
 void setModuleManager(OsModuleManager* moduleManager) {
