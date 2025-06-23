@@ -454,7 +454,7 @@ DbgUtilErr OsUtil::readEntireFileToBuf(const char* path, std::vector<char>& buf)
             return rc;
         }
         offset += bytesRead;
-    } while (bytesRead == 0);
+    } while (bytesRead != 0);
     // NOTE: reading less than requested does not necessarily indicate end of file, according to man
     // page only return value of 0 truly indicates end of file
 

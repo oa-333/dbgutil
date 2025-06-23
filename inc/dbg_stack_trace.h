@@ -196,9 +196,21 @@ inline DbgUtilErr getStackTrace(StackTrace& stackTrace, void* context = nullptr)
  * @param threadId[opt] Optional thread id.
  * @return std::string The resulting resolved stack trace string.
  */
-extern DBGUTIL_API std::string rawStackTraceToString(RawStackTrace& stackTrace, int skip = 0,
+extern DBGUTIL_API std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip = 0,
                                                      StackEntryFormatter* formatter = nullptr,
                                                      os_thread_id_t threadId = 0);
+
+/**
+ * @brief Converts resolved stack frames to string form.
+ * @param stackTrace The stack trace.
+ * @param skip[opt] The number of frames to skip.
+ * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
+ * @param threadId[opt] Optional thread id.
+ * @return std::string The resulting resolved stack trace string.
+ */
+extern DBGUTIL_API std::string stackTraceToString(const StackTrace& stackTrace, int skip = 0,
+                                                  StackEntryFormatter* formatter = nullptr,
+                                                  os_thread_id_t threadId = 0);
 
 /**
  * @brief Prints stack trace by a given context. Context is either captured by calling thread, or is
@@ -281,7 +293,7 @@ inline void logStackTraceContext(void* context, ELogLevel logLevel, const char* 
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  * @return std::string The resulting resolved stack trace string.
  */
-inline std::string stackTraceToString(int skip, StackEntryFormatter* formatter = nullptr) {
+inline std::string getStackTraceString(int skip = 0, StackEntryFormatter* formatter = nullptr) {
     StringStackEntryPrinter printer;
     printStackTrace(skip, &printer, formatter);
     return printer.getStackTrace();
@@ -318,7 +330,7 @@ extern DBGUTIL_API DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrac
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  * @return std::string The resulting resolved stack trace string.
  */
-extern DBGUTIL_API std::string appRawStackTraceToString(AppRawStackTrace& appStackTrace,
+extern DBGUTIL_API std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace,
                                                         int skip = 0,
                                                         StackEntryFormatter* formatter = nullptr);
 
@@ -362,7 +374,7 @@ inline void logAppStackTrace(ELogLevel logLevel, const char* title, int skip,
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  * @return std::string The resulting resolved stack trace string.
  */
-inline std::string appStackTraceToString(int skip, StackEntryFormatter* formatter = nullptr) {
+inline std::string getAppStackTraceString(int skip, StackEntryFormatter* formatter = nullptr) {
     StringStackEntryPrinter printer;
     printStackTrace(skip, &printer, formatter);
     return printer.getStackTrace();

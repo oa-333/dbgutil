@@ -125,7 +125,7 @@ DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackT
     return DBGUTIL_ERR_OK;
 }
 
-std::string rawStackTraceToString(RawStackTrace& stackTrace, int skip /* = 0 */,
+std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip /* = 0 */,
                                   StackEntryFormatter* formatter /* = nullptr */,
                                   os_thread_id_t threadId /* = 0 */) {
     StringStackEntryPrinter printer;
@@ -141,6 +141,27 @@ std::string rawStackTraceToString(RawStackTrace& stackTrace, int skip /* = 0 */,
     PrintFrameListener listener(skip, &printer, formatter);
     for (void* frameAddress : stackTrace) {
         listener.onStackFrame(frameAddress);
+    }
+    printer.onEndStackTrace();
+    return printer.getStackTrace();
+}
+
+std::string stackTraceToString(const StackTrace& stackTrace, int skip /* = 0 */,
+                               StackEntryFormatter* formatter /* = nullptr */,
+                               os_thread_id_t threadId /* = 0 */) {
+    StringStackEntryPrinter printer;
+    DefaultStackEntryFormatter defaultFormatter;
+    if (formatter == nullptr) {
+        formatter = &defaultFormatter;
+    }
+
+    if (threadId == 0) {
+        threadId = OsUtil::getCurrentThreadId();
+    }
+    printer.onBeginStackTrace(threadId);
+    for (const auto& stackEntry : stackTrace) {
+        std::string entry = formatter->formatStackEntry(stackEntry);
+        printer.onStackEntry(entry.c_str());
     }
     printer.onEndStackTrace();
     return printer.getStackTrace();
@@ -196,7 +217,7 @@ DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
     return rc;
 }
 
-std::string appRawStackTraceToString(AppRawStackTrace& appStackTrace, int skip /* = 0 */,
+std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace, int skip /* = 0 */,
                                      StackEntryFormatter* formatter /* = nullptr */) {
     std::stringstream res;
     for (auto& stackTrace : appStackTrace) {
