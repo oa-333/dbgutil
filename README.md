@@ -1,36 +1,270 @@
-# CSI Package
+# dbgutil Package
 
-This is simple package for common software infrastructure in C++.  
-The package was designed such that it can be extended for a broad range of use cases.
+A simple package for common software debug utilities in C++.  
 
 ## Description
 
-TBD
+The dbgutil package allows:
+
+- Retrieving stack traces (raw or with full symbol information)
+- Resolving symbol information (with file and line, on Windows/Linux/MinGW)
+- Catching fatal exceptions and receiving elaborate exception information
+- Querying loaded module information
 
 ## Getting Started
 
-TBD
+In order to use the library, first include the main header "dbg_util.h", and initialize the library:
+
+    #include "dbg_util.h"
+
+    // initialize the library
+    DbgUtilErr res = dbgutil::initDbgUtil();
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+    // do application stuff
+
+    res = dbgutil::termDbgUtil();
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+It is possible to register a log handler (so that internal error messages and application exception information  
+can be printed properly), and an exception handler that receives notifications about fatal faults  
+(e.g. segmentation fault).
 
 ### Dependencies
 
-TBD
+The dbgutil package has no external dependencies.
 
 ### Installing
 
-TBD
+The library can be built and installed by running:
+
+    build.sh --install-dir <install-path>
+    build.bat --install-dir <install-path>
+
+(Checkout the possible options with --help switch).
+
+Add to compiler include path:
+
+    -I<install-path>/include
+    
+Add to linker flags:
+
+    -L<install-path>/lib -ldbgutil
+
+In the future it may be uploaded to package managers (e.g. vcpkg).
 
 ## Help
 
-TBD
+See [examples](#examples) section below, and documentation in header files for more information.
 
 ## Authors
 
-Oren Amor (oren.amor@gmail.com)
+Oren A. (oa.github.333@gmail.com)
 
 ## License
 
-This project is licensed under the Apache 2.0 License - see the LICENSE file for details
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
 
 ## Examples
 
-TBD
+### Playing with Stack Traces
+
+Raw stack trace (frame addresses only), can be achieved as follows:
+
+    #include "dbg_stack_trace.h"
+
+    DbgUtilErr res = dbgutil::RawStackTrace rawStackTrace;
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+In order to resolve all stack frames (i.e. get symbol info, file, line, module, etc.), do this:
+
+    dbgutil::StackTrace stackTrace;
+    res = dbgutil::resolveRawStackTrace(rawStackTrace, stackTrace);
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+The separation was done in order to allow retrieving a call stack quickly,  
+and doing symbol resolving some time later on the background.  
+
+In order to simply get the fully resolved current stack trace, do the following:
+
+    std::string stackTraceStr = dbgutil::getStackTraceString();
+
+Here is sample output (on Linux machine):
+
+    2025-07-07 09:53:14.816 INFO   [46748] {main} <elog_root> [Thread 46748 (0xb69c) <main> stack trace]
+ 
+    0# 0x716a4879e618 dbgutil::printStackTraceContext() +185   at dbg_stack_trace.cpp:185 (libdbgutil.so)
+    1# 0x716a4903b8cf dbgutil::printStackTrace() +46           at dbg_stack_trace.h:238 (libelog.so)
+    2# 0x716a4903b1c1 elog::ELogSystem::logStackTrace() +101   at elog_system.cpp:1527 (libelog.so)
+    3# 0x5c4bddcbfb30 initRecovery() +973                      at waL_test.cpp:299 (wal_test_linux)
+    4# 0x5c4bddcbeb04 testLoadWALRecord() +120                 at waL_test.cpp:122 (wal_test_linux)
+    5# 0x5c4bddcbe96d runTest() +51                            at waL_test.cpp:95 (wal_test_linux)
+    6# 0x5c4bddcbe8da main() +389                              at waL_test.cpp:74 (wal_test_linux)
+    7# 0x716a4842a1ca N/A                                      at <N/A>  (libc.so.6)
+    8# 0x716a4842a28b __libc_start_main()                      at <N/A>  (libc.so.6)
+    9# 0x5c4bddcba745 _start() +37                             at <N/A>  (wal_test_linux)
+
+Skipping frames is supported for cleaner output, as well as custom formatting.  
+Checkout the API at dbg_stack_trace.h for more details.
+
+If you would like to dump the current stack trace to the standard error stream, it can be done like this:
+
+    dbgutil::dumpStackTrace();
+
+### Dumping pstack-like application stack trace of all threads
+
+Occasionally, it may be desired to dump stack trace of all active threads. It may be achieved like this:
+
+    dbgutil::dumpAppStackTrace().
+
+This is an experimental feature that may be susceptible to deadlocks, so it is advised to use this feature  
+with caution, perhaps only as a last resort before crashing.  
+
+One might wonder why there is a need for such a full stack trace dump, since a core file already contains this information, but there are some cases of very restriction production environments, where dumping a core file is not allowed or not possible. In these cases, this feature is very handy.
+
+It is also possible to retrieve this dump as a string so it can be sent to a log file:
+
+    dbgutil::getAppStackTraceString();
+
+### Exception Handling
+
+In order to enable exception handling, the dbgutil must be initialized with at least DBGUTIL_CATCH_EXCEPTIONS flag enabled:
+
+    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS);
+
+By default, dbgutil catches the following signals on Linux and MinGW:
+
+- SIGSEGV
+- SIGILL
+- SIGFPE
+- SIGBUS (not available on MinGW)
+- SIGTRAP (not available on MinGW)
+
+On Windows, an unhandled exception filter is registered to catch all critical exceptions.
+
+### std::terminate() Handling
+
+In addition, dbgutil can be ordered to catch std::terminate() as well:
+
+    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+
+### Sending Exception Report To Log
+
+If all that is required is to write exception information to log, then adding the DBGUTIL_LOG_EXCEPTIONS suffices:
+
+    dbgutil::initDbgUtil(nullptr, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
+
+This will have all exception information sent to the installed [log handler](#log-handling).
+
+### Registering Custom Exception Listener
+
+It is possible to register an exception listener, that will receive notifications about fatal events.  
+Currently only fatal exceptions, and std::terminate() are reported.  
+In order to register such a listener, first derive from OsExceptionListener, and then pass a pointer to initDbgUtil():
+
+    class MyExceptionListener : public dbgutil::OsExceptionListener {
+        // implement pure virtual functions
+    };
+
+    static MyExceptionListener myExceptionListener;
+
+    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+
+### Generating Mini-dump on Windows
+
+It is possible to order dbgutil to generate mini-dump file before crashing.  
+Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
+so consider this is a best effort attempt.
+
+The enable this option, dbgutil should be initialized with the DBGUTIL_WIN32_MINI_DUMP_CORE flag:
+
+    dbgutil::initDbgUtil(null, nullptr, LS_FATAL, DBGUTIL_WIN32_MINI_DUMP_CORE);
+
+### Combining All Options
+
+If all exception options are to be used, then this form can be used instead:
+
+    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_FLAGS_ALL);
+
+### Exception Handling Sequence
+
+When an exception occurs, and the user configured dbgutil to catch exceptions, the following takes place:
+
+- If user configured exception logging, then:
+    - An elaborate error message is printed to log, describing the signal/exception details
+    - Full stack trace, with file and line information is also written to log
+- If user installed an exception listener, then a full exception information object is dispatched to the registered listener
+- On Windows, if user configured to do so, an attempt is made to generate mini-dump
+- On Linux the default core dump generation takes place without any intervention required
+
+### Log Handling
+
+In order to receive exception messages, as well internal errors or traces, a log handler should be installed.  
+A default log handler that prints to the standard error stream can be used as follows:
+
+    // initialize the library
+    DbgUtilErr res = dbgutil::initDbgUtil(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+It is possible to derive from LogHandler, and redirect dbgutil log messages into the application's  
+standard logging system:
+
+
+
+    class MyLogHandler : public dbgutil::LogHandler {
+    public:
+        dbgutil::LogSeverity onRegisterLogger(dbgutil::LogSeverity severity, const char* loggerName,
+                                              uint32_t loggerId) final {
+            // TODO: handle event - logger initializing
+            // if no special handling is required then don't override this method
+            // it may be handing here to map dbgutil logger to application logger
+        }
+
+        void onUnregisterLogger(uint32_t loggerId) final {
+            // TODO: handle event - logger terminating
+            // if no special handling is required then don't override this method
+        }
+
+        void onMsg(dbgutil::LogSeverity severity, uint32_t loggerId, const char* loggerName,
+                   const char* msg) final {
+            // TODO: redirect message to internal logging system, logger id may be used to 
+            // locate mapped logger from onRegisterLogger()
+        }
+    };
+
+    MyLogHandler logHandler;
+
+    // initialize the library
+    // pass custom log handler
+    // receive messages with INFO and higher log level
+    // receive exception log messages
+    // no exception listener used
+    DbgUtilErr res = dbgutil::initDbgUtil(nullptr, &logHandler, dbgutil::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
+    if (res != DBGUTIL_ERR_OK) {
+        // handle error
+    }
+
+### Traverse All Threads
+
+It is possible to get a list of the identifiers of all active threads, as follows:
+
+    #include "os_thread_manager.h"
+
+    dbgutil::visitThreads([](dbgutil::os_thread_id_t threadId){
+        printf("Got thread %" PRItid, threadId);
+    });
+
+Pay attention that on non-Windows platforms, the given thread identifier is a system identifier,  
+and not the pthread_t handle.
+
+Also note the PRItid format specification that is defined properly per platform.
