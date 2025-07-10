@@ -32,7 +32,7 @@ public:
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    DbgUtilErr visitThreads(ThreadVisitor* visitor) final;
+    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
 
 private:
     Win32ThreadManager() {}

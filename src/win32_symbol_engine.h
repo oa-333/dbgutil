@@ -12,13 +12,13 @@ namespace dbgutil {
 
 class Win32SymbolEngine : public OsSymbolEngine {
 public:
-    /** @brief Creates the singleton instance of the module manager for Windows platform. */
+    /** @brief Creates the singleton instance of the symbol engine for Windows platform. */
     static void createInstance();
 
-    /** @brief Retrieves a reference to the single instance of the module manager. */
+    /** @brief Retrieves a reference to the single instance of the symbol engine. */
     static Win32SymbolEngine* getInstance();
 
-    /** @brief Destroys the singleton instance of the module manager. */
+    /** @brief Destroys the singleton instance of the symbol engine. */
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */

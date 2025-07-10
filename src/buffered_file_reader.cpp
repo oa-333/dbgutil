@@ -15,13 +15,13 @@ static Logger sLogger;
 void BufferedFileReader::initLogger() { registerLogger(sLogger, "buffered_file_reader"); }
 void BufferedFileReader::termLogger() { unregisterLogger(sLogger); }
 
-const uint32_t BufferedFileReader::DEFAULT_BUFFER_SIZE = 4096;
+const size_t BufferedFileReader::DEFAULT_BUFFER_SIZE = 4096;
 
 BufferedFileReader::BufferedFileReader()
     : m_fd(0), m_fileOffset(0), m_bufferSize(0), m_bufferOffset(0), m_eof(false) {}
 
 DbgUtilErr BufferedFileReader::open(const char* filePath,
-                                    uint32_t bufferSize /* = BFR_DEFAULT_BUFFER_SIZE */) {
+                                    size_t bufferSize /* = BFR_DEFAULT_BUFFER_SIZE */) {
     if (isOpen()) {
         return DBGUTIL_ERR_INVALID_STATE;
     }
@@ -55,7 +55,7 @@ DbgUtilErr BufferedFileReader::close() {
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr BufferedFileReader::getOffset(uint64_t& offset) const {
+DbgUtilErr BufferedFileReader::getOffset(size_t& offset) const {
     // check state
     if (!isOpen()) {
         return DBGUTIL_ERR_INVALID_STATE;
@@ -66,7 +66,7 @@ DbgUtilErr BufferedFileReader::getOffset(uint64_t& offset) const {
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr BufferedFileReader::seek(uint64_t offset) {
+DbgUtilErr BufferedFileReader::seek(size_t offset) {
     // check state
     if (!isOpen()) {
         return DBGUTIL_ERR_INVALID_STATE;
@@ -97,10 +97,10 @@ DbgUtilErr BufferedFileReader::seek(uint64_t offset) {
     return refillBuffer();
 }
 
-DbgUtilErr BufferedFileReader::readFull(char* buffer, uint32_t len,
-                                        uint32_t* bytesReadRef /* = nullptr */) {
+DbgUtilErr BufferedFileReader::readFull(char* buffer, size_t len,
+                                        size_t* bytesReadRef /* = nullptr */) {
     // NOTE: no state check, as this might be called frequently
-    uint32_t bytesRead = 0;
+    size_t bytesRead = 0;
     DbgUtilErr rc = read(buffer, len, bytesRead);
     if (bytesReadRef != nullptr) {
         *bytesReadRef = bytesRead;
@@ -115,7 +115,7 @@ DbgUtilErr BufferedFileReader::readFull(char* buffer, uint32_t len,
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr BufferedFileReader::read(char* buffer, uint32_t len, uint32_t& bytesRead) {
+DbgUtilErr BufferedFileReader::read(char* buffer, size_t len, size_t& bytesRead) {
     // NOTE: no state check, as this might be called frequently
     bytesRead = 0;
     while (bytesRead < len) {
@@ -126,9 +126,9 @@ DbgUtilErr BufferedFileReader::read(char* buffer, uint32_t len, uint32_t& bytesR
                 return rc;
             }
         }
-        uint32_t bytesToRead = len - bytesRead;
-        uint32_t bytesInBuffer = m_buffer.size() - m_bufferOffset;
-        uint32_t bytesCanRead = std::min(bytesInBuffer, bytesToRead);
+        size_t bytesToRead = len - bytesRead;
+        size_t bytesInBuffer = m_buffer.size() - m_bufferOffset;
+        size_t bytesCanRead = std::min(bytesInBuffer, bytesToRead);
         memcpy(buffer + bytesRead, &m_buffer[m_bufferOffset], bytesCanRead);
         bytesRead += bytesCanRead;
         m_bufferOffset += bytesCanRead;
@@ -143,7 +143,7 @@ DbgUtilErr BufferedFileReader::refillBuffer() {
     m_bufferOffset = 0;
 
     // now read another buffer
-    uint32_t bytesRead = 0;
+    size_t bytesRead = 0;
     int sysErr = 0;
     DbgUtilErr rc = OsUtil::readFile(m_fd, &m_buffer[0], m_bufferSize, bytesRead, &sysErr);
     if (rc != DBGUTIL_ERR_OK) {

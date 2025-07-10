@@ -1,8 +1,11 @@
 #include "log_buffer.h"
 
+#include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+
+#include "dbgutil_common.h"
 
 namespace dbgutil {
 
@@ -12,18 +15,23 @@ LogBuffer::~LogBuffer() {
 #endif
 }
 
-bool LogBuffer::resize(uint32_t newSize) {
+bool LogBuffer::resize(size_t newSize) {
     if (m_bufferSize < newSize) {
+        // allocate a bit more so we avoid another realloc and copy if possible
+        size_t actualNewSize = m_bufferSize;
+        while (actualNewSize < newSize) {
+            actualNewSize *= 2;
+        }
         bool shouldCopy = (m_dynamicBuffer == nullptr);
-        char* newBuffer = (char*)realloc(m_dynamicBuffer, newSize);
+        char* newBuffer = (char*)realloc(m_dynamicBuffer, actualNewSize);
         if (newBuffer == nullptr) {
             return false;
         }
         m_dynamicBuffer = newBuffer;
         if (shouldCopy) {
-            strncpy(m_dynamicBuffer, m_fixedBuffer, m_bufferSize);
+            dbgutil_strncpy(m_dynamicBuffer, m_fixedBuffer, m_bufferSize);
         }
-        m_bufferSize = newSize;
+        m_bufferSize = actualNewSize;
     }
     return true;
 }
@@ -34,6 +42,57 @@ void LogBuffer::reset() {
         m_dynamicBuffer = nullptr;
     }
     m_bufferSize = LOG_BUFFER_SIZE;
+}
+
+bool LogBuffer::appendV(const char* fmt, va_list args) {
+    if (m_bufferFull) {
+        return false;
+    }
+
+    // NOTE: if buffer is too small then args is corrupt and cannot be reused, so we have no option
+    // but prepare a copy in advance, even though mostly it will not be used
+    va_list apCopy;
+    va_copy(apCopy, args);
+    size_t sizeLeft = size() - m_offset;
+    int res = vsnprintf(getRef() + m_offset, sizeLeft, fmt, args);
+    // return value does not include the terminating null, and number of copied characters,
+    // including the terminating null, will not exceed size, so if res==size it means size - 1
+    // characters were copied and one more terminating null, meaning one character was lost.
+    // if res > size if definitely means buffer was too small, and res shows the required size
+    if (res < sizeLeft) {
+        va_end(apCopy);
+        m_offset += res;
+        return true;
+    }
+
+    // buffer too small
+    if (!ensureBufferLength(res)) {
+        return false;
+    }
+    // this time we must succeed
+    sizeLeft = size() - m_offset;
+    res = vsnprintf(getRef() + m_offset, sizeLeft, fmt, apCopy);
+    va_end(apCopy);
+    if (res >= sizeLeft) {
+        fprintf(stderr, "Failed to format string second time\n");
+        return false;
+    }
+    m_offset += res;
+    return true;
+}
+
+bool LogBuffer::append(const char* msg, size_t len /* = 0 */) {
+    if (m_bufferFull) {
+        return false;
+    }
+    if (len == 0) {
+        len = strlen(msg);
+    }
+    if (!ensureBufferLength(len)) {
+        return false;
+    }
+    m_offset += dbgutil_strncpy(getRef() + m_offset, msg, size() - m_offset, len);
+    return true;
 }
 
 }  // namespace dbgutil

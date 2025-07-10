@@ -48,7 +48,7 @@ private:
 
     DbgUtilErr getSectionName(unsigned char* nameRef, std::string& name);
     DbgUtilErr getSymbolName(unsigned char* shortName, unsigned long* longName, std::string& name);
-    void getFileName(unsigned char* rawName, std::string& name);
+    DbgUtilErr getFileName(unsigned char* rawName, std::string& name);
 };
 
 extern DbgUtilErr initWin32PEReader();

@@ -192,7 +192,7 @@ DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
         StackTraceCollector(AppRawStackTrace& appStackTrace)
             : m_appStackTrace(appStackTrace), m_result(DBGUTIL_ERR_OK) {}
 
-        void onThread(os_thread_id_t threadId) final {
+        void onThreadId(os_thread_id_t threadId) final {
             RawStackTrace rawStackTrace;
             DbgUtilErr rc = getStackTraceProvider()->getThreadStackTrace(threadId, rawStackTrace);
             if (rc == DBGUTIL_ERR_OK) {
@@ -210,7 +210,7 @@ DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
         DbgUtilErr m_result;
     };
     StackTraceCollector collector(appStackTrace);
-    DbgUtilErr rc = getThreadManager()->visitThreads(&collector);
+    DbgUtilErr rc = getThreadManager()->visitThreadIds(&collector);
     if (rc == DBGUTIL_ERR_OK) {
         rc = collector.getResult();
     }

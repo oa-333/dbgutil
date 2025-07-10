@@ -30,6 +30,7 @@
 // headers required for fsync/fdatasync
 #ifdef DBGUTIL_WINDOWS
 #include <io.h>
+#include <share.h>
 #include <winternl.h>
 #endif
 
@@ -231,14 +232,18 @@ DbgUtilErr OsUtil::deleteDir(const char* path) {
 
 DbgUtilErr OsUtil::openFile(const char* path, int flags, int mode, int& fd) {
 #ifdef DBGUTIL_WINDOWS
-    fd = _open(path, flags, mode);
+    errno_t errc = _sopen_s(&fd, path, flags, _SH_DENYNO, mode);
+    if (errc != 0) {
+        LOG_SYS_ERROR(sLogger, _sopen_s, "Failed to open file: %s", path);
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
 #else
     fd = open(path, flags, mode);
-#endif
     if (fd == -1) {
         LOG_SYS_ERROR(sLogger, open, "Failed to open file: %s", path);
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
+#endif
     return DBGUTIL_ERR_OK;
 }
 
@@ -297,10 +302,17 @@ DbgUtilErr OsUtil::getFileSize(int fd, uint64_t& fileSizeBytes, int* sysErr /* =
     return seekFile(fd, currOffset, SEEK_SET, nullptr, sysErr);
 }
 
-DbgUtilErr OsUtil::writeFile(int fd, const char* buf, uint32_t len, uint32_t& bytesWritten,
+DbgUtilErr OsUtil::writeFile(int fd, const char* buf, size_t len, size_t& bytesWritten,
                              int* sysErr /* = nullptr */) {
 #ifdef DBGUTIL_WINDOWS
-    int res = _write(fd, buf, len);
+    // on Windows, _write() receives unsigned int as buffer length, while on Unix/Linux it is
+    // size_t. Since the len parameter is size_t (due to Unix/Linux), we must test that the value
+    // does not exceed unsigned integer maximum value.
+    if (len >= UINT32_MAX) {
+        LOG_ERROR(sLogger, "Buffer size %zu too large to write to file", len);
+        return DBGUTIL_ERR_INVALID_ARGUMENT;
+    }
+    int res = _write(fd, buf, (unsigned int)len);
 #else
     ssize_t res = write(fd, buf, len);
 #endif
@@ -316,10 +328,17 @@ DbgUtilErr OsUtil::writeFile(int fd, const char* buf, uint32_t len, uint32_t& by
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr OsUtil::readFile(int fd, char* buf, uint32_t len, uint32_t& bytesRead,
+DbgUtilErr OsUtil::readFile(int fd, char* buf, size_t len, size_t& bytesRead,
                             int* sysErr /* = nullptr */) {
 #ifdef DBGUTIL_WINDOWS
-    int res = _read(fd, buf, len);
+    // on Windows, _read() receives unsigned int as buffer length, while on Unix/Linux it is
+    // size_t. Since the len parameter is size_t (due to Unix/Linux), we must test that the value
+    // does not exceed unsigned integer maximum value.
+    if (len >= UINT32_MAX) {
+        LOG_ERROR(sLogger, "Buffer size %zu too large to write to file", len);
+        return DBGUTIL_ERR_INVALID_ARGUMENT;
+    }
+    int res = _read(fd, buf, (unsigned int)len);
 #else
     ssize_t res = read(fd, buf, len);
 #endif
@@ -443,8 +462,8 @@ DbgUtilErr OsUtil::readEntireFileToBuf(const char* path, std::vector<char>& buf)
 
     // some files cannot be seek-ed, such as /proc files, so we just read in chunks of 4K
     const int BUF_INC_SIZE = 4096;
-    int offset = 0;
-    uint32_t bytesRead = 0;
+    size_t offset = 0;
+    size_t bytesRead = 0;
     do {
         if (buf.size() - offset == 0) {
             buf.resize(buf.size() + BUF_INC_SIZE);
@@ -469,19 +488,19 @@ DbgUtilErr OsUtil::readEntireFileToLines(const char* path, std::vector<std::stri
     }
 
     // break to lines
-    int prevIdx = -1;
+    size_t prevIdx = 0;  // always one past previous line
     do {
-        int idx = 0;
-        std::vector<char>::iterator itr = std::find(buf.begin() + prevIdx + 1, buf.end(), '\n');
+        size_t idx = 0;
+        std::vector<char>::iterator itr = std::find(buf.begin() + prevIdx, buf.end(), '\n');
         if (itr == buf.end()) {
             idx = buf.size();
         } else {
             idx = itr - buf.begin();
         }
 
-        std::string line(&buf[prevIdx + 1], idx - prevIdx - 1);
+        std::string line(&buf[prevIdx + 1], idx - prevIdx);
         lines.push_back(line);
-        prevIdx = idx;
+        prevIdx = idx + 1;
     } while (prevIdx < buf.size());
     return DBGUTIL_ERR_OK;
 }
@@ -497,17 +516,29 @@ DbgUtilErr OsUtil::execCmd(const char* cmdLine, std::vector<char>& buf) {
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
-    buf.resize(4096);
-    uint32_t pos = 0;
-    uint32_t bufSize = buf.size() - pos;
+    const size_t BUF_SIZE = 4096;
+    const size_t LOW_WATERMARK = 1024;
+    const size_t INC_FACTOR = 2;
+    buf.resize(BUF_SIZE);
+    size_t pos = 0;
+    size_t bufSize = BUF_SIZE;
+    int bufSizeInt = BUF_SIZE;
+    DbgUtilErr copyRes = DBGUTIL_ERR_OK;
     // fgets reads at most bufSize-1 puts a terminating null
     // newline chars are copied as is
-    while (fgets(&buf[pos], bufSize, output)) {
+    while (fgets(&buf[pos], bufSizeInt, output)) {
         pos += strlen(&buf[pos]);
-        if (buf.size() - pos < 1024) {
-            buf.resize(buf.size() * 2);
+        if (buf.size() - pos < LOW_WATERMARK) {
+            buf.resize(buf.size() * INC_FACTOR);
         }
         bufSize = buf.size() - pos;
+        if (bufSize >= INT32_MAX) {
+            LOG_ERROR(sLogger, "Invalid buffer size %zu when executing command %s", bufSize,
+                      cmdLine);
+            copyRes = DBGUTIL_ERR_INTERNAL_ERROR;
+            break;
+        }
+        bufSizeInt = (int)bufSize;
     }
 
     int isEof = feof(output);
@@ -524,7 +555,7 @@ DbgUtilErr OsUtil::execCmd(const char* cmdLine, std::vector<char>& buf) {
         LOG_ERROR(sLogger, "Failed to read command line output till the end");
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    return DBGUTIL_ERR_OK;
+    return copyRes;
 }
 
 DbgUtilErr OsUtil::initializeSpinLock(csi_spinlock_t& spinLock) {

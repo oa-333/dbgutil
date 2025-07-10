@@ -134,7 +134,7 @@ protected:
         std::string m_name;
 
         /** @var The index of the file containing the symbol. */
-        int m_srcFileIndex;
+        uint32_t m_srcFileIndex;
 
         /** @brief The index of the section containing the symbol. */
         int m_originSectionIndex;

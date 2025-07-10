@@ -1,11 +1,11 @@
 #include "dwarf_def.h"
 
 struct NamedEntry {
-    int m_value;
+    unsigned m_value;
     const char* m_name;
 };
 
-static const char* searchNamedEntry(NamedEntry* table, unsigned size, int value) {
+static const char* searchNamedEntry(NamedEntry* table, unsigned size, unsigned value) {
     // a table may have some holes, so the search is nto direct
     if (value < size) {
         NamedEntry* start = table + value;
@@ -277,7 +277,7 @@ static NamedEntry sFormNameTable[] = {DECL_NAME_ENTRY(DW_TAG_array_type),
 
 static unsigned sFormNameTableSize = sizeof(sFormNameTable) / sizeof(sFormNameTable[0]);
 
-extern const char* getDwarfTagName(int tagName) {
+extern const char* getDwarfTagName(unsigned tagName) {
     if (tagName == DW_TAG_lo_user) {
         return "DW_TAG_lo_user";
     }
@@ -287,7 +287,7 @@ extern const char* getDwarfTagName(int tagName) {
     return searchNamedEntry(sTagNameTable, sTagNameTableSize, tagName);
 }
 
-extern const char* getDwarfAttributeName(int attName) {
+extern const char* getDwarfAttributeName(unsigned attName) {
     if (attName == DW_AT_lo_user) {
         return "DW_AT_lo_user";
     }
@@ -297,6 +297,6 @@ extern const char* getDwarfAttributeName(int attName) {
     return searchNamedEntry(sAttNameTable, sAttNameTableSize, attName);
 }
 
-extern const char* getDwarfFormName(int formName) {
+extern const char* getDwarfFormName(unsigned formName) {
     return searchNamedEntry(sFormNameTable, sFormNameTableSize, formName);
 }

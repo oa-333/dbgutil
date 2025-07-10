@@ -45,7 +45,7 @@ public:
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    DbgUtilErr visitThreads(ThreadVisitor* visitor) final;
+    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
 
     /**
      * @brief Retrieves thread handle by id.
@@ -66,7 +66,7 @@ public:
      * result of the operation being executed on the target thread, is returned via the @ref
      * opResult out parameter.
      */
-    DbgUtilErr execThreadRequest(os_thread_id_t hreadId, ThreadExecutor* executor,
+    DbgUtilErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
                                  DbgUtilErr& requestResult);
 
 private:

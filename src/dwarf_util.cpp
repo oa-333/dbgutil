@@ -163,11 +163,18 @@ DbgUtilErr DwarfUtil::readCUData(uint64_t offset, CUData& cuData) {
         return rc;
     }
 
+    // tag is not expected to be very large
+    if (tag >= UINT32_MAX) {
+        LOG_ERROR(sLogger, "Invalid tag value %" PRIu64 " when reading compilation unit data", tag);
+        // this is either internal error or data corrupt
+        return DBGUTIL_ERR_DATA_CORRUPT;
+    }
+
     // we expect to see either DW_TAG_compile_unit or DW_TAG_partial_unit
     // only DW_TAG_compile_unit is supported
     if (tag != DW_TAG_compile_unit) {
         LOG_DEBUG(sLogger, "ERROR: Compilation unit tag %s not supported",
-                  getDwarfTagName((int)tag));
+                  getDwarfTagName((unsigned)tag));
         return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
 
@@ -234,7 +241,7 @@ DbgUtilErr DwarfUtil::readCUData(uint64_t offset, CUData& cuData) {
                 DWARF_READ_OFFSET(is, rngOffset, is64Bit);
             } else {
                 LOG_DEBUG(sLogger, "ERROR: CU Attribute form %s not supported",
-                          getDwarfFormName((int)attr.m_form));
+                          getDwarfFormName((unsigned)attr.m_form));
                 return DBGUTIL_ERR_NOT_IMPLEMENTED;
             }
             // read range list from debug section .debug_rnglists
@@ -270,7 +277,7 @@ DbgUtilErr DwarfUtil::readCUData(uint64_t offset, CUData& cuData) {
                 DWARF_READ_OFFSET(is, secOffset, is64Bit);
             } else {
                 LOG_DEBUG(sLogger, "ERROR: CU Attribute form %s not supported",
-                          getDwarfFormName((int)attr.m_form));
+                          getDwarfFormName((unsigned)attr.m_form));
                 return DBGUTIL_ERR_NOT_IMPLEMENTED;
             }
         }
@@ -490,7 +497,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
         if (alignDiff != 0) {
             LOG_DEBUG(sLogger, "Set start at offset %u is not aligned to %u, skipping %u bytes",
                       is.getOffset(), align, align - alignDiff);
-            uint32_t bytesSkipped = 0;
+            size_t bytesSkipped = 0;
             rc = is.skipBytes(align - alignDiff, bytesSkipped);
             if (rc != DBGUTIL_ERR_OK) {
                 LOG_DEBUG(sLogger, "ERROR: Failed to skip %u bytes to first range pair: %s",

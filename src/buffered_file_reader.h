@@ -17,7 +17,7 @@ public:
     static void termLogger();
 
     /** @brief The default buffer size. */
-    static const uint32_t DEFAULT_BUFFER_SIZE;
+    static const size_t DEFAULT_BUFFER_SIZE;
 
     /**
      * @brief Opens the reader over a file.
@@ -25,7 +25,7 @@ public:
      * @param bufferSize The buffer size used in reading.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr open(const char* filePath, uint32_t bufferSize = DEFAULT_BUFFER_SIZE);
+    DbgUtilErr open(const char* filePath, size_t bufferSize = DEFAULT_BUFFER_SIZE);
 
     /** @brief Closed the buffered reader. */
     DbgUtilErr close();
@@ -34,10 +34,10 @@ public:
     inline bool isOpen() const { return m_fd != 0; }
 
     /** @brief Retrieves the current offset (from begining of file) of the reader. */
-    DbgUtilErr getOffset(uint64_t& offset) const;
+    DbgUtilErr getOffset(size_t& offset) const;
 
     /** @brief Sets file pointer to a specified position (offset from begining of file). */
-    DbgUtilErr seek(uint64_t offset);
+    DbgUtilErr seek(size_t offset);
 
     /** @brief Queries whether the reader has reached the end of the file. */
     inline bool eof() const { return m_eof; }
@@ -65,7 +65,7 @@ public:
      * read()).
      * @return DbgUtilErr Any other error.
      */
-    DbgUtilErr readFull(char* buffer, uint32_t len, uint32_t* bytesReadRef = nullptr);
+    DbgUtilErr readFull(char* buffer, size_t len, size_t* bytesReadRef = nullptr);
 
     /**
      * @brief Reads data from the buffered file reader.
@@ -79,7 +79,7 @@ public:
      * bytes were read at all (bytesRead is returned with value 0).
      * @return DbgUtilErr Any other error code.
      */
-    DbgUtilErr read(char* buffer, uint32_t len, uint32_t& bytesRead);
+    DbgUtilErr read(char* buffer, size_t len, size_t& bytesRead);
 
     /**
      * @brief Skips the number of specified bytes in the buffered file reader.
@@ -88,14 +88,14 @@ public:
      * @param length The amount of bytes to skip.
      * @return DbgUtilErr The operation result.
      */
-    inline DbgUtilErr skip(uint32_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
+    inline DbgUtilErr skip(size_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
 
 private:
     int m_fd;
-    uint64_t m_fileOffset;
-    uint32_t m_bufferSize;
+    size_t m_fileOffset;
+    size_t m_bufferSize;
     std::vector<char> m_buffer;
-    uint32_t m_bufferOffset;
+    size_t m_bufferOffset;
     bool m_eof;
 
     DbgUtilErr refillBuffer();

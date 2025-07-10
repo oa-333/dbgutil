@@ -69,10 +69,27 @@
         "fstream": "cpp",
         "iostream": "cpp",
         "bitset": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "future": "cpp"
     },
     "cSpell.words": [
         "dbgutil",
+        "NTSTATUS",
         "publicheaders"
+    ],
+    "cSpell.ignoreWords": [
+        "LNCT",
+        "addressx",
+        "addrx",
+        "coarray",
+        "discr",
+        "endianity",
+        "exprloc",
+        "loclistx",
+        "rnglist",
+        "rnglists",
+        "rnglistsptr",
+        "rnglistx",
+        "startx"
     ]
 }

@@ -4,7 +4,7 @@
 
 namespace dbgutil {
 
-FixedInputStream::FixedInputStream(const char* buffer, uint32_t bufferSize, bool byRef /* = true */,
+FixedInputStream::FixedInputStream(const char* buffer, size_t bufferSize, bool byRef /* = true */,
                                    bool requiresBigEndian /* = false */)
     : InputStream(requiresBigEndian),
       m_bufRef(byRef ? buffer : nullptr),
@@ -16,15 +16,15 @@ FixedInputStream::FixedInputStream(const char* buffer, uint32_t bufferSize, bool
     }
 }
 
-DbgUtilErr FixedInputStream::peekBytes(char* buffer, uint32_t length, uint32_t& bytesRead) {
-    uint64_t offset = m_offset;
+DbgUtilErr FixedInputStream::peekBytes(char* buffer, size_t length, size_t& bytesRead) {
+    size_t offset = m_offset;
     DbgUtilErr rc = readBytes(buffer, length, bytesRead);
     m_offset = offset;
     return rc;
 }
 
-DbgUtilErr FixedInputStream::readBytes(char* buffer, uint32_t length, uint32_t& bytesRead) {
-    uint32_t bytesCanRead = size();
+DbgUtilErr FixedInputStream::readBytes(char* buffer, size_t length, size_t& bytesRead) {
+    uint64_t bytesCanRead = size();
     if (bytesCanRead == 0) {
         return DBGUTIL_ERR_END_OF_STREAM;
     }
@@ -34,8 +34,8 @@ DbgUtilErr FixedInputStream::readBytes(char* buffer, uint32_t length, uint32_t& 
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr FixedInputStream::skipBytes(uint32_t length, uint32_t& bytesRead) {
-    uint32_t bytesCanRead = size();
+DbgUtilErr FixedInputStream::skipBytes(size_t length, size_t& bytesRead) {
+    size_t bytesCanRead = size();
     if (bytesCanRead == 0) {
         return DBGUTIL_ERR_END_OF_STREAM;
     }

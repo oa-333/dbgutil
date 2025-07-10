@@ -8,7 +8,7 @@
 namespace dbgutil {
 
 /** @enum Log severity constants */
-enum LogSeverity {
+enum LogSeverity : uint32_t {
     /** @brief Fatal severity */
     LS_FATAL,
 
@@ -37,6 +37,9 @@ enum LogSeverity {
 /** @class Log handler for handling log messages coming from the Debug Utilities library. */
 class DBGUTIL_API LogHandler {
 public:
+    /** @brief Virtual destructor. */
+    virtual ~LogHandler() {}
+
     /**
      * @brief Notifies that a logger has been registered.
      * @param severity The log severity with which the logger was initialized.
@@ -46,18 +49,27 @@ public:
      * the severity with which the logger was registered.
      */
     virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName,
-                                         uint32_t loggerId) = 0;
+                                         uint32_t loggerId) {
+        return severity;
+    }
 
     /** @brief Unregisters a previously registered logger. */
-    virtual void onUnregisterLogger(uint32_t loggerId) = 0;
+    virtual void onUnregisterLogger(uint32_t loggerId) {}
 
     /**
      * @brief Notifies a logger is logging a message.
      * @param severity The log message severity.
-     * @param loggerId The logger id.
+     * @param loggerId The logger's id.
+     * @param loggerName The logger's name.
      * @param msg The log message.
      */
-    virtual void onMsg(LogSeverity severity, uint32_t loggerId, const char* msg) = 0;
+    virtual void onMsg(LogSeverity severity, uint32_t loggerId, const char* loggerName,
+                       const char* msg) = 0;
+
+protected:
+    LogHandler() {}
+    LogHandler(const LogHandler&) = delete;
+    LogHandler(LogHandler&&) = delete;
 };
 
 /** @brief Configures global log severity */
@@ -65,6 +77,12 @@ extern DBGUTIL_API void setLogSeverity(LogSeverity severity);
 
 /** @brief Configures log severity of a specific logger. */
 extern DBGUTIL_API void setLoggerSeverity(uint32_t loggerId, LogSeverity severity);
+
+/** @brief Converts log severity to string. */
+extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
+
+/** @def A special constant denoting default log handler (prints to standard error stream). */
+#define DBGUTIL_DEFAULT_LOG_HANDLER ((LogHandler*)-1)
 
 }  // namespace dbgutil
 

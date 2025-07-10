@@ -12,7 +12,7 @@ public:
     virtual void reset() = 0;
 
     /** @brief Queries the stream size.  */
-    virtual uint64_t size() const = 0;
+    virtual size_t size() const = 0;
 
     /** @brief Queries whether the stream is empty. */
     inline bool empty() const { return size() == 0; }
@@ -29,7 +29,7 @@ public:
      * @param[out] bytesRead The number of bytes actually peeked.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr peekBytes(char* buffer, uint32_t length, uint32_t& bytesRead) = 0;
+    virtual DbgUtilErr peekBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Reads bytes from the stream.
@@ -40,7 +40,7 @@ public:
      * @param[out] bytesRead The number of bytes actually read.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr readBytes(char* buffer, uint32_t length, uint32_t& bytesRead) = 0;
+    virtual DbgUtilErr readBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Skips the number of specified bytes in the stream.
@@ -50,7 +50,7 @@ public:
      * @param[out] bytesRead The number of bytes actually skipped.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr skipBytes(uint32_t length, uint32_t& bytesRead) = 0;
+    virtual DbgUtilErr skipBytes(size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Peeks for a value.
@@ -65,7 +65,7 @@ public:
         if (size() < sizeof(T)) {
             return DBGUTIL_ERR_END_OF_STREAM;
         }
-        uint32_t length = 0;
+        size_t length = 0;
         DbgUtilErr rc = peekBytes((char*)&value, sizeof(T), length);
         if (rc != DBGUTIL_ERR_OK) {
             return rc;
@@ -89,7 +89,7 @@ public:
         if (size() < sizeof(T)) {
             return DBGUTIL_ERR_END_OF_STREAM;
         }
-        uint32_t length = 0;
+        size_t length = 0;
         DbgUtilErr rc = readBytes(reinterpret_cast<char*>(&value), sizeof(T), length);
         if (rc != DBGUTIL_ERR_OK) {
             return rc;
@@ -111,7 +111,7 @@ public:
     inline DbgUtilErr readUntil(F f) {
         uint8_t byte = 0;
         do {
-            uint32_t bytesRead = 0;
+            size_t bytesRead = 0;
             DbgUtilErr rc = readBytes((char*)&byte, 1, bytesRead);
             if (rc != DBGUTIL_ERR_OK) {
                 return rc;

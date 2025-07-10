@@ -19,18 +19,18 @@ public:
      * @param requiresBigEndian Optionally specifies whether the buffer data is usign big endian
      * byte order.
      */
-    FixedInputStream(const char* buffer, uint32_t bufferSize, bool byRef = true,
+    FixedInputStream(const char* buffer, size_t bufferSize, bool byRef = true,
                      bool requiresBigEndian = false);
     ~FixedInputStream() override {}
 
     /** @brief Retrieves the current offset of the stream. */
-    inline uint32_t getOffset() const { return m_offset; }
+    inline size_t getOffset() const { return m_offset; }
 
     /** @brief Resets the input stream (drops all buffers). */
     void reset() final {}
 
     /** @brief Queries the stream size (how many bytes left to read). */
-    uint64_t size() const final { return m_size - m_offset; }
+    size_t size() const final { return m_size - m_offset; }
 
     /**
      * @brief Peeks for a few bytes in the stream without pulling them.
@@ -41,7 +41,7 @@ public:
      * @param[out] bytesRead The number of bytes actually peeked.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr peekBytes(char* buffer, uint32_t length, uint32_t& bytesRead) override;
+    DbgUtilErr peekBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Reads bytes from the stream.
@@ -52,7 +52,7 @@ public:
      * @param[out] bytesRead The number of bytes actually read.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr readBytes(char* buffer, uint32_t length, uint32_t& bytesRead) override;
+    DbgUtilErr readBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Skips the number of specified bytes in the stream.
@@ -62,13 +62,13 @@ public:
      * @param[out] bytesRead The number of bytes actually skipped.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr skipBytes(uint32_t length, uint32_t& bytesRead) override;
+    DbgUtilErr skipBytes(size_t length, size_t& bytesRead) override;
 
 private:
     std::vector<char> m_buf;
     const char* m_bufRef;
-    uint32_t m_size;
-    uint32_t m_offset;
+    size_t m_size;
+    size_t m_offset;
 };
 
 }  // namespace dbgutil

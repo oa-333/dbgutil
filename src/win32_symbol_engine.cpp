@@ -179,7 +179,7 @@ DbgUtilErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
         symbolInfo.m_lineNumber = lineInfo.LineNumber;
         symbolInfo.m_startAddress = (void*)lineInfo.Address;
         symbolInfo.m_byteOffset =
-            displacement;  //(uint32_t)(lineInfo.Address - (DWORD64)symAddress);
+            (uint32_t)displacement;  //(uint32_t)(lineInfo.Address - (DWORD64)symAddress);
     }
     free(sym);
 
@@ -240,10 +240,10 @@ DbgUtilErr Win32SymbolEngine::getSymbolModule(void* symAddress, SymbolInfo& symb
 void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     // try to create mini-dump
     std::stringstream s;
-    s << m_processDir << "\\" << m_processName << ".core." << getpid();
+    s << m_processDir << "\\" << m_processName << ".core." << _getpid();
     std::string dumpPath = s.str();
     LOG_TRACE(sLogger, "Attempting to generate mini-dump at %s", dumpPath.c_str());
-    HANDLE hFile = CreateFileA(dumpPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW,
+    HANDLE hFile = CreateFileA(dumpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_NEW,
                                FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, CreateFileA, "Failed to create dump file: %s", dumpPath.c_str());
@@ -251,7 +251,7 @@ void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     }
     _MINIDUMP_EXCEPTION_INFORMATION mdExceptInfo = {GetThreadId(GetCurrentThread()),
                                                     (_EXCEPTION_POINTERS*)ExceptionInfo, FALSE};
-    if (!MiniDumpWriteDump(m_processHandle, GetCurrentProcessId(), hFile, MiniDumpValidTypeFlags,
+    if (!MiniDumpWriteDump(m_processHandle, GetCurrentProcessId(), hFile, MiniDumpWithFullMemory,
                            &mdExceptInfo, NULL, NULL)) {
         LOG_WIN32_ERROR(sLogger, MiniDumpWriteDump, "Failed to write mini-dump file");
     }

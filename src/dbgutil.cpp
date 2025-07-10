@@ -27,6 +27,7 @@
 
 #include "buffered_file_reader.h"
 #include "dbgutil_log_imp.h"
+#include "dbgutil_tls.h"
 #include "dir_scanner.h"
 #include "dwarf_line_util.h"
 #include "dwarf_util.h"
@@ -53,8 +54,14 @@ static DbgUtilErr termLinuxDbgUtil();
         }                           \
     }
 
-DbgUtilErr initDbgUtil(LogHandler* logHandler, LogSeverity severity) {
+DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
+                       LogHandler* logHandler /* = nullptr */,
+                       LogSeverity severity /* = LS_FATAL */, uint32_t flags /* = 0 */) {
+    // TLS and logger initialization is tricky, and must be done in parts
     initLog(logHandler, severity);
+    initTls();
+    EXEC_CHECK_OP(finishInitLog);
+    setGlobalFlags(flags);
 
 #if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(initWin32DbgUtil);
@@ -63,6 +70,9 @@ DbgUtilErr initDbgUtil(LogHandler* logHandler, LogSeverity severity) {
 #if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(initLinuxDbgUtil);
 #endif
+    if (exceptionListener != nullptr) {
+        getExceptionHandler()->setExceptionListener(exceptionListener);
+    }
 
     PathParser::initLogger();
     BufferedFileReader::initLogger();
@@ -92,7 +102,9 @@ DbgUtilErr termDbgUtil() {
     EXEC_CHECK_OP(termWin32DbgUtil);
 #endif
 
-    termLog();
+    EXEC_CHECK_OP(beginTermLog);
+    termTls();
+    EXEC_CHECK_OP(termLog);
     return DBGUTIL_ERR_OK;
 }
 

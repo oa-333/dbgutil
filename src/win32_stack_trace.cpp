@@ -63,7 +63,7 @@ DbgUtilErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     }
 
     // suspend thread
-    if (!SuspendThread(hThread) == (DWORD)-1) {
+    if (SuspendThread(hThread) == (DWORD)-1) {
         LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to suspend thread %" PRItid, threadId);
         CloseHandle(hThread);
         return DBGUTIL_ERR_SYSTEM_FAILURE;

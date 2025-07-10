@@ -19,7 +19,7 @@ public:
      * @param osData Any additional OS-specific thread-related information. On Linux this can be
      * cast directly to pthread_t.
      */
-    virtual void onThread(os_thread_id_t threadId) = 0;
+    virtual void onThreadId(os_thread_id_t threadId) = 0;
 
 protected:
     ThreadVisitor() {}
@@ -32,11 +32,11 @@ public:
     virtual ~OsThreadManager() {}
 
     /**
-     * @brief Traverses all running threads.
+     * @brief Traverses all running thread ids.
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    virtual DbgUtilErr visitThreads(ThreadVisitor* visitor) = 0;
+    virtual DbgUtilErr visitThreadIds(ThreadVisitor* visitor) = 0;
 
 protected:
     OsThreadManager() {}
@@ -47,6 +47,18 @@ extern DBGUTIL_API void setThreadManager(OsThreadManager* provider);
 
 /** @brief Retrieves the installed thread manager. */
 extern DBGUTIL_API OsThreadManager* getThreadManager();
+
+/** @brief Utility API for lambda syntax. */
+template <typename F>
+inline void visitThreadIds(F f) {
+    struct Visitor final : public ThreadVisitor {
+        Visitor(F f) : m_f(f) {}
+        void onThread(os_thread_id_t threadId) { m_f(threadId); }
+        F m_f;
+    };
+    Visitor visitor(f);
+    getThreadManager()->visitThreadIds(&visitor);
+}
 
 }  // namespace dbgutil
 

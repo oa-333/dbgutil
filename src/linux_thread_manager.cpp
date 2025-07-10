@@ -235,7 +235,7 @@ public:
         if (dirEntry.m_type == DirEntryType::DET_DIR) {
             os_thread_id_t osThreadId = 0;
             if (parseThreadId(dirEntry.m_name, osThreadId)) {
-                m_visitor->onThread(osThreadId);
+                m_visitor->onThreadId(osThreadId);
             }
         }
     }
@@ -264,10 +264,10 @@ private:
     }
 };
 
-DbgUtilErr LinuxThreadManager::visitThreads(ThreadVisitor* visitor) {
+DbgUtilErr LinuxThreadManager::visitThreadIds(ThreadVisitor* visitor) {
 #ifdef DBGUTIL_MINGW
     // divert to Win32
-    return Win32ThreadManager::getInstance()->visitThreads(visitor);
+    return Win32ThreadManager::getInstance()->visitThreadIds(visitor);
 #else
     // take a snapshot of all running threads through /proc/self/task
     ThreadIdVisitor dirVisitor(visitor);

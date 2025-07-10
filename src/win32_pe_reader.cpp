@@ -253,7 +253,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
         return rc;
     }
 
-    int srcFileIndex = 0;
+    uint32_t srcFileIndex = 0;
     IMAGE_SYMBOL sym = {};
     for (uint32_t i = 0; i < symCount; ++i) {
         rc = m_fileReader.read(sym);
@@ -273,9 +273,14 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                     return rc;
                 }
                 ++auxRecRead;
-                getFileName(auxSym.File.Name, fileName);
+                rc = getFileName(auxSym.File.Name, fileName);
+                if (rc != DBGUTIL_ERR_OK) {
+                    LOG_ERROR(sLogger,
+                              "Failed to build symbol table, unable to retrieve file name");
+                    return rc;
+                }
                 LOG_DEBUG(sLogger, "Found file: %s", fileName.c_str());
-                srcFileIndex = m_srcFileNames.size();
+                srcFileIndex = (uint32_t)m_srcFileNames.size();
                 m_srcFileNames.push_back(fileName);
             }
         }
@@ -381,10 +386,16 @@ DbgUtilErr Win32PEReader::getSectionName(unsigned char* nameRef, std::string& na
         name = (char*)nameRef;
     } else {
         // no null, so we carefully first copy into a null terminate string
-        char tmp[9];
-        strncpy(tmp, (char*)nameRef, 8);
-        tmp[8] = 0;
-        name = tmp;
+        const size_t BUF_SIZE = 9;
+        char tmp[BUF_SIZE];
+        errno_t errc = strncpy_s(tmp, BUF_SIZE, (const char*)nameRef, 8);
+        if (errc == 0) {
+            tmp[8] = 0;
+            name = tmp;
+        } else {
+            LOG_ERROR(sLogger, "Failed to securely copy section name");
+            return DBGUTIL_ERR_INTERNAL_ERROR;
+        }
     }
     return DBGUTIL_ERR_OK;
 }
@@ -401,25 +412,38 @@ DbgUtilErr Win32PEReader::getSymbolName(unsigned char* shortName, unsigned long*
             name = (char*)shortName;
         } else {
             // carefully copy
-            char tmp[9];
-            strncpy(tmp, (char*)shortName, 8);
-            tmp[8] = 0;
-            name = tmp;
+            const size_t BUF_SIZE = 9;
+            char tmp[BUF_SIZE];
+            errno_t errc = strncpy_s(tmp, BUF_SIZE, (const char*)shortName, 8);
+            if (errc == 0) {
+                tmp[8] = 0;
+                name = tmp;
+            } else {
+                LOG_ERROR(sLogger, "Failed to securely copy symbol name");
+                return DBGUTIL_ERR_INTERNAL_ERROR;
+            }
         }
     }
     return DBGUTIL_ERR_OK;
 }
 
-void Win32PEReader::getFileName(unsigned char* rawName, std::string& name) {
+DbgUtilErr Win32PEReader::getFileName(unsigned char* rawName, std::string& name) {
     if (rawName[IMAGE_SIZEOF_SYMBOL - 1] == 0) {
         name = (char*)rawName;
     } else {
         // carefully copy
         char tmp[IMAGE_SIZEOF_SYMBOL + 1];
-        strncpy(tmp, (char*)rawName, IMAGE_SIZEOF_SYMBOL);
-        tmp[IMAGE_SIZEOF_SYMBOL] = 0;
-        name = tmp;
+        errno_t errc =
+            strncpy_s(tmp, IMAGE_SIZEOF_SYMBOL + 1, (const char*)rawName, IMAGE_SIZEOF_SYMBOL);
+        if (errc == 0) {
+            tmp[IMAGE_SIZEOF_SYMBOL] = 0;
+            name = tmp;
+        } else {
+            LOG_ERROR(sLogger, "Failed to securely copy file name");
+            return DBGUTIL_ERR_INTERNAL_ERROR;
+        }
     }
+    return DBGUTIL_ERR_OK;
 }
 
 class Win32PEReaderFactory : public OsImageReaderFactory {

@@ -302,9 +302,9 @@
 #define DW_LNCT_lo_user 0x2000
 #define DW_LNCT_hi_user 0x3fff
 
-extern const char* getDwarfTagName(int tagName);
-extern const char* getDwarfAttributeName(int attName);
-extern const char* getDwarfFormName(int formName);
+extern const char* getDwarfTagName(unsigned tagName);
+extern const char* getDwarfAttributeName(unsigned attName);
+extern const char* getDwarfFormName(unsigned formName);
 
 // class interpretation
 

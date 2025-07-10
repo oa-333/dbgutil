@@ -13,45 +13,140 @@
 
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
-#include "log_msg_builder.h"
+#include "dbgutil_tls.h"
+#include "log_buffer.h"
 
 #define LOG_BUFFER_SIZE 1024
 
 namespace dbgutil {
 
+// log severity string constants
+static const char* sLogSeverityStr[] = {"FATAL", "ERROR", "WARN",  "NOTICE",
+                                        "INFO",  "TRACE", "DEBUG", "DIAG"};
+static const size_t sLogSeverityCount = sizeof(sLogSeverityStr) / sizeof(sLogSeverityStr[0]);
+
 struct LogData {
     const Logger* m_logger;
     LogSeverity m_severity;
-    LogMsgBuilder m_msgBuilder;
+    LogBuffer m_buffer;
     LogData* m_next;
 
     LogData(LogData* next = nullptr) : m_logger(nullptr), m_severity(LS_INFO), m_next(next) {
-        m_msgBuilder.reset();
+        m_buffer.reset();
     }
 
     inline void reset(const Logger* logger = nullptr, LogSeverity severity = LS_INFO) {
         m_logger = logger;
         m_severity = severity;
-        m_msgBuilder.reset();
+        m_buffer.reset();
     }
 };
 
-static thread_local LogData sLogDataHead;
-static thread_local LogData* sLogData = &sLogDataHead;
+class DefaultLogHandler final : public LogHandler {
+public:
+    /** @brief Virtual destructor. */
+    ~DefaultLogHandler() {}
 
+    LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName, uint32_t loggerId) {
+        return severity;
+    }
+
+    void onUnregisterLogger(uint32_t loggerId) {}
+
+    void onMsg(LogSeverity severity, uint32_t loggerId, const char* loggerName, const char* msg) {
+        fprintf(stderr, "[%s] <%s> %s\n", logSeverityToString(severity), loggerName, msg);
+    }
+};
+
+// use TLS instead of thread_local due to MinGW bug (static thread_local variable destruction
+// sometimes takes place twice, not clear under which conditions)
+static TlsKey sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
+
+inline LogData* allocLogData() { return new (std::nothrow) LogData(); }
+
+inline void freeLogData(void* data) {
+    LogData* logData = (LogData*)data;
+    if (logData != nullptr) {
+        delete logData;
+    }
+}
+
+static LogData* getOrCreateTlsLogData() {
+    LogData* logData = (LogData*)getTls(sLogDataKey);
+    if (logData == nullptr) {
+        logData = allocLogData();
+        if (logData == nullptr) {
+            fprintf(stderr, "Failed to allocate thread-local log buffer\n");
+            return nullptr;
+        }
+        if (!setTls(sLogDataKey, logData)) {
+            fprintf(stderr, "Failed to set thread-local log buffer\n");
+            freeLogData(logData);
+            return nullptr;
+        }
+    }
+    return logData;
+}
+
+// due to MinGW issues with static/thread-local destruction (it crashes sometimes), we use instead
+// thread-local pointers
+static thread_local LogData* sLogDataHead = nullptr;
+static thread_local LogData* sLogData = nullptr;
+
+static DefaultLogHandler sDefaultLogHandler;
 static LogHandler* sLogHandler = nullptr;
 static LogSeverity sLogSeverity = LS_INFO;
 static std::vector<Logger*> sLoggers;
 
-static void pushLogData() {
+inline void ensureLogDataExists() {
+    if (sLogData == nullptr) {
+        // create on-demand on a per-thread basis
+        sLogData = getOrCreateTlsLogData();
+        assert(sLogDataHead == nullptr);
+        sLogDataHead = sLogData;
+    }
+}
+
+inline DbgUtilErr createLogDataKey() {
+    if (sLogDataKey != DBGUTIL_INVALID_TLS_KEY) {
+        fprintf(stderr, "Cannot create record builder TLS key, already created\n");
+        return false;
+    }
+    if (!createTls(sLogDataKey, freeLogData)) {
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+    return DBGUTIL_ERR_OK;
+}
+
+inline DbgUtilErr destroyLogDataKey() {
+    if (sLogDataKey == DBGUTIL_INVALID_TLS_KEY) {
+        // silently ignore the request
+        return DBGUTIL_ERR_OK;
+    }
+    if (!destroyTls(sLogDataKey)) {
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+    sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
+    return DBGUTIL_ERR_OK;
+}
+
+static LogData* getLogData() {
+    ensureLogDataExists();
+    // we cannot afford a failure here, this is fatal
+    assert(sLogData != nullptr);
+    return sLogData;
+}
+
+static LogData* pushLogData() {
     LogData* logData = new (std::nothrow) LogData(sLogData);
     if (logData != nullptr) {
         sLogData = logData;
     }
+    return sLogData;
 }
 
 static void popLogData() {
-    if (sLogData != &sLogDataHead) {
+    if (sLogData != sLogDataHead) {
         LogData* next = sLogData->m_next;
         delete sLogData;
         sLogData = next;
@@ -59,14 +154,23 @@ static void popLogData() {
 }
 
 void initLog(LogHandler* logHandler, LogSeverity severity) {
-    sLogHandler = logHandler;
+    if (logHandler == DBGUTIL_DEFAULT_LOG_HANDLER) {
+        logHandler = &sDefaultLogHandler;
+    } else {
+        sLogHandler = logHandler;
+    }
     sLogSeverity = severity;
 }
 
-void termLog() {
-    while (sLogData != &sLogDataHead) {
-        popLogData();
-    }
+DbgUtilErr finishInitLog() { return createLogDataKey(); }
+
+DbgUtilErr beginTermLog() { return destroyLogDataKey(); }
+
+DbgUtilErr termLog() {
+    // NOTE: it is expected that at this point there are no log data lists at any thread
+    // the recommended behavior is to arrive here after all application threads have terminated,
+    // such that in each thread the TLS destructor was called
+    return destroyLogDataKey();
 }
 
 void setLogSeverity(LogSeverity severity) { sLogSeverity = severity; }
@@ -77,39 +181,62 @@ void setLoggerSeverity(uint32_t loggerId, LogSeverity severity) {
     }
 }
 
-/** @brief Queries whether a multi-part log message is being constructed. */
-static bool isLogging() { return sLogData->m_msgBuilder.getOffset() > 0; }
-
-static void appendMsgV(const char* fmt, va_list ap) {
-    va_list apCopy;
-    va_copy(apCopy, ap);
-    uint32_t requiredBytes = (vsnprintf(nullptr, 0, fmt, apCopy) + 1);
-    if (sLogData->m_msgBuilder.ensureBufferLength(requiredBytes)) {
-        sLogData->m_msgBuilder.appendV(fmt, ap);
+DBGUTIL_API const char* logSeverityToString(LogSeverity severity) {
+    if (severity < sLogSeverityCount) {
+        return sLogSeverityStr[severity];
     }
+    return "N/A";
+}
+
+/** @brief Queries whether a multi-part log message is being constructed. */
+static bool isLogging(LogData* logData) { return logData->m_buffer.getOffset() > 0; }
+
+static void appendMsgV(LogData* logData, const char* fmt, va_list args) {
+    va_list apCopy;
+    va_copy(apCopy, args);
+    logData->m_buffer.appendV(fmt, args);
     va_end(apCopy);
 }
 
-static void appendMsg(const char* msg) {
-    uint32_t requiredBytes = (strlen(msg) + 1);
-    if (sLogData->m_msgBuilder.ensureBufferLength(requiredBytes)) {
-        sLogData->m_msgBuilder.append(msg);
+static void appendMsg(LogData* logData, const char* msg) {
+    size_t requiredBytes = (strlen(msg) + 1);
+    logData->m_buffer.append(msg);
+}
+
+static void finishLogData(LogData* logData) {
+    if (isLogging(logData)) {
+        // NOTE: new line character at the end of the line is added by log handler if at all
+        logData->m_buffer.finalize();
+        const char* formattedLogMsg = logData->m_buffer.getRef();
+        if (sLogHandler != nullptr) {
+            sLogHandler->onMsg(logData->m_severity, logData->m_logger->m_loggerId,
+                               logData->m_logger->m_loggerName.c_str(), formattedLogMsg);
+        }
+        logData->reset();
+        popLogData();
+    } else {
+        fprintf(stderr, "attempt to end log message without start-log being issued first\n");
     }
 }
 
 void registerLogger(Logger& logger, const char* loggerName) {
-    logger.m_loggerId = sLoggers.size();
+    logger.m_loggerId = (uint32_t)sLoggers.size();
     sLoggers.push_back(&logger);
     logger.m_loggerName = loggerName;
-    logger.m_severity = sLogHandler->onRegisterLogger(sLogSeverity, loggerName, logger.m_loggerId);
+    if (sLogHandler != nullptr) {
+        logger.m_severity =
+            sLogHandler->onRegisterLogger(sLogSeverity, loggerName, logger.m_loggerId);
+    }
 }
 
 void unregisterLogger(Logger& logger) {
-    sLogHandler->onUnregisterLogger(logger.m_loggerId);
+    if (sLogHandler != nullptr) {
+        sLogHandler->onUnregisterLogger(logger.m_loggerId);
+    }
     if (logger.m_loggerId < sLoggers.size()) {
         sLoggers[logger.m_loggerId] = nullptr;
         uint32_t maxLoggerId = 0;
-        for (int i = sLoggers.size() - 1; i >= 0; --i) {
+        for (int i = (int)sLoggers.size() - 1; i >= 0; --i) {
             if (sLoggers[i] != nullptr) {
                 maxLoggerId = i;
                 break;
@@ -126,45 +253,57 @@ bool canLog(const Logger& logger, LogSeverity severity) {
 }
 
 void logMsg(const Logger& logger, LogSeverity severity, const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    if (isLogging()) {
-        pushLogData();
+    va_list args;
+    va_start(args, fmt);
+
+    LogData* logData = getLogData();
+    if (isLogging(logData)) {
+        logData = pushLogData();
     }
-    sLogData->reset(&logger, severity);
-    appendMsgV(fmt, ap);
-    finishLog();
-    va_end(ap);
+    logData->reset(&logger, severity);
+    appendMsgV(logData, fmt, args);
+    finishLogData(logData);
+
+    va_end(args);
 }
 
 void startLog(const Logger& logger, LogSeverity severity, const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    if (isLogging()) {
-        pushLogData();
+    va_list args;
+    va_start(args, fmt);
+    LogData* logData = getLogData();
+    if (isLogging(logData)) {
+        logData = pushLogData();
     }
-    sLogData->reset(&logger, severity);
-    appendMsgV(fmt, ap);
-    va_end(ap);
+    logData->reset(&logger, severity);
+    appendMsgV(logData, fmt, args);
+    va_end(args);
 }
 
 void appendLog(const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    if (isLogging()) {
-        appendMsgV(fmt, ap);
+    va_list args;
+    va_start(args, fmt);
+    LogData* logData = getLogData();
+    if (isLogging(logData)) {
+        logData = pushLogData();
+    }
+    if (isLogging(logData)) {
+        appendMsgV(logData, fmt, args);
     } else {
         fprintf(stderr, "Attempt to append log message without start-log being issued first: ");
-        vfprintf(stderr, fmt, ap);
+        vfprintf(stderr, fmt, args);
         fputs("\n", stderr);
         fflush(stderr);
     }
-    va_end(ap);
+    va_end(args);
 }
 
 void appendLogNoFormat(const char* msg) {
-    if (isLogging()) {
-        appendMsg(msg);
+    LogData* logData = getLogData();
+    if (isLogging(logData)) {
+        logData = pushLogData();
+    }
+    if (isLogging(logData)) {
+        appendMsg(logData, msg);
     } else {
         fprintf(stderr,
                 "Attempt to append unformatted log message without start-log being issued first: ");
@@ -174,17 +313,7 @@ void appendLogNoFormat(const char* msg) {
     }
 }
 
-void finishLog() {
-    if (isLogging()) {
-        // NOTE: new line character at the end of the line is added by log handler if at all
-        const char* logMsg = sLogData->m_msgBuilder.finalize();
-        sLogHandler->onMsg(sLogData->m_severity, sLogData->m_logger->m_loggerId, logMsg);
-        sLogData->reset();
-        popLogData();
-    } else {
-        fprintf(stderr, "attempt to end log message without start-log being issued first\n");
-    }
-}
+void finishLog() { finishLogData(getLogData()); }
 
 const char* sysErrorToStr(int sysErrorCode) {
     const int BUF_LEN = 256;

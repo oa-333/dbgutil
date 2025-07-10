@@ -198,7 +198,7 @@ public:
      * @param[out] sysErr Optional parameter, receiving system error code in case of error.
      * @return DbgUtilErr The operation result.
      */
-    static DbgUtilErr writeFile(int fd, const char* buf, uint32_t len, uint32_t& bytesWritten,
+    static DbgUtilErr writeFile(int fd, const char* buf, size_t len, size_t& bytesWritten,
                                 int* sysErr = nullptr);
 
     /**
@@ -210,7 +210,7 @@ public:
      * @param[out] sysErr Optional parameter, receiving system error code in case of error.
      * @return DbgUtilErr The operation result.
      */
-    static DbgUtilErr readFile(int fd, char* buf, uint32_t len, uint32_t& bytesRead,
+    static DbgUtilErr readFile(int fd, char* buf, size_t len, size_t& bytesRead,
                                int* sysErr = nullptr);
 
     /**

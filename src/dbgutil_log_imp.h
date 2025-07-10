@@ -5,6 +5,7 @@
 #include <string>
 
 #include "dbg_util_def.h"
+#include "dbg_util_err.h"
 #include "dbg_util_log.h"
 
 namespace dbgutil {
@@ -17,7 +18,13 @@ struct Logger {
 
 extern void initLog(LogHandler* logHandler, LogSeverity severity);
 
-extern void termLog();
+// call this after TLS is initialized
+extern DbgUtilErr finishInitLog();
+
+// call this before TLS is terminated
+extern DbgUtilErr beginTermLog();
+
+extern DbgUtilErr termLog();
 
 extern void registerLogger(Logger& logger, const char* loggerName);
 

@@ -205,7 +205,8 @@ extern DBGUTIL_API std::string rawStackTraceToString(const RawStackTrace& stackT
  * @param stackTrace The stack trace.
  * @param skip[opt] The number of frames to skip.
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
- * @param threadId[opt] Optional thread id.
+ * @param threadId[opt] Optional thread id (for printing purposes only). If not specified, current
+ * thread id will be used.
  * @return std::string The resulting resolved stack trace string.
  */
 extern DBGUTIL_API std::string stackTraceToString(const StackTrace& stackTrace, int skip = 0,

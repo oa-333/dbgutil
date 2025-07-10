@@ -215,7 +215,14 @@ DbgUtilErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfDat
                 if (m_files.empty()) {
                     return DBGUTIL_ERR_DATA_CORRUPT;
                 }
-                m_files.back().m_dirIndex = index;
+                // directory index is never excepted to be very large
+                if (index >= UINT32_MAX) {
+                    LOG_ERROR(sLogger, "Invalid directory index %" PRIu64 " in line program",
+                              index);
+                    // this means either internal error or data corrupt
+                    return DBGUTIL_ERR_DATA_CORRUPT;
+                }
+                m_files.back().m_dirIndex = (uint32_t)index;
             } else if (ctCode == DW_LNCT_timestamp) {
                 if (form == DW_FORM_block) {
                     return DBGUTIL_ERR_NOT_IMPLEMENTED;
@@ -266,7 +273,7 @@ DbgUtilErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
         return DBGUTIL_ERR_INTERNAL_ERROR;
     }
     if (offset < m_startProgramOffset) {
-        uint32_t bytesSkiped = 0;
+        size_t bytesSkiped = 0;
         DbgUtilErr rc = is.skipBytes(m_startProgramOffset - offset, bytesSkiped);
         if (rc != DBGUTIL_ERR_OK) {
             return rc;
@@ -356,7 +363,28 @@ DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& i
         case DW_LNS_advance_line: {
             int64_t advance = 0;
             DWARF_READ_SLEB128(is, advance);
-            m_stateMachine.m_lineNumber += advance;
+            // the advance is never expected to be too large, so we check for bounds
+            if (advance >= INT32_MAX || advance <= INT32_MIN) {
+                LOG_ERROR(sLogger, "Invalid line advance value %" PRId64 " in line program",
+                          advance);
+                // this means either internal error or corrupt data
+                return DBGUTIL_ERR_DATA_CORRUPT;
+            }
+            // carefully update the value, line number cannot go below 1
+            if (advance >= 0) {
+                m_stateMachine.m_lineNumber += (int32_t)advance;
+            } else {
+                uint32_t advanceAbs32 = (uint32_t)(-advance);
+                if (advanceAbs32 >= m_stateMachine.m_lineNumber) {
+                    LOG_ERROR(sLogger,
+                              "Line advance value %" PRId64
+                              " will cause line number %u to reach invalid value",
+                              advance, m_stateMachine.m_lineNumber);
+                    // this is either internal error or corrupt data
+                    return DBGUTIL_ERR_DATA_CORRUPT;
+                }
+                m_stateMachine.m_lineNumber += (int32_t)advance;
+            }
             LOG_DEBUG(sLogger, "Executed DW_LNS_advance_line: %" PRId64 " --> %s", advance,
                       m_stateMachine.toString().c_str());
             break;
@@ -367,14 +395,26 @@ DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& i
             DWARF_READ_ULEB128(is, fileIndex);
             LOG_DEBUG(sLogger, "Executed DW_LNS_set_file: %" PRIu64 " --> %s", fileIndex,
                       m_stateMachine.toString().c_str());
-            m_stateMachine.m_fileIndex = fileIndex;
+            // file index is never expected to be too large
+            if (fileIndex >= UINT32_MAX) {
+                LOG_ERROR(sLogger, "Invalid file index %" PRIu64 " in line program", fileIndex);
+                // this is either internal error or corrupt data
+                return DBGUTIL_ERR_DATA_CORRUPT;
+            }
+            m_stateMachine.m_fileIndex = (uint32_t)fileIndex;
             break;
         }
 
         case DW_LNS_set_column: {
             uint64_t columnIndex = 0;
             DWARF_READ_ULEB128(is, columnIndex);
-            m_stateMachine.m_columnIndex = columnIndex;
+            // file index is never expected to be too large
+            if (columnIndex >= UINT32_MAX) {
+                LOG_ERROR(sLogger, "Invalid column index %" PRIu64 " in line program", columnIndex);
+                // this is either internal error or corrupt data
+                return DBGUTIL_ERR_DATA_CORRUPT;
+            }
+            m_stateMachine.m_columnIndex = (uint32_t)columnIndex;
             LOG_DEBUG(sLogger, "Executed DW_LNS_set_column: %" PRIu64, columnIndex);
             break;
         }
@@ -422,7 +462,13 @@ DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& i
             if (value > UINT_MAX) {
                 return DBGUTIL_ERR_INTERNAL_ERROR;
             }
-            m_stateMachine.m_isa = value;
+            // not sure what range of values is expected here, for now we restrict to uint32_t
+            if (value >= UINT32_MAX) {
+                LOG_ERROR(sLogger, "Invalid isa value %" PRIu64 " in line program", value);
+                // this is either internal error or corrupt data
+                return DBGUTIL_ERR_DATA_CORRUPT;
+            }
+            m_stateMachine.m_isa = (uint32_t)value;
             LOG_DEBUG(sLogger, "Executed DW_LNS_set_isa: %" PRIu64, value);
             break;
         }
@@ -452,7 +498,7 @@ void DwarfLineUtil::advancePC(uint8_t opCode, bool advanceLine /* = false */) {
 
     advanceAddress(opAdvance);
     if (advanceLine) {
-        int64_t lineAdvance = m_lineBase + (adjustedOpCode % m_lineRange);
+        int8_t lineAdvance = m_lineBase + (adjustedOpCode % m_lineRange);
         m_stateMachine.m_lineNumber += lineAdvance;
     }
 }
@@ -498,7 +544,14 @@ DbgUtilErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& 
         case DW_LNE_set_discriminator: {
             uint64_t value = 0;
             DWARF_READ_ULEB128(is, value);
-            m_stateMachine.m_discriminator = value;
+            // not sure what range of values is expected here, for now we restrict to uint32_t
+            if (value >= UINT32_MAX) {
+                LOG_ERROR(sLogger, "Invalid discriminator value %" PRIu64 " in line program",
+                          value);
+                // this is either internal error or corrupt data
+                return DBGUTIL_ERR_DATA_CORRUPT;
+            }
+            m_stateMachine.m_discriminator = (uint32_t)value;
             LOG_DEBUG(sLogger, "Executed DW_LNE_set_discriminator: %" PRIu64, value);
             break;
         }

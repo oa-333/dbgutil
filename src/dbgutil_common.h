@@ -18,21 +18,26 @@ namespace dbgutil {
  */
 extern const char* errorCodeToStr(DbgUtilErr rc);
 
-/** @brief Trims a string's prefix from the left side (in-place). */
-inline void ltrim(std::string& s) { s.erase(0, s.find_first_not_of(" \n\r\t")); }
+/** @brief Sets the global flags settings for dbgutil. */
+extern void setGlobalFlags(uint32_t flags);
 
-/** @brief Trims a string suffix from the right side (in-place). */
-inline void rtrim(std::string& s) { s.erase(s.find_last_not_of(" \n\r\t") + 1); }
+/** @brief Sets the global flags settings for dbgutil. */
+extern uint32_t getGlobalFlags();
 
-/** @brief Trims a string from both sides (in-place). */
-inline std::string trim(const std::string& s) {
-    std::string res = s;
-    ltrim(res);
-    rtrim(res);
-    return res;
-}
-
-// TODO: reorganize this file
+/**
+ * @brief Safer and possibly/hopefully faster version of strncpy() (not benchmarked yet). Unlike
+ * strncpy(), this implementation has three notable differences:
+ * (1) The resulting destination always has a terminating null
+ * (2) In case of a short source string, the resulting destination is not padded with many nulls up
+ * to the size limit, but rather only one terminating null is added
+ * (3) The result value is the number of characters copied, not including the terminating null.
+ * @param dest The destination string.
+ * @param src The source string.
+ * @param destLen The destination length.
+ * @param srcLen The source length (optional, can run faster if provided).
+ * @return The number of characters copied.
+ */
+extern size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
 
 }  // namespace dbgutil
 

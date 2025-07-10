@@ -3,6 +3,8 @@ target_sources(dbgutil PRIVATE
     ./dbg_stack_trace.cpp
     ./dbgutil_common.cpp
     ./dbgutil_log_imp.cpp
+    ./dbgutil_tls.cpp
+    ./dbgutil_win32_dll_event.cpp
     ./dbgutil.cpp
     ./dir_scanner.cpp
     ./dwarf_common.cpp
@@ -17,7 +19,7 @@ target_sources(dbgutil PRIVATE
     ./linux_symbol_engine.cpp
     ./linux_thread_manager.cpp
     ./log_buffer.cpp
-    ./log_msg_builder.cpp
+    ./os_exception_handler.cpp
     ./os_image_reader.cpp
     ./os_module_manager.cpp
     ./os_stack_trace.cpp
