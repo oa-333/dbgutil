@@ -24,11 +24,28 @@ In order to use the library, first include the main header "dbg_util.h", and ini
     }
 
     // do application stuff
+    // dump stack trace
+    dbgutil::dumpStackTrace();
 
     res = dbgutil::termDbgUtil();
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
+
+Sample output (MinGW):
+
+    [Thread 45252 stack trace]
+     0# 0x7ffe5fc32597 dbgutil::printStackTraceContext() +167   at dbg_stack_trace.cpp:185 (libdbgutil.dll)
+     1# 0x7ff7f841b050 dbgutil::printStackTrace() +48           at dbg_stack_trace.h:238 (wal_test_mingw.exe)
+     2# 0x7ff7f841b015 dbgutil::dumpStackTrace() +37            at dbg_stack_trace.h:247 (wal_test_mingw.exe)
+     3# 0x7ff7f84130ff initRecovery() +1275                     at waL_test.cpp:304 (wal_test_mingw.exe)
+     4# 0x7ff7f8412064 testLoadWALRecord() +122                 at waL_test.cpp:122 (wal_test_mingw.exe)
+     5# 0x7ff7f8411ebb runTest() +47                            at waL_test.cpp:95 (wal_test_mingw.exe)
+     6# 0x7ff7f8411e31 main() +398                              at waL_test.cpp:74 (wal_test_mingw.exe)
+     7# 0x7ff7f84112ee __tmainCRTStartup() +366                 at crtexe.c:268 (wal_test_mingw.exe)
+     8# 0x7ff7f8411406 mainCRTStartup() +22                     at crtexe.c:190 (wal_test_mingw.exe)
+     9# 0x7fff0a9be8d7 BaseThreadInitThunk()                    at <N/A>  (KERNEL32.DLL)
+    10# 0x7fff0bf3c34c RtlUserThreadStart()                     at <N/A>  (ntdll.dll)
 
 It is possible to register a log handler (so that internal error messages and application exception information  
 can be printed properly), and an exception handler that receives notifications about fatal faults  
