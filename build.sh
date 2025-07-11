@@ -51,9 +51,6 @@ echo "[INFO] Install dir: $INSTALL_DIR"
 OPTS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 if [ $VERBOSE -eq 1 ]; then
     OPTS+=" -DCMAKE_VERBOSE_MAKEFILE=ON"
-fi
-
-if [ $VERBOSE -eq 1 ]; then
     VERBOSE_OPT=--verbose
 fi
 
@@ -65,7 +62,7 @@ pushd $BUILD_DIR > /dev/null
 
 if [ $CLEAN -eq 1 ]; then
     echo "[INFO] Running target clean"
-    cmake --build . -j -$VERBOSE_OPT --target clean
+    cmake --build . -j $VERBOSE_OPT --target clean
     if [ $? -ne 0 ]; then
         echo "[ERROR] Clean failed, see errors above, aborting"
         popd > /dev/null

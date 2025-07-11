@@ -41,6 +41,9 @@ add_subdirectory(src)
 # public headers
 add_subdirectory(inc)
 
+# normalize install paths, suppress warning from CMAKE 3.31
+cmake_policy(SET CMP0177 NEW)
+
 # install header in install dir
 install(TARGETS dbgutil FILE_SET publicheaders)
 
