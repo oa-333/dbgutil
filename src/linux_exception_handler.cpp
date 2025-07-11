@@ -204,7 +204,7 @@ void LinuxExceptionHandler::signalHandler(int sigNum, siginfo_t* sigInfo, void* 
 
     // printf fault address
     sExceptBufLen += snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                              "Faulting address: %p\n", addr);
+                              "Faulting address: %p\n", exInfo.m_faultAddress);
 
     // print extended information
     printExtendedInfo(sigNum, sigInfo->si_code);
@@ -239,7 +239,7 @@ const char* LinuxExceptionHandler::getSignalName(int sigNum) {
 #endif
 }
 
-DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandler handler,
+DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandlerFunc handler,
                                                         SignalHandler* prevHandler) {
 #ifdef DBGUTIL_MINGW
     SignalHandler prevHandlerLocal = signal(sigNum, handler);
@@ -262,7 +262,7 @@ DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandle
     memset(&prevHandlerLocal, 0, sizeof(struct sigaction));
 
     // install signal handler
-    int res = sigaction(sigNum, &sa, &prevHandler);
+    int res = sigaction(sigNum, &sa, &prevHandlerLocal);
     if (res != 0) {
         LOG_SYS_ERROR(sLogger, sigaction, "Failed to register signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
@@ -270,6 +270,26 @@ DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandle
     }
     if (prevHandler != nullptr) {
         *prevHandler = prevHandlerLocal;
+    }
+#endif
+    return DBGUTIL_ERR_OK;
+}
+
+DbgUtilErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler& handler) {
+#ifdef DBGUTIL_MINGW
+    SignalHandler prevHandlerLocal = signal(sigNum, handler);
+    if (prevHandlerLocal == SIG_ERR) {
+        LOG_SYS_ERROR(sLogger, signal, "Failed to register signal handler for signal %d (%s)",
+                      sigNum, getSignalName(sigNum));
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+#else
+    // install previous signal handler
+    int res = sigaction(sigNum, &handler, nullptr);
+    if (res != 0) {
+        LOG_SYS_ERROR(sLogger, sigaction, "Failed to register signal handler for signal %d (%s)",
+                      sigNum, getSignalName(sigNum));
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 #endif
     return DBGUTIL_ERR_OK;
@@ -290,7 +310,7 @@ DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
                   "Internal error, duplicate registration of signal handler for signal %d (%s)",
                   sigNum, getSignalName(sigNum));
         // best effort to restore previous handler
-        registerSignalHandler(sigNum, prevHandler, nullptr);
+        restoreSignalHandler(sigNum, prevHandler);
         return DBGUTIL_ERR_ALREADY_EXISTS;
     }
     return DBGUTIL_ERR_OK;
@@ -308,7 +328,7 @@ DbgUtilErr LinuxExceptionHandler::unregisterSignalHandler(int sigNum) {
 
     // restore previous handler
     SignalHandler prevHandler = itr->second;
-    DbgUtilErr res = registerSignalHandler(sigNum, prevHandler, nullptr);
+    DbgUtilErr res = restoreSignalHandler(sigNum, prevHandler);
     if (res != DBGUTIL_ERR_OK) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to unregister signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));

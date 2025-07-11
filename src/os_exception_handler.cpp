@@ -26,7 +26,7 @@ public:
         sCallStackBuf[0] = 0;
         sCallStackBufLen =
             snprintf(sCallStackBuf + sCallStackBufLen, CALL_STACK_BUF_SIZE - sCallStackBufLen,
-                     "[Thread %u stack trace]\n", threadId);
+                     "[Thread %" PRItidx " stack trace]\n", threadId);
     }
     void onEndStackTrace() override {}
     void onStackEntry(const char* stackEntry) {

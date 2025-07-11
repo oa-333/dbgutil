@@ -113,32 +113,6 @@ DbgUtilErr termLinuxStackTrace() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-BEGIN_STARTUP_JOB(OsStackTrace) {
-    LinuxStackTraceProvider::createInstance();
-    DbgUtilErr rc = LinuxStackTraceProvider::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    setStackTraceProvider(LinuxStackTraceProvider::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsStackTrace)
-DECLARE_STARTUP_JOB_DEP(OsStackTrace, LinuxThreadManager)
-
-BEGIN_TEARDOWN_JOB(OsStackTrace) {
-    setStackTraceProvider(nullptr);
-    DbgUtilErr rc = LinuxStackTraceProvider::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    LinuxStackTraceProvider::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsStackTrace)
-DECLARE_TEARDOWN_JOB_DEP(OsStackTrace, LinuxThreadManager)
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_GCC

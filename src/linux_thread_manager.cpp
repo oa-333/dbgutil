@@ -360,35 +360,6 @@ DbgUtilErr termLinuxThreadManager() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-BEGIN_STARTUP_JOB(LinuxThreadManager) {
-    sLogger = elog::ELogSystem::getSharedLogger("csi.common.linux_thread_manager");
-    LinuxThreadManager::createInstance();
-    DbgUtilErr rc = LinuxThreadManager::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-#ifdef DBGUTIL_LINUX
-    setThreadManager(LinuxThreadManager::getInstance());
-#endif
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(LinuxThreadManager)
-
-BEGIN_TEARDOWN_JOB(LinuxThreadManager) {
-    setThreadManager(nullptr);
-    DbgUtilErr rc = LinuxThreadManager::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-#ifdef DBGUTIL_LINUX
-    LinuxThreadManager::destroyInstance();
-#endif
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(LinuxThreadManager)
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_GCC

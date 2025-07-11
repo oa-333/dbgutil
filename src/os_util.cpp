@@ -498,7 +498,7 @@ DbgUtilErr OsUtil::readEntireFileToLines(const char* path, std::vector<std::stri
             idx = itr - buf.begin();
         }
 
-        std::string line(&buf[prevIdx + 1], idx - prevIdx);
+        std::string line(&buf[prevIdx], idx - prevIdx);
         lines.push_back(line);
         prevIdx = idx + 1;
     } while (prevIdx < buf.size());

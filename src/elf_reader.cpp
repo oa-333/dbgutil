@@ -404,7 +404,7 @@ DbgUtilErr ElfReader::buildSymInfoSet32(Elf32_Ehdr* hdr) {
     char* symTabStart = &m_symTab[0];
     char* symSecEndPos = symTabStart + m_symTabSize;
     char* symPos = symTabStart;
-    int srcFileIndex = 0;
+    uint32_t srcFileIndex = 0;
     for (; symPos < symSecEndPos; symPos += m_symEntrySize) {
         Elf32_Sym* symInfo = (Elf32_Sym*)symPos;
         if (symInfo->st_shndx == SHN_UNDEF) {
@@ -416,7 +416,7 @@ DbgUtilErr ElfReader::buildSymInfoSet32(Elf32_Ehdr* hdr) {
         const char* symName = &m_strTab[symInfo->st_name];
         int type = ELF32_ST_TYPE(symInfo->st_info);
         if (type == STT_FILE) {
-            srcFileIndex = m_srcFileNames.size();
+            srcFileIndex = (uint32_t)m_srcFileNames.size();
             m_srcFileNames.push_back(symName);
             continue;
         }
@@ -439,7 +439,7 @@ DbgUtilErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
     char* symTabStart = &m_symTab[0];
     char* symSecEndPos = symTabStart + m_symTabSize;
     char* symPos = symTabStart;
-    int srcFileIndex = 0;
+    uint32_t srcFileIndex = 0;
     for (; symPos < symSecEndPos; symPos += m_symEntrySize) {
         Elf64_Sym* symInfo = (Elf64_Sym*)symPos;
         if (symInfo->st_shndx == SHN_UNDEF) {
@@ -451,9 +451,10 @@ DbgUtilErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
         const char* symName = &m_strTab[symInfo->st_name];
         int type = ELF64_ST_TYPE(symInfo->st_info);
         if (type == STT_FILE) {
-            srcFileIndex = m_srcFileNames.size();
+            srcFileIndex = (uint32_t)m_srcFileNames.size();
             m_srcFileNames.push_back(symName);
-            LOG_DEBUG(sLogger, "Found file: %s", symName);
+            LOG_DEBUG(sLogger, "Found file: %s (name index: %u, file index: %u)", symName,
+                      symInfo->st_name, srcFileIndex);
             continue;
         }
         if (type != STT_FUNC) {
@@ -563,22 +564,6 @@ DbgUtilErr termElfReader() {
     ElfReaderFactory::destroyInstance();
     return DBGUTIL_ERR_OK;
 }
-
-#if 0
-BEGIN_STARTUP_JOB(OsImageReaderFactory) {
-    ElfReaderFactory::createInstance();
-    setImageReaderFactory(ElfReaderFactory::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsImageReaderFactory)
-
-BEGIN_TEARDOWN_JOB(OsImageReaderFactory) {
-    setImageReaderFactory(nullptr);
-    ElfReaderFactory::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsImageReaderFactory)
-#endif
 
 }  // namespace dbgutil
 

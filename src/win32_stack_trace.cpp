@@ -121,43 +121,6 @@ DbgUtilErr termWin32StackTrace() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-#ifdef DBGUTIL_MSVC
-BEGIN_STARTUP_JOB(OsStackTrace) {
-#else
-BEGIN_STARTUP_JOB(Win32StackTrace) {
-#endif
-    sLogger = elog::ELogSystem::getSharedLogger("csi.common.win32_stack_trace");
-    Win32StackTraceProvider::createInstance();
-#ifdef DBGUTIL_MSVC
-    setStackTraceProvider(Win32StackTraceProvider::getInstance());
-#endif
-    return DBGUTIL_ERR_OK;
-}
-#ifdef DBGUTIL_MSVC
-END_STARTUP_JOB(OsStackTrace)
-#else
-END_STARTUP_JOB(Win32StackTrace)
-#endif
-
-#ifdef DBGUTIL_MSVC
-BEGIN_TEARDOWN_JOB(OsStackTrace) {
-#else
-BEGIN_TEARDOWN_JOB(Win32StackTrace) {
-#endif
-#ifdef DBGUTIL_MSVC
-    setStackTraceProvider(nullptr);
-#endif
-    Win32StackTraceProvider::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-#ifdef DBGUTIL_MSVC
-END_TEARDOWN_JOB(OsStackTrace)
-#else
-END_TEARDOWN_JOB(Win32StackTrace)
-#endif
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_WINDOWS

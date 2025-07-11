@@ -70,6 +70,11 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
         LOG_DEBUG(sLogger, "Failed to find symbol %p in binary image: %s", symAddress,
                   errorCodeToStr(rc));
     } else {
+        LOG_DEBUG(
+            sLogger,
+            "Found symbol %p info in binary image: symbol name=%s, file name=%s, start addr=%p",
+            symAddress, symbolInfo.m_symbolName.c_str(), symbolInfo.m_fileName.c_str(),
+            symbolInfo.m_startAddress);
         symbolInfo.m_byteOffset = (uint64_t)symAddress - (uint64_t)symbolInfo.m_startAddress;
     }
 
@@ -265,27 +270,6 @@ DbgUtilErr termLinuxSymbolEngine() {
     unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
-
-#if 0
-BEGIN_STARTUP_JOB(LinuxSymbolEngine) {
-    LinuxSymbolEngine::createInstance();
-#ifdef DBGUTIL_GCC
-    setSymbolEngine(LinuxSymbolEngine::getInstance());
-#endif
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(LinuxSymbolEngine)
-DECLARE_STARTUP_JOB_DEP(LinuxSymbolEngine, OsModuleManager)
-
-BEGIN_TEARDOWN_JOB(LinuxSymbolEngine) {
-#ifdef DBGUTIL_MSVC
-    setSymbolEngine(nullptr);
-#endif
-    LinuxSymbolEngine::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(LinuxSymbolEngine)
-#endif
 
 }  // namespace dbgutil
 

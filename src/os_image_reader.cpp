@@ -27,6 +27,7 @@ DbgUtilErr OsImageReader::open(const char* path, void* moduleBase) {
         return rc;
     }
     m_moduleBase = (char*)moduleBase;
+    LOG_DEBUG(sLogger, "Processing binary image: %s", path);
 
     rc = readImage();
     if (rc != DBGUTIL_ERR_OK) {

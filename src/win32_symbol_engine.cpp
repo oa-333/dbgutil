@@ -284,36 +284,6 @@ DbgUtilErr termWin32SymbolEngine() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-BEGIN_STARTUP_JOB(Win32SymbolEngine) {
-    Win32SymbolEngine::createInstance();
-    DbgUtilErr rc = Win32SymbolEngine::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-#ifdef DBGUTIL_MSVC
-    setSymbolEngine(Win32SymbolEngine::getInstance());
-#endif
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(Win32SymbolEngine)
-DECLARE_STARTUP_JOB_DEP(Win32SymbolEngine, OsModuleManager)
-
-BEGIN_TEARDOWN_JOB(Win32SymbolEngine) {
-#ifdef DBGUTIL_MSVC
-    setSymbolEngine(nullptr);
-#endif
-    DbgUtilErr rc = Win32SymbolEngine::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    Win32SymbolEngine::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(Win32SymbolEngine)
-DECLARE_TEARDOWN_JOB_DEP(Win32SymbolEngine, OsModuleManager)
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_WINDOWS

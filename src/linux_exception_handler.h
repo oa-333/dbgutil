@@ -37,8 +37,10 @@ private:
     static LinuxExceptionHandler* sInstance;
 
 #ifdef DBGUTIL_MINGW
+    typedef __p_sig_fn_t SignalHandlerFunc;
     typedef __p_sig_fn_t SignalHandler;
 #else
+    typedef void (*SignalHandlerFunc)(int, siginfo_t*, void*);
     typedef struct sigaction SignalHandler;
 #endif
     typedef std::unordered_map<int, SignalHandler> SigHandlerMap;
@@ -59,7 +61,9 @@ private:
     DbgUtilErr registerSignalHandler(int sigNum);
     DbgUtilErr unregisterSignalHandler(int sigNum);
 
-    DbgUtilErr registerSignalHandler(int sigNum, SignalHandler handler, SignalHandler* prevHandler);
+    DbgUtilErr registerSignalHandler(int sigNum, SignalHandlerFunc handler,
+                                     SignalHandler* prevHandler);
+    DbgUtilErr restoreSignalHandler(int sigNum, SignalHandler& handler);
 
     void finalizeSignalHandling(OsExceptionInfo& exInfo, void* context);
 };

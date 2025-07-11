@@ -154,7 +154,7 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
         }
     }
 
-    if (!moduleFound) {
+    if (address != nullptr && !moduleFound) {
         // it has been observed that at times, the /proc/self/maps does not provide a full list of
         // loaded modules, so in this case we resort to dladdr()
         Dl_info dlinfo = {};
@@ -252,22 +252,6 @@ DbgUtilErr termLinuxModuleManager() {
     unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
-
-#if 0
-BEGIN_STARTUP_JOB(OsModuleManager) {
-    LinuxModuleManager::createInstance();
-    setModuleManager(LinuxModuleManager::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsModuleManager)
-
-BEGIN_TEARDOWN_JOB(OsModuleManager) {
-    setModuleManager(nullptr);
-    LinuxModuleManager::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsModuleManager)
-#endif
 
 }  // namespace dbgutil
 

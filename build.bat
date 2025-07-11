@@ -89,9 +89,13 @@ REM print cmake info
 echo [INFO] CMake version:
 cmake --version
 
+if %VERBOSE% EQU 1 (
+    SET VERBOSE_OPT=--verbose
+)
+
 IF %CLEAN% EQU 1 (
     echo [INFO] Running target clean
-    cmake --build . -j --verbose --target clean
+    cmake --build . -j %VERBOSE_OPT% --target clean
     if errorlevel 1 (
         echo [ERROR] Clean failed, see errors above, aborting
         popd > NUL
@@ -123,8 +127,8 @@ if errorlevel 1 (
 REM build phase
 REM NOTE: On windows MSVC (multi-config system), the configuration to build should be specified in build command
 echo [INFO] Building
-echo [INFO] Executing command: cmake --build . -j --verbose --config %BUILD_TYPE%
-cmake --build . -j --verbose --config %BUILD_TYPE%
+echo [INFO] Executing command: cmake --build . -j %VERBOSE_OPT% --config %BUILD_TYPE%
+cmake --build . -j %VERBOSE_OPT% --config %BUILD_TYPE%
 if errorlevel 1 (
     echo [ERROR] Build phase failed, see errors above, aborting
     popd > NUL
@@ -133,7 +137,7 @@ if errorlevel 1 (
 
 REM install phase
 echo [INFO] Installing
-cmake --install . --verbose --config %BUILD_TYPE%
+cmake --install . %VERBOSE_OPT% --config %BUILD_TYPE%
 if errorlevel 1 (
     echo [ERROR] Install phase failed, see errors above, aborting
     popd > NUL

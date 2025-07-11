@@ -496,22 +496,6 @@ extern DbgUtilErr termWin32PEReader() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-BEGIN_STARTUP_JOB(OsImageReaderFactory) {
-    Win32PEReaderFactory::createInstance();
-    setImageReaderFactory(Win32PEReaderFactory::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsImageReaderFactory)
-
-BEGIN_TEARDOWN_JOB(OsImageReaderFactory) {
-    setImageReaderFactory(nullptr);
-    Win32PEReaderFactory::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsImageReaderFactory)
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_WINDOWS

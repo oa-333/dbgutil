@@ -2,6 +2,7 @@
 #define __LOG_BUFFER_H__
 
 #include <cassert>
+#include <cstdarg>
 #include <cstdint>
 #include <cstring>
 

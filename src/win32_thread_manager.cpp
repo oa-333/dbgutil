@@ -111,31 +111,6 @@ DbgUtilErr termWin32ThreadManager() {
     return DBGUTIL_ERR_OK;
 }
 
-#if 0
-BEGIN_STARTUP_JOB(OsThreadManager) {
-    sLogger = elog::ELogSystem::getSharedLogger("csi.common.win32_thread_manager");
-    Win32ThreadManager::createInstance();
-    DbgUtilErr rc = Win32ThreadManager::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    setThreadManager(Win32ThreadManager::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsThreadManager)
-
-BEGIN_TEARDOWN_JOB(OsThreadManager) {
-    setThreadManager(nullptr);
-    DbgUtilErr rc = Win32ThreadManager::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    Win32ThreadManager::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsThreadManager)
-#endif
-
 }  // namespace dbgutil
 
 #endif  // DBGUTIL_WINDOWS
