@@ -229,6 +229,11 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
         LOG_FATAL(sLogger, exInfo.m_fullExceptionInfo);
         LOG_FATAL(sLogger, exInfo.m_callStack);
     }
+
+    // generate core
+    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+        abort();
+    }
 }
 
 const char* LinuxExceptionHandler::getSignalName(int sigNum) {

@@ -209,7 +209,7 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
     }
 
     // finally, attempt to dump core
-    if (getGlobalFlags() && DBGUTIL_WIN32_MINI_DUMP_CORE) {
+    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
         LOG_DEBUG(sLogger, "Dumping core");
         Win32SymbolEngine::getInstance()->dumpCore(exceptionInfo);
         LOG_DEBUG(sLogger, "Finished dumping core");

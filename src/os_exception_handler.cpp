@@ -65,7 +65,7 @@ void OsExceptionHandler::dispatchExceptionInfo(const OsExceptionInfo& exceptionI
 const char* OsExceptionHandler::prepareCallStack(void* context) {
     // get stack trace information
     CallStackBufPrinter callStackBufPrinter;
-    printStackTraceContext(context, 2, &callStackBufPrinter);
+    printStackTraceContext(context, 0, &callStackBufPrinter);
     return sCallStackBuf;
 }
 
