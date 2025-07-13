@@ -105,14 +105,10 @@ private:
 
     struct LineInfo {
         uint64_t m_address;      // relocatable address
-        uint32_t m_size;         // computed by next address in matrix
         uint32_t m_fileIndex;    // 0-based index to file list
         uint32_t m_lineNumber;   // 1-based index
         uint32_t m_columnIndex;  // 1-based index
-
-        inline bool contains(uint64_t offset) const {
-            return offset >= m_address && offset < m_address + m_size;
-        }
+        uint32_t m_padding;
 
         inline bool operator<(const LineInfo& lineInfo) const {
             return m_address < lineInfo.m_address;

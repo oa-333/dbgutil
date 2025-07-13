@@ -79,13 +79,21 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
     }
 
     // next we go to dwarf data and try there
+    SymbolInfo symbolInfoDwarf = symbolInfo;
+    LOG_DEBUG(sLogger, "Searching for symbol %p at module %s base %p by relocation base %p",
+              symAddress, symModData->m_moduleInfo.m_modulePath.c_str(),
+              symModData->m_moduleInfo.m_loadAddress,
+              (void*)symModData->m_imageReader->getRelocationBase());
     rc = symModData->m_dwarfUtil.searchSymbol(
-        symAddress, symbolInfo, (void*)symModData->m_imageReader->getRelocationBase());
+        symAddress, symbolInfoDwarf, (void*)symModData->m_imageReader->getRelocationBase());
     if (rc == DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Dwarf info: sym name %s, file %s, line %u",
-                  symbolInfo.m_symbolName.c_str(), symbolInfo.m_fileName.c_str(),
-                  symbolInfo.m_lineNumber);
+                  symbolInfoDwarf.m_symbolName.c_str(), symbolInfoDwarf.m_fileName.c_str(),
+                  symbolInfoDwarf.m_lineNumber);
     }
+
+    // finally merge all missing data from the dwarf symbol info
+    symbolInfo.merge(symbolInfoDwarf);
 
     // although we should know from image reader that the symbol table is empty (so we can
     // distinguish whether this is a Windows native DLL or a MinGW DLL built by gcc/g++), we just

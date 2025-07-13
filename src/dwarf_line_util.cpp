@@ -53,32 +53,61 @@ DbgUtilErr DwarfLineUtil::buildLineMatrix(DwarfData& dwarfData, FixedInputStream
 DbgUtilErr DwarfLineUtil::searchLineMatrix(const DwarfSearchData& searchData,
                                            SymbolInfo& symbolInfo) {
     // search relocated address (translated to debug info base) line in matrix
+    // NOTE: we search for the first entry whose address >= search address, special care required,
+    // see below for more explanation
     LOG_DEBUG(sLogger, "Searching for relocated address %p", (void*)searchData.m_relocatedAddress)
     LineMatrix::iterator itr =
         std::lower_bound(m_lineMatrix.begin(), m_lineMatrix.end(), searchData.m_relocatedAddress,
                          [](const LineInfo& lineInfo, uint64_t relocSymAddr) {
-                             return lineInfo.m_address + lineInfo.m_size <= relocSymAddr;
+                             return lineInfo.m_address < relocSymAddr;
                          });
 
+    // NOTE: we get the first iterator for which the predicate is false, or end(),
+    // so end() means all addresses are less than searched address.
     if (itr == m_lineMatrix.end()) {
         return DBGUTIL_ERR_NOT_FOUND;
     }
 
-    LineInfo& lineInfo = *itr;
-    if (lineInfo.contains(searchData.m_relocatedAddress)) {
+    // NOTE: since we passed strict less operator "<", then if the last address equals the searched
+    // address, then we would get a valid iterator pointing to the last valid element (not end()).
+    // if we get the begin() iterator it means that either the address equals the first element (so
+    // strict "<" return false), or that the searched address is lower than the first address.
+    // in simpler words: first check that the current iterator points to an address equal to the
+    // searched address, and if so return it, otherwise check for the previous iterator (unless this
+    // is begin iterator), which will definitely return true for "<".
+    bool found = false;
+    if (itr->m_address == searchData.m_relocatedAddress) {
+        found = true;
+    } else if (itr != m_lineMatrix.begin()) {
+        --itr;
+        if (itr->m_address <= searchData.m_relocatedAddress) {
+            found = true;
+        }
+    }
+
+    if (found) {
+        // at this point it is possible to have several entries with the searched address, so we
+        // prefer to choose the one which has the main file, rather that STL or libstdc stuff
+        LineMatrix::iterator itr2 = itr;
+        while (itr2 != m_lineMatrix.end() && itr2->m_address == itr->m_address &&
+               m_files[itr->m_fileIndex].m_name.compare(m_files[0].m_name) != 0) {
+            ++itr2;
+        }
+        if (itr2 != m_lineMatrix.end()) {
+            // we found an entry with the same address but pointing to main file of CU, so take it
+            itr = itr2;
+        }
+
+        LineInfo& lineInfo = *itr;
         FileInfo& fileInfo = m_files[lineInfo.m_fileIndex];
-        // TODO: this is not necessarily correct, maybe image symbol table given better data
-        /*symbolInfo.m_startAddress =
-        (void*)(lineInfo.m_address - (uint64_t)searchData.m_relocationBase +
-                (uint64_t)searchData.m_moduleBaseAddress);*/
+        // NOTE: symbol start address is extracted from symbol table
         std::string dir = m_dirs[fileInfo.m_dirIndex];
         symbolInfo.m_fileName = dir + "/" + fileInfo.m_name;
         symbolInfo.m_lineNumber = lineInfo.m_lineNumber;
         symbolInfo.m_columnIndex = lineInfo.m_columnIndex;
-        // symbolInfo.m_byteOffset = searchData.m_relocatedAddress - lineInfo.m_address;
-        LOG_DEBUG(sLogger, "Relocated address %p found at file %s, line %u",
-                  (void*)searchData.m_relocatedAddress, symbolInfo.m_fileName.c_str(),
-                  symbolInfo.m_lineNumber);
+        LOG_DEBUG(sLogger, "Relocated address %p found at %p, file %s, line %u",
+                  (void*)searchData.m_relocatedAddress, (void*)lineInfo.m_address,
+                  symbolInfo.m_fileName.c_str(), symbolInfo.m_lineNumber);
         return DBGUTIL_ERR_OK;
     }
 
@@ -311,13 +340,10 @@ DbgUtilErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
     }
 
     // sort matrix for quick search
-    std::sort(m_lineMatrix.begin(), m_lineMatrix.end());
-
-    // fix end address of each line in the matrix
-    for (uint32_t i = 1; i < m_lineMatrix.size(); ++i) {
-        m_lineMatrix[i - 1].m_size =
-            (uint32_t)(m_lineMatrix[i].m_address - m_lineMatrix[i - 1].m_address);
-    }
+    // NOTE: since a single address may be associated with several files/lines (especially in
+    // release builds), we would like to preserve original order as it appears in the line program,
+    // therefore we use here stable_sort(), rather than sort().
+    std::stable_sort(m_lineMatrix.begin(), m_lineMatrix.end());
 
     // print matrix
     if (canLog(sLogger, LS_DEBUG)) {
@@ -335,7 +361,7 @@ DbgUtilErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
 }
 
 void DwarfLineUtil::appendLineMatrix() {
-    m_lineMatrix.push_back({m_stateMachine.m_address, 0, m_stateMachine.m_fileIndex,
+    m_lineMatrix.push_back({m_stateMachine.m_address, m_stateMachine.m_fileIndex,
                             m_stateMachine.m_lineNumber, m_stateMachine.m_columnIndex});
 }
 

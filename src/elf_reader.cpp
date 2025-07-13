@@ -373,7 +373,7 @@ DbgUtilErr ElfReader::getSymTab64(Elf64_Ehdr* hdr) {
         return rc;
     }
 
-    for (int i = 0; i < (int)hdr->e_shnum; ++i) {
+    for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf64_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
         if (rc != DBGUTIL_ERR_OK) {

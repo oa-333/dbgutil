@@ -53,11 +53,10 @@ DbgUtilErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void
     unw_context_t* ucontext = (unw_context_t*)context;
     unw_cursor_t cursor;
     unw_init_local(&cursor, ucontext);
-    unsigned long a[100];
-    int ctr = 0;
-    unw_word_t ip, sp;
 
     while (unw_step(&cursor) > 0) {
+        unw_word_t ip = 0;
+        unw_word_t sp = 0;
         unw_get_reg(&cursor, UNW_REG_IP, &ip);
         unw_get_reg(&cursor, UNW_REG_SP, &sp);
         void* addr = (void*)ip;

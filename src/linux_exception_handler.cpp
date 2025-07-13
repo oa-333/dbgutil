@@ -219,7 +219,9 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
     exInfo.m_fullExceptionInfo = sExceptBuf;
 
     // get stack trace information
-    exInfo.m_callStack = prepareCallStack(context);
+    // NOTE: on Linux, using the context record results in one missing frame, so instead we pass
+    // nullptr and let libunwind get full stack trace from this point
+    exInfo.m_callStack = prepareCallStack(nullptr);
 
     // now we can dispatch the exception
     dispatchExceptionInfo(exInfo);
@@ -232,6 +234,7 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
 
     // generate core
     if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+        LOG_FATAL(sLogger, "Aborting after fatal exception, see details above.");
         abort();
     }
 }

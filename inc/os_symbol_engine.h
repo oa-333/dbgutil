@@ -44,6 +44,33 @@ struct DBGUTIL_API SymbolInfo {
           m_byteOffset(0),
           m_lineNumber(0),
           m_columnIndex(0) {}
+
+    void merge(const SymbolInfo& symInfo) {
+        if (m_moduleBaseAddress == nullptr) {
+            m_moduleBaseAddress = symInfo.m_moduleBaseAddress;
+        }
+        if (m_startAddress == nullptr) {
+            m_startAddress = symInfo.m_startAddress;
+        }
+        if (m_byteOffset == 0) {
+            m_byteOffset = symInfo.m_byteOffset;
+        }
+        if (m_lineNumber == 0) {
+            m_lineNumber = symInfo.m_lineNumber;
+        }
+        if (m_columnIndex == 0) {
+            m_columnIndex = symInfo.m_columnIndex;
+        }
+        if (m_symbolName.empty()) {
+            m_symbolName = symInfo.m_symbolName;
+        }
+        if (m_fileName.empty()) {
+            m_fileName = symInfo.m_fileName;
+        }
+        if (m_moduleName.empty()) {
+            m_moduleName = symInfo.m_moduleName;
+        }
+    }
 };
 
 /** @brief Parent interface for symbol engines. */
