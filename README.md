@@ -240,17 +240,20 @@ In order to register such a listener, first derive from OsExceptionListener, and
 
     static MyExceptionListener myExceptionListener;
 
-    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, 
+        DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
 
-### Generating Mini-dump on Windows
+### Generating Core Dumps on Windows/Linux during Crash Handling
 
-It is possible to order dbgutil to generate mini-dump file before crashing.  
+It is possible to order dbgutil to generate core dump file before crashing.  
+
+To enable this option, dbgutil should be initialized with the DBGUTIL_EXCEPTION_DUMP_CORE flag:
+
+    dbgutil::initDbgUtil(null, nullptr, LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
+    
+On Windows this will have dbgutil generate a mini-dump file.  
 Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
 so consider this is a best effort attempt.
-
-The enable this option, dbgutil should be initialized with the DBGUTIL_WIN32_MINI_DUMP_CORE flag:
-
-    dbgutil::initDbgUtil(null, nullptr, LS_FATAL, DBGUTIL_WIN32_MINI_DUMP_CORE);
 
 ### Combining All Options
 
