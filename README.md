@@ -1,10 +1,16 @@
-# dbgutil Package
+# dbgutil Library
 
-A simple package for common software debug utilities in C++.  
+Dbgutil is a simple library for common software debug utilities in C++,  
+with special focus on stack traces including file and line information.  
+Supported platforms are:
+
+- Windows
+- Linux
+- MinGW
 
 ## Description
 
-The dbgutil package allows:
+The dbgutil library allows:
 
 - Retrieving stack traces (raw or with full symbol information)
 - Resolving symbol information (with file and line, on Windows/Linux/MinGW)
@@ -51,9 +57,36 @@ It is possible to register a log handler (so that internal error messages and ap
 can be printed properly), and an exception handler that receives notifications about fatal faults  
 (e.g. segmentation fault).
 
+Here is a sample output of the exception handler (Linux):
+
+    2025-07-17 11:01:52.678 FATAL  [35850] dbgutil.linux_exception_handler Received signal 11: Segmentation fault
+    Faulting address: (nil)
+    Extended exception information: Address not mapped to object
+
+    2025-07-17 11:01:52.678 FATAL  [35850] dbgutil.linux_exception_handler [Thread 8c0a stack trace]
+     0# 0x77fb9a36b0b1 dbgutil::printStackTraceContext() +186   at dbg_stack_trace.cpp:193 (libdbgutil.so)
+     1# 0x77fb9a39f5be dbgutil::OsExceptionHandler::prepareCallStack() +74 at os_exception_handler.cpp:79 (libdbgutil.so)
+     2# 0x77fb9a390458 dbgutil::LinuxExceptionHandler::finalizeSignalHandling() +66 at linux_exception_handler.cpp:224 (libdbgutil.so)
+     3# 0x77fb9a3903f5 dbgutil::LinuxExceptionHandler::signalHandler() +307 at linux_exception_handler.cpp:214 (libdbgutil.so)
+     4# 0x77fb9a3902bf dbgutil::LinuxExceptionHandler::signalHandlerStatic() +55 at linux_exception_handler.cpp:191 (libdbgutil.so)
+     5# 0x77fb99c45330 N/A                                      at <N/A>  (libc.so.6)
+     6# 0x58025499fca6 runSingleThreadedTest() +433             at elog_bench.cpp:1310 (elog_bench)
+     7# 0x5802549a2ed4 testPerfSTQuantumCount4096() +131        at elog_bench.cpp:2084 (elog_bench)
+     8# 0x5802549a2527 testPerfAllSingleThread() +754           at elog_bench.cpp:1808 (elog_bench)
+     9# 0x58025499faee testException() +27                      at elog_bench.cpp:1282 (elog_bench)
+    10# 0x58025499e77a main() +305                              at elog_bench.cpp:751 (elog_bench)
+    11# 0x77fb99c2a1ca N/A                                      at <N/A>  (libc.so.6)
+    12# 0x77fb99c2a28b __libc_start_main()                      at <N/A>  (libc.so.6)
+    13# 0x58025499d7c5 _start() +37                             at <N/A>  (elog_bench)
+
+    2025-07-17 11:01:52.678 FATAL  [35850] dbgutil.linux_exception_handler Aborting after fatal exception, see details above.
+    Aborted
+
+
 ### Dependencies
 
-The dbgutil package has no external dependencies.
+The dbgutil package has no external dependencies, except for libunwind on Linux/MinGW.  
+Besides that, dbgutil relies solely on reading binary images and DWARF data.
 
 ### Installing
 
@@ -71,6 +104,14 @@ Add to compiler include path:
 Add to linker flags:
 
     -L<install-path>/lib -ldbgutil
+
+For CMake builds it is possible to use FetchContent as follows:
+
+    FetchContent_Declare(dbgutil
+        GIT_REPOSITORY https://github.com/oa-333/dbgutil.git
+        GIT_TAG 0.1.0
+    )
+    FetchContent_MakeAvailable(dbgutil)
 
 In the future it may be uploaded to package managers (e.g. vcpkg).
 
@@ -241,18 +282,18 @@ standard logging system:
     class MyLogHandler : public dbgutil::LogHandler {
     public:
         dbgutil::LogSeverity onRegisterLogger(dbgutil::LogSeverity severity, const char* loggerName,
-                                              uint32_t loggerId) final {
+                                              size_t loggerId) final {
             // TODO: handle event - logger initializing
             // if no special handling is required then don't override this method
             // it may be handing here to map dbgutil logger to application logger
         }
 
-        void onUnregisterLogger(uint32_t loggerId) final {
+        void onUnregisterLogger(size_t loggerId) final {
             // TODO: handle event - logger terminating
             // if no special handling is required then don't override this method
         }
 
-        void onMsg(dbgutil::LogSeverity severity, uint32_t loggerId, const char* loggerName,
+        void onMsg(dbgutil::LogSeverity severity, size_t loggerId, const char* loggerName,
                    const char* msg) final {
             // TODO: redirect message to internal logging system, logger id may be used to 
             // locate mapped logger from onRegisterLogger()
