@@ -109,9 +109,15 @@ For CMake builds it is possible to use FetchContent as follows:
 
     FetchContent_Declare(dbgutil
         GIT_REPOSITORY https://github.com/oa-333/dbgutil.git
-        GIT_TAG 0.1.0
+        GIT_TAG v0.1.0
     )
     FetchContent_MakeAvailable(dbgutil)
+    target_include_directories(
+        <your project name here>
+        PRIVATE
+        ${dbgutil_SOURCE_DIR}/inc
+    )
+    target_link_libraries(<your project name here> dbgutil)
 
 In the future it may be uploaded to package managers (e.g. vcpkg).
 

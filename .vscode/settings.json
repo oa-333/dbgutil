@@ -74,17 +74,35 @@
         "cassert": "cpp"
     },
     "cSpell.words": [
+        "crtexe",
         "dbgutil",
+        "elog",
         "HINSTANCE",
         "IMAGEHLP",
+        "Itid",
+        "ldbgutil",
+        "libc",
+        "libdbgutil",
+        "libelog",
+        "libunwind",
         "lseeki",
         "MINIDUMP",
         "MSVC",
+        "ntdll",
         "NTSTATUS",
+        "nullptr",
+        "pstack",
+        "pthread",
         "publicheaders",
+        "SIGBUS",
+        "SIGFPE",
+        "SIGILL",
         "SIGRTMIN",
+        "SIGSEGV",
+        "SIGTRAP",
         "tgsigqueueinfo",
-        "UNDNAME"
+        "UNDNAME",
+        "vcpkg"
     ],
     "cSpell.ignoreWords": [
         "LNCT",
@@ -99,6 +117,7 @@
         "rnglists",
         "rnglistsptr",
         "rnglistx",
-        "startx"
+        "startx",
+        "tmain"
     ]
 }
