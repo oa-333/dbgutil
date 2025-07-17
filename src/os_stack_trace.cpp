@@ -8,9 +8,15 @@ static OsStackTraceProvider* sProvider = nullptr;
 
 DbgUtilErr OsStackTraceProvider::getStackTrace(void* context, RawStackTrace& stackTrace) {
     struct StackFrameCollector : public StackFrameListener {
-        RawStackTrace& m_stackTrace;
         StackFrameCollector(RawStackTrace& stackTrace) : m_stackTrace(stackTrace) {}
+        StackFrameCollector(const StackFrameCollector&) = delete;
+        StackFrameCollector(StackFrameCollector&&) = delete;
+        StackFrameCollector& operator=(const StackFrameCollector&) = delete;
+        ~StackFrameCollector() final {}
+
         void onStackFrame(void* frameAddress) final { m_stackTrace.push_back(frameAddress); }
+
+        RawStackTrace& m_stackTrace;
     };
 
     StackFrameCollector collector(stackTrace);

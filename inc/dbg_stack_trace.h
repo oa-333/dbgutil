@@ -13,7 +13,7 @@
 namespace dbgutil {
 
 /** @brief A fully resolved single stack entry. */
-struct StackEntry {
+struct DBGUTIL_API StackEntry {
     /** @brief The stack frame index (required if stack trace is partial or reordered). */
     uint32_t m_frameIndex;  // zero means innermost
 
@@ -22,6 +22,12 @@ struct StackEntry {
 
     /** @brief Resolved entry debug information. */
     SymbolInfo m_entryInfo;
+
+    StackEntry() : m_frameIndex(0), m_frameAddress(nullptr) {}
+    StackEntry(const StackEntry&) = default;
+    StackEntry(StackEntry&&) = default;
+    StackEntry& operator=(const StackEntry&) = default;
+    ~StackEntry() {}
 };
 
 /** @typedef A fully resolved stack trace. */
@@ -30,40 +36,73 @@ typedef std::vector<StackEntry> StackTrace;
 /** @brief Stack entry formatter interface. */
 class DBGUTIL_API StackEntryFormatter {
 public:
+    virtual ~StackEntryFormatter() {}
+
     /**
      * @brief Formats a stack trace entry
      * @param stackEntry The stack entry.
      * @return std::string The formatted stack entry string.
      */
     virtual std::string formatStackEntry(const StackEntry& stackEntry) = 0;
+
+protected:
+    StackEntryFormatter() {}
+    StackEntryFormatter(const StackEntryFormatter&) = delete;
+    StackEntryFormatter(StackEntryFormatter&&) = delete;
+    StackEntryFormatter& operator=(StackEntryFormatter&) = delete;
 };
 
 /** @brief Default formatter implementation. */
 class DBGUTIL_API DefaultStackEntryFormatter : public StackEntryFormatter {
 public:
+    DefaultStackEntryFormatter() {}
+    DefaultStackEntryFormatter(const DefaultStackEntryFormatter&) = delete;
+    DefaultStackEntryFormatter(DefaultStackEntryFormatter&&) = delete;
+    DefaultStackEntryFormatter& operator=(DefaultStackEntryFormatter&) = delete;
+    ~DefaultStackEntryFormatter() override {}
+
     std::string formatStackEntry(const StackEntry& stackEntry) override;
 };
 
 /** @brief Stack entry printer interface. */
 class DBGUTIL_API StackEntryPrinter {
 public:
+    virtual ~StackEntryPrinter() {}
+
     virtual void onBeginStackTrace(os_thread_id_t threadId) = 0;
     virtual void onEndStackTrace() = 0;
     virtual void onStackEntry(const char* stackEntry) = 0;
+
+protected:
+    StackEntryPrinter() {}
+    StackEntryPrinter(const StackEntryPrinter&) = delete;
+    StackEntryPrinter(StackEntryPrinter&&) = delete;
+    StackEntryPrinter& operator=(StackEntryPrinter&) = delete;
 };
 
 /** @brief Stack entry printer that does nothing. */
 class DBGUTIL_API NullEntryPrinter : public StackEntryPrinter {
 public:
-    void onBeginStackTrace(os_thread_id_t threadId) final {}
+    NullEntryPrinter() {}
+    NullEntryPrinter(const NullEntryPrinter&) = delete;
+    NullEntryPrinter(NullEntryPrinter&&) = delete;
+    NullEntryPrinter& operator=(NullEntryPrinter&) = delete;
+    ~NullEntryPrinter() override {}
+
+    void onBeginStackTrace(os_thread_id_t /* threadId */) final {}
     void onEndStackTrace() final {}
-    void onStackEntry(const char* stackEntry) final {}
+    void onStackEntry(const char* /* stackEntry */) final {}
 };
 
 /** @brief stack entry printer to a file. */
 class DBGUTIL_API FileStackEntryPrinter : public StackEntryPrinter {
 public:
     FileStackEntryPrinter(FILE* fileHandle) : m_fileHandle(fileHandle) {}
+    FileStackEntryPrinter(const FileStackEntryPrinter&) = delete;
+    FileStackEntryPrinter(FileStackEntryPrinter&&) = delete;
+    FileStackEntryPrinter& operator=(FileStackEntryPrinter&) = delete;
+    ~FileStackEntryPrinter() override {}
+
     void onBeginStackTrace(os_thread_id_t threadId) override {
         fprintf(m_fileHandle, "[Thread %" PRItid " stack trace]\n", threadId);
     }
@@ -78,12 +117,20 @@ private:
 class DBGUTIL_API StderrStackEntryPrinter : public FileStackEntryPrinter {
 public:
     StderrStackEntryPrinter() : FileStackEntryPrinter(stderr) {};
+    StderrStackEntryPrinter(const StderrStackEntryPrinter&) = delete;
+    StderrStackEntryPrinter(StderrStackEntryPrinter&&) = delete;
+    StderrStackEntryPrinter& operator=(StderrStackEntryPrinter&) = delete;
+    ~StderrStackEntryPrinter() override {}
 };
 
 /** @brief stack entry printer to standard output stream. */
 class DBGUTIL_API StdoutStackEntryPrinter : public FileStackEntryPrinter {
 public:
     StdoutStackEntryPrinter() : FileStackEntryPrinter(stdout) {};
+    StdoutStackEntryPrinter(const StdoutStackEntryPrinter&) = delete;
+    StdoutStackEntryPrinter(StdoutStackEntryPrinter&&) = delete;
+    StdoutStackEntryPrinter& operator=(StdoutStackEntryPrinter&) = delete;
+    ~StdoutStackEntryPrinter() override {}
 };
 
 #if 0
@@ -109,6 +156,11 @@ private:
 class DBGUTIL_API StringStackEntryPrinter : public StackEntryPrinter {
 public:
     StringStackEntryPrinter() {}
+    StringStackEntryPrinter(const StringStackEntryPrinter&) = delete;
+    StringStackEntryPrinter(StringStackEntryPrinter&&) = delete;
+    StringStackEntryPrinter& operator=(StringStackEntryPrinter&) = delete;
+    ~StringStackEntryPrinter() override {}
+
     void onBeginStackTrace(os_thread_id_t threadId) override {
         m_s << "[Thread " << threadId << " stack trace]" << std::endl;
     }
@@ -127,6 +179,10 @@ public:
         m_printers.push_back(printer1);
         m_printers.push_back(printer2);
     }
+    MultiStackEntryPrinter(const MultiStackEntryPrinter&) = delete;
+    MultiStackEntryPrinter(MultiStackEntryPrinter&&) = delete;
+    MultiStackEntryPrinter& operator=(MultiStackEntryPrinter&) = delete;
+    ~MultiStackEntryPrinter() override {}
 
     inline void addPrinter(StackEntryPrinter* printer) { m_printers.push_back(printer); }
 

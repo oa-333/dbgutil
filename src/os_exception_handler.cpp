@@ -14,7 +14,7 @@ static Logger sLogger;
 // thread local static buffer for call stack (avoid allocation during panic)
 #define CALL_STACK_BUF_SIZE 8192
 static thread_local char sCallStackBuf[CALL_STACK_BUF_SIZE];
-static int sCallStackBufLen = 0;
+static size_t sCallStackBufLen = 0;
 
 static OsExceptionHandler* sExceptionHandler = nullptr;
 
@@ -22,16 +22,26 @@ static OsExceptionHandler* sExceptionHandler = nullptr;
 class CallStackBufPrinter : public StackEntryPrinter {
 public:
     CallStackBufPrinter() {}
+    CallStackBufPrinter(const CallStackBufPrinter&) = delete;
+    CallStackBufPrinter(CallStackBufPrinter&&) = delete;
+    CallStackBufPrinter& operator=(const CallStackBufPrinter&) = delete;
+    ~CallStackBufPrinter() final {}
+
     void onBeginStackTrace(os_thread_id_t threadId) override {
         sCallStackBuf[0] = 0;
-        sCallStackBufLen =
-            snprintf(sCallStackBuf + sCallStackBufLen, CALL_STACK_BUF_SIZE - sCallStackBufLen,
-                     "[Thread %" PRItidx " stack trace]\n", threadId);
+        int res = snprintf(sCallStackBuf + sCallStackBufLen, CALL_STACK_BUF_SIZE - sCallStackBufLen,
+                           "[Thread %" PRItidx " stack trace]\n", threadId);
+        if (res > 0) {
+            sCallStackBufLen += (size_t)res;
+        }
     }
     void onEndStackTrace() override {}
     void onStackEntry(const char* stackEntry) {
-        sCallStackBufLen += snprintf(sCallStackBuf + sCallStackBufLen,
-                                     CALL_STACK_BUF_SIZE - sCallStackBufLen, "%s\n", stackEntry);
+        int res = snprintf(sCallStackBuf + sCallStackBufLen, CALL_STACK_BUF_SIZE - sCallStackBufLen,
+                           "%s\n", stackEntry);
+        if (res > 0) {
+            sCallStackBufLen += (size_t)res;
+        }
     }
 };
 
@@ -82,7 +92,7 @@ void OsExceptionHandler::restoreTerminateHandler() {
     }
 }
 
-void OsExceptionHandler::terminateHandler() {
+void OsExceptionHandler::terminateHandler() noexcept {
     // delegate to non-static class member
     OsExceptionHandler* exceptionHandler = getExceptionHandler();
     exceptionHandler->handleTerminate();

@@ -172,6 +172,7 @@ class OsImageReaderFactory {
 public:
     OsImageReaderFactory(const OsImageReaderFactory&) = delete;
     OsImageReaderFactory(OsImageReaderFactory&&) = delete;
+    OsImageReaderFactory& operator=(const OsImageReaderFactory&) = delete;
     virtual ~OsImageReaderFactory() {}
 
     /** @brief Creates the image reader. */

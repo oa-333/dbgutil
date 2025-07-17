@@ -45,6 +45,11 @@ struct DBGUTIL_API SymbolInfo {
           m_lineNumber(0),
           m_columnIndex(0) {}
 
+    SymbolInfo(const SymbolInfo&) = default;
+    SymbolInfo(SymbolInfo&&) = default;
+    SymbolInfo& operator=(const SymbolInfo&) = default;
+    ~SymbolInfo() {}
+
     void merge(const SymbolInfo& symInfo) {
         if (m_moduleBaseAddress == nullptr) {
             m_moduleBaseAddress = symInfo.m_moduleBaseAddress;
@@ -78,6 +83,7 @@ class DBGUTIL_API OsSymbolEngine {
 public:
     OsSymbolEngine(const OsSymbolEngine&) = delete;
     OsSymbolEngine(OsSymbolEngine&&) = delete;
+    OsSymbolEngine& operator=(const OsSymbolEngine&) = delete;
     virtual ~OsSymbolEngine() {}
 
     /**

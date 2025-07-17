@@ -1,7 +1,7 @@
 #ifndef __DWARF_UTIL_H__
 #define __DWARF_UTIL_H__
 
-#include <map>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -16,6 +16,10 @@ namespace dbgutil {
 class DwarfUtil {
 public:
     DwarfUtil();
+    DwarfUtil(const DwarfUtil&) = delete;
+    DwarfUtil(DwarfUtil&&) = delete;
+    DwarfUtil& operator=(const DwarfUtil&) = delete;
+    ~DwarfUtil() {}
 
     static void initLogger();
     static void termLogger();
@@ -53,8 +57,8 @@ private:
 
     typedef std::unordered_set<uint64_t> OffsetSet;
     // NOTE: using transparent comparator template version of map.lower_bound
-    typedef std::map<AddrRange, OffsetSet, std::less<>> RangeCuMultiMap;
-    RangeCuMultiMap m_rangeCuMultiMap;
+    typedef std::set<AddrRange, std::less<>> RangeCuSet;
+    RangeCuSet m_rangeCUSet;
 
     struct CUData {
         std::string m_fileName;

@@ -7,6 +7,7 @@
 #endif
 
 #include <algorithm>
+#include <cinttypes>
 #include <climits>
 #include <cstring>
 
@@ -260,7 +261,7 @@ DbgUtilErr OsUtil::closeFile(int fd) {
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr OsUtil::seekFile(int fd, uint64_t offset, int origin,
+DbgUtilErr OsUtil::seekFile(int fd, int64_t offset, int origin,
                             uint64_t* resultOffset /* = nullptr */, int* sysErr /* = nullptr */) {
 #ifdef DBGUTIL_WINDOWS
     long long res = _lseeki64(fd, offset, origin);
@@ -275,6 +276,11 @@ DbgUtilErr OsUtil::seekFile(int fd, uint64_t offset, int origin,
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     if (resultOffset != nullptr) {
+        if (res < 0) {
+            LOG_ERROR(sLogger, "Unexpected negative file offset returned from lseek64(): %" PRId64,
+                      res);
+            return DBGUTIL_ERR_SYSTEM_FAILURE;
+        }
         *resultOffset = (uint64_t)res;
     }
     return DBGUTIL_ERR_OK;
@@ -299,7 +305,7 @@ DbgUtilErr OsUtil::getFileSize(int fd, uint64_t& fileSizeBytes, int* sysErr /* =
     }
 
     // restore previous offset
-    return seekFile(fd, currOffset, SEEK_SET, nullptr, sysErr);
+    return seekFile(fd, (int64_t)currOffset, SEEK_SET, nullptr, sysErr);
 }
 
 DbgUtilErr OsUtil::writeFile(int fd, const char* buf, size_t len, size_t& bytesWritten,
@@ -324,7 +330,7 @@ DbgUtilErr OsUtil::writeFile(int fd, const char* buf, size_t len, size_t& bytesW
         // LOG_SYS_ERROR(sLogger, write, "Failed to write to file");
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    bytesWritten = res;
+    bytesWritten = (size_t)res;
     return DBGUTIL_ERR_OK;
 }
 
@@ -350,7 +356,7 @@ DbgUtilErr OsUtil::readFile(int fd, char* buf, size_t len, size_t& bytesRead,
         // LOG_SYS_ERROR(sLogger, write, "Failed to read from file");
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    bytesRead = res;
+    bytesRead = (size_t)res;
     return DBGUTIL_ERR_OK;
 }
 
@@ -491,11 +497,12 @@ DbgUtilErr OsUtil::readEntireFileToLines(const char* path, std::vector<std::stri
     size_t prevIdx = 0;  // always one past previous line
     do {
         size_t idx = 0;
-        std::vector<char>::iterator itr = std::find(buf.begin() + prevIdx, buf.end(), '\n');
+        std::vector<char>::iterator itr =
+            std::find(buf.begin() + (int64_t)prevIdx, buf.end(), '\n');
         if (itr == buf.end()) {
             idx = buf.size();
         } else {
-            idx = itr - buf.begin();
+            idx = (size_t)(itr - buf.begin());
         }
 
         std::string line(&buf[prevIdx], idx - prevIdx);

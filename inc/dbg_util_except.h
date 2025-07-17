@@ -55,6 +55,7 @@ protected:
     OsExceptionListener() {}
     OsExceptionListener(const OsExceptionListener&) = delete;
     OsExceptionListener(OsExceptionListener&&) = delete;
+    OsExceptionListener& operator=(const OsExceptionListener&) = delete;
 };
 
 }  // namespace dbgutil

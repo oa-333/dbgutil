@@ -10,9 +10,11 @@
 
 namespace dbgutil {
 
+#define DBGUTIL_INVALID_LOGGER_ID ((size_t)-1)
+
 struct Logger {
     std::string m_loggerName;
-    uint32_t m_loggerId;
+    size_t m_loggerId;
     LogSeverity m_severity;
 };
 
@@ -90,12 +92,12 @@ extern void win32FreeErrorStr(char* errStr);
 
 // Windows system error logging macros
 #ifdef DBGUTIL_WINDOWS
-#define LOG_WIN32_ERROR_NUM(logger, syscall, sysErr, fmt, ...)                                   \
-    {                                                                                            \
-        char* errStr = win32SysErrorToStr(sysErr);                                               \
-        LOG_ERROR(logger, "Windows system call " #syscall "() failed: %d (%s)", sysErr, errStr); \
-        win32FreeErrorStr(errStr);                                                               \
-        LOG_ERROR(logger, fmt, ##__VA_ARGS__);                                                   \
+#define LOG_WIN32_ERROR_NUM(logger, syscall, sysErr, fmt, ...)                                    \
+    {                                                                                             \
+        char* errStr = win32SysErrorToStr(sysErr);                                                \
+        LOG_ERROR(logger, "Windows system call " #syscall "() failed: %lu (%s)", sysErr, errStr); \
+        win32FreeErrorStr(errStr);                                                                \
+        LOG_ERROR(logger, fmt, ##__VA_ARGS__);                                                    \
     }
 
 #define LOG_WIN32_ERROR(logger, syscall, fmt, ...) \

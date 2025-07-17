@@ -305,7 +305,11 @@ DbgUtilErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler
 
 DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
     // register handler
-    SignalHandler prevHandler;
+#ifdef DBGUTIL_MINGW
+    SignalHandler prevHandler = nullptr;
+#else
+    SignalHandler prevHandler = {};
+#endif
     DbgUtilErr res =
         registerSignalHandler(sigNum, &LinuxExceptionHandler::signalHandlerStatic, &prevHandler);
     if (res != DBGUTIL_ERR_OK) {

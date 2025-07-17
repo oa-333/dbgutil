@@ -53,7 +53,7 @@ DbgUtilErr dwarfReadULEB128(InputStream& is, uint64_t& result) {
         DBGUTIL_DESERIALIZE_INT8(is, byte);
 
         // select lower 7 bits, and put in 64 bit value
-        uint64_t byte64 = (byte & 0x7F);
+        uint64_t byte64 = (byte & ((uint64_t)0x7F));
 
         // shift next byte and add to result
         result |= (byte64 << shift);

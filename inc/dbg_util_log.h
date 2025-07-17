@@ -2,6 +2,7 @@
 #define __DBG_UTIL_LOG_H__
 
 #include <cinttypes>
+#include <cstddef>
 
 #include "dbg_util_def.h"
 
@@ -48,13 +49,13 @@ public:
      * @return LogSeverity The desired severity for the logger. If not to be changed, then return
      * the severity with which the logger was registered.
      */
-    virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName,
-                                         uint32_t loggerId) {
+    virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* /* loggerName */,
+                                         size_t /* loggerId */) {
         return severity;
     }
 
     /** @brief Unregisters a previously registered logger. */
-    virtual void onUnregisterLogger(uint32_t loggerId) {}
+    virtual void onUnregisterLogger(size_t /* loggerId */) {}
 
     /**
      * @brief Notifies a logger is logging a message.
@@ -63,20 +64,21 @@ public:
      * @param loggerName The logger's name.
      * @param msg The log message.
      */
-    virtual void onMsg(LogSeverity severity, uint32_t loggerId, const char* loggerName,
+    virtual void onMsg(LogSeverity severity, size_t loggerId, const char* loggerName,
                        const char* msg) = 0;
 
 protected:
     LogHandler() {}
     LogHandler(const LogHandler&) = delete;
     LogHandler(LogHandler&&) = delete;
+    LogHandler& operator=(const LogHandler&) = delete;
 };
 
 /** @brief Configures global log severity */
 extern DBGUTIL_API void setLogSeverity(LogSeverity severity);
 
 /** @brief Configures log severity of a specific logger. */
-extern DBGUTIL_API void setLoggerSeverity(uint32_t loggerId, LogSeverity severity);
+extern DBGUTIL_API void setLoggerSeverity(size_t loggerId, LogSeverity severity);
 
 /** @brief Converts log severity to string. */
 extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);

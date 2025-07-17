@@ -26,7 +26,7 @@ LPTOP_LEVEL_EXCEPTION_FILTER Win32ExceptionHandler::sPrevFilter = nullptr;
 // thread local static buffer for exception information (avoid allocation during panic)
 #define EXCEPTION_BUF_SIZE 256
 static thread_local char sExceptBuf[EXCEPTION_BUF_SIZE];
-static int sExceptBufLen = 0;
+static size_t sExceptBufLen = 0;
 
 Win32ExceptionHandler* Win32ExceptionHandler::sInstance = nullptr;
 
@@ -129,8 +129,11 @@ static void getExtendedExceptionInfo(_EXCEPTION_POINTERS* exceptionInfo) {
     // https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record -
     // especially the ExceptionInformation member array documentation).
     if (exceptionInfo->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE) {
-        sExceptBufLen += snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                                  "Exception is non-continuable\n");
+        int res = snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
+                           "Exception is non-continuable\n");
+        if (res > 0) {
+            sExceptBufLen += (size_t)res;
+        }
     }
 
     // access violation or page error
@@ -138,35 +141,41 @@ static void getExtendedExceptionInfo(_EXCEPTION_POINTERS* exceptionInfo) {
         exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_IN_PAGE_ERROR) {
         if (exceptionInfo->ExceptionRecord->NumberParameters >= 2) {
             if (exceptionInfo->ExceptionRecord->ExceptionInformation[0] == 8) {
-                sExceptBufLen +=
-                    snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                             "The instruction at 0x%p referenced memory at 0x%p, causing "
-                             "user-mode data execution prevention (DEP) violation",
-                             exceptionInfo->ExceptionRecord->ExceptionAddress,
-                             (void*)exceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+                int res = snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
+                                   "The instruction at 0x%p referenced memory at 0x%p, causing "
+                                   "user-mode data execution prevention (DEP) violation",
+                                   exceptionInfo->ExceptionRecord->ExceptionAddress,
+                                   (void*)exceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+                if (res > 0) {
+                    sExceptBufLen += (size_t)res;
+                }
             } else {
-                sExceptBufLen +=
-                    snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                             "The instruction at 0x%p referenced memory at 0x%p. The memory "
-                             "could not be %s.",
-                             exceptionInfo->ExceptionRecord->ExceptionAddress,
-                             (void*)exceptionInfo->ExceptionRecord->ExceptionInformation[1],
-                             getAccessViolationType(
-                                 exceptionInfo->ExceptionRecord->ExceptionInformation[0]));
+                int res = snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
+                                   "The instruction at 0x%p referenced memory at 0x%p. The memory "
+                                   "could not be %s.",
+                                   exceptionInfo->ExceptionRecord->ExceptionAddress,
+                                   (void*)exceptionInfo->ExceptionRecord->ExceptionInformation[1],
+                                   getAccessViolationType(
+                                       exceptionInfo->ExceptionRecord->ExceptionInformation[0]));
+                if (res > 0) {
+                    sExceptBufLen += (size_t)res;
+                }
             }
         }
         if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_IN_PAGE_ERROR &&
             exceptionInfo->ExceptionRecord->NumberParameters >= 3) {
-            sExceptBufLen +=
-                snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                         "NT STATUS code: %ld",  // NTSTATUS is typedef of LONG
-                         (LONG)exceptionInfo->ExceptionRecord->ExceptionInformation[3]);
+            int res = snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
+                               "NT STATUS code: %ld",  // NTSTATUS is typedef of LONG
+                               (LONG)exceptionInfo->ExceptionRecord->ExceptionInformation[3]);
+            if (res > 0) {
+                sExceptBufLen += (size_t)res;
+            }
         }
     }
 }
 
 LONG WINAPI
-Win32ExceptionHandler::unhandledExceptionFilterStatic(_EXCEPTION_POINTERS* exceptionInfo) {
+Win32ExceptionHandler::unhandledExceptionFilterStatic(_EXCEPTION_POINTERS* exceptionInfo) noexcept {
     Win32ExceptionHandler* exceptionHandler = (Win32ExceptionHandler*)getExceptionHandler();
     exceptionHandler->unhandledExceptionFilter(exceptionInfo);
 
@@ -184,13 +193,19 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
 
     // orint basic exception information
     sExceptBuf[0] = 0;
-    sExceptBufLen =
+    int res =
         snprintf(sExceptBuf, EXCEPTION_BUF_SIZE, "Encountered unhandled exception 0x%08lX: %s\n",
                  exInfo.m_exceptionCode, exInfo.m_exceptionName);
+    if (res > 0) {
+        sExceptBufLen += (size_t)res;
+    }
 
     // print fault address
-    sExceptBufLen += snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
-                              "Faulting address: 0x%p\n", exInfo.m_faultAddress);
+    res = snprintf(sExceptBuf + sExceptBufLen, EXCEPTION_BUF_SIZE - sExceptBufLen,
+                   "Faulting address: 0x%p\n", exInfo.m_faultAddress);
+    if (res > 0) {
+        sExceptBufLen += (size_t)res;
+    }
 
     // print extended information if any
     getExtendedExceptionInfo(exceptionInfo);
@@ -210,9 +225,9 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
 
     // finally, attempt to dump core
     if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
-        LOG_DEBUG(sLogger, "Dumping core");
+        LOG_WARN(sLogger, "Dumping core");
         Win32SymbolEngine::getInstance()->dumpCore(exceptionInfo);
-        LOG_DEBUG(sLogger, "Finished dumping core");
+        LOG_WARN(sLogger, "Finished dumping core");
     }
 
     // old exception printing code, keeping for reference

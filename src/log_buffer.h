@@ -11,7 +11,10 @@
 namespace dbgutil {
 
 /** @def The fixed buffer size used for logging. */
-#define LOG_BUFFER_SIZE 1024
+#define DBGUTIL_LOG_BUFFER_SIZE ((size_t)1024)
+
+/** @def The maximum size allowed for a single log message buffer. */
+#define DBGUTIL_MAX_BUFFER_SIZE ((size_t)(16 * 1024))
 
 /**
  * @brief A fixed size buffer that may transition to dynamic size buffer. This is required by the
@@ -27,13 +30,13 @@ public:
     /** @brief Constructor. */
     LogBuffer()
         : m_dynamicBuffer(nullptr),
-          m_bufferSize(LOG_BUFFER_SIZE),
+          m_bufferSize(DBGUTIL_LOG_BUFFER_SIZE),
           m_offset(0),
           m_bufferFull(false) {}
 
     LogBuffer(const LogBuffer& buffer)
         : m_dynamicBuffer(nullptr),
-          m_bufferSize(LOG_BUFFER_SIZE),
+          m_bufferSize(DBGUTIL_LOG_BUFFER_SIZE),
           m_offset(0),
           m_bufferFull(false) {
         assign(buffer.getRef(), buffer.getOffset());
@@ -77,6 +80,9 @@ public:
 
     /** @brief Assigns a string value to the buffer. Discards previous contents. */
     inline bool assign(const char* msg, size_t len = 0) {
+        if (len >= DBGUTIL_MAX_BUFFER_SIZE) {
+            return false;
+        }
         reset();
         return append(msg, len);
     }
@@ -123,7 +129,7 @@ public:
     }
 
 private:
-    char m_fixedBuffer[LOG_BUFFER_SIZE];
+    char m_fixedBuffer[DBGUTIL_LOG_BUFFER_SIZE];
     char* m_dynamicBuffer;
     size_t m_bufferSize;
     size_t m_offset;

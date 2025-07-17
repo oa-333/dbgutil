@@ -18,14 +18,30 @@ typedef void (*ThreadDllEventCB)(int, void*);
 
 class DllListener {
 public:
+    virtual ~DllListener() {}
+
     virtual void onThreadDllAttach() = 0;
     virtual void onThreadDllDetach() = 0;
     virtual void onProcessDllDetach() = 0;
+
+protected:
+    DllListener() {}
+    DllListener(const DllListener&) = delete;
+    DllListener(DllListener&&) = delete;
+    DllListener& operator=(const DllListener&) = delete;
 };
 
 class DllPurgeFilter {
 public:
+    virtual ~DllPurgeFilter() {}
+
     virtual bool purge(ThreadDllEventCB callback, void* userData) = 0;
+
+protected:
+    DllPurgeFilter() {}
+    DllPurgeFilter(const DllPurgeFilter&) = delete;
+    DllPurgeFilter(DllPurgeFilter&&) = delete;
+    DllPurgeFilter& operator=(const DllPurgeFilter&) = delete;
 };
 
 // listener API

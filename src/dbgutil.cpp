@@ -39,11 +39,15 @@
 
 namespace dbgutil {
 
+#ifdef DBGUTIL_WINDOWS
 static DbgUtilErr initWin32DbgUtil();
-static DbgUtilErr initLinuxDbgUtil();
-
 static DbgUtilErr termWin32DbgUtil();
+#endif
+
+#ifndef DBGUTIL_MSVC
+static DbgUtilErr initLinuxDbgUtil();
 static DbgUtilErr termLinuxDbgUtil();
+#endif
 
 // helper macro
 #define EXEC_CHECK_OP(op)           \
@@ -63,11 +67,11 @@ DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
     EXEC_CHECK_OP(finishInitLog);
     setGlobalFlags(flags);
 
-#if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
+#ifdef DBGUTIL_WINDOWS
     EXEC_CHECK_OP(initWin32DbgUtil);
 #endif
 
-#if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
+#ifndef DBGUTIL_MSVC
     EXEC_CHECK_OP(initLinuxDbgUtil);
 #endif
     if (exceptionListener != nullptr) {
@@ -94,11 +98,11 @@ DbgUtilErr termDbgUtil() {
     OsImageReader::termLogger();
     OsUtil::termLogger();
 
-#if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
+#ifndef DBGUTIL_MSVC
     EXEC_CHECK_OP(termLinuxDbgUtil);
 #endif
 
-#if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
+#ifdef DBGUTIL_WINDOWS
     EXEC_CHECK_OP(termWin32DbgUtil);
 #endif
 
@@ -108,20 +112,20 @@ DbgUtilErr termDbgUtil() {
     return DBGUTIL_ERR_OK;
 }
 
+#ifdef DBGUTIL_WINDOWS
 DbgUtilErr initWin32DbgUtil() {
-#if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(initWin32ModuleManager);
     EXEC_CHECK_OP(initWin32SymbolEngine);
     EXEC_CHECK_OP(initWin32ExceptionHandler);
     EXEC_CHECK_OP(initWin32ThreadManager);
     EXEC_CHECK_OP(initWin32StackTrace);
     EXEC_CHECK_OP(initWin32PEReader);
-#endif
     return DBGUTIL_ERR_OK;
 }
+#endif
 
+#ifndef DBGUTIL_MSVC
 DbgUtilErr initLinuxDbgUtil() {
-#if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(initLinuxExceptionHandler);
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(initLinuxModuleManager);
@@ -132,24 +136,24 @@ DbgUtilErr initLinuxDbgUtil() {
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(initElfReader);
 #endif
-#endif
     return DBGUTIL_ERR_OK;
 }
+#endif
 
+#ifdef DBGUTIL_WINDOWS
 DbgUtilErr termWin32DbgUtil() {
-#if defined(DBGUTIL_MSVC) || defined(DBGUTIL_MINGW)
     EXEC_CHECK_OP(termWin32PEReader);
     EXEC_CHECK_OP(termWin32StackTrace);
     EXEC_CHECK_OP(termWin32ExceptionHandler);
     EXEC_CHECK_OP(termWin32ThreadManager);
     EXEC_CHECK_OP(termWin32SymbolEngine);
     EXEC_CHECK_OP(termWin32ModuleManager);
-#endif
     return DBGUTIL_ERR_OK;
 }
+#endif
 
+#ifndef DBGUTIL_MSVC
 DbgUtilErr termLinuxDbgUtil() {
-#if defined(DBGUTIL_LINUX) || defined(DBGUTIL_MINGW)
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(termElfReader);
 #endif
@@ -160,9 +164,9 @@ DbgUtilErr termLinuxDbgUtil() {
     EXEC_CHECK_OP(termLinuxModuleManager);
 #endif
     EXEC_CHECK_OP(termLinuxExceptionHandler);
-#endif
     return DBGUTIL_ERR_OK;
 }
+#endif
 
 os_thread_id_t getCurrentThreadId() { return OsUtil::getCurrentThreadId(); }
 

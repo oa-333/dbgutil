@@ -23,12 +23,16 @@ public:
 
 protected:
     ThreadVisitor() {}
+    ThreadVisitor(const ThreadVisitor&) = delete;
+    ThreadVisitor(ThreadVisitor&&) = delete;
+    ThreadVisitor& operator=(const ThreadVisitor&) = delete;
 };
 
 class DBGUTIL_API OsThreadManager {
 public:
     OsThreadManager(const OsThreadManager&) = delete;
     OsThreadManager(OsThreadManager&&) = delete;
+    OsThreadManager& operator=(const OsThreadManager&) = delete;
     virtual ~OsThreadManager() {}
 
     /**

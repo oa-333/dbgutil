@@ -37,6 +37,9 @@ public:
 
 private:
     Win32StackTraceProvider() {}
+    Win32StackTraceProvider(const Win32StackTraceProvider&) = delete;
+    Win32StackTraceProvider(Win32StackTraceProvider&&) = delete;
+    Win32StackTraceProvider& operator=(const Win32StackTraceProvider&) = delete;
     ~Win32StackTraceProvider() final {}
 
     static Win32StackTraceProvider* sInstance;

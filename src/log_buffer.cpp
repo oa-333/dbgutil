@@ -17,6 +17,11 @@ LogBuffer::~LogBuffer() {
 
 bool LogBuffer::resize(size_t newSize) {
     if (m_bufferSize < newSize) {
+        if (newSize > DBGUTIL_MAX_BUFFER_SIZE) {
+            fprintf(stderr, "Cannot resize log buffer to size %zu, exceeding maximum allowed %u",
+                    newSize, (unsigned)DBGUTIL_MAX_BUFFER_SIZE);
+            return false;
+        }
         // allocate a bit more so we avoid another realloc and copy if possible
         size_t actualNewSize = m_bufferSize;
         while (actualNewSize < newSize) {
@@ -41,7 +46,7 @@ void LogBuffer::reset() {
         free(m_dynamicBuffer);
         m_dynamicBuffer = nullptr;
     }
-    m_bufferSize = LOG_BUFFER_SIZE;
+    m_bufferSize = DBGUTIL_LOG_BUFFER_SIZE;
 }
 
 bool LogBuffer::appendV(const char* fmt, va_list args) {
@@ -55,29 +60,52 @@ bool LogBuffer::appendV(const char* fmt, va_list args) {
     va_copy(apCopy, args);
     size_t sizeLeft = size() - m_offset;
     int res = vsnprintf(getRef() + m_offset, sizeLeft, fmt, args);
-    // return value does not include the terminating null, and number of copied characters,
+    if (res < 0) {
+        // output error occurred, report this, this is highly unexpected
+        fprintf(stderr, "Failed to format message buffer\n");
+        return false;
+    }
+
+    // now we can safely make the cast
+    uint32_t res32 = (uint32_t)res;
+
+    // NOTE: return value does not include the terminating null, and number of copied characters,
     // including the terminating null, will not exceed size, so if res==size it means size - 1
     // characters were copied and one more terminating null, meaning one character was lost.
     // if res > size if definitely means buffer was too small, and res shows the required size
-    if (res < sizeLeft) {
+
+    // NOTE: cast to int is safe (since size is limited to DBGUTIL_MAX_BUFFER_SIZE = 16KB)
+    if (res32 < sizeLeft) {
         va_end(apCopy);
         m_offset += res;
         return true;
     }
 
     // buffer too small
-    if (!ensureBufferLength(res)) {
+    if (!ensureBufferLength(res32)) {
         return false;
     }
     // this time we must succeed
     sizeLeft = size() - m_offset;
     res = vsnprintf(getRef() + m_offset, sizeLeft, fmt, apCopy);
     va_end(apCopy);
-    if (res >= sizeLeft) {
+
+    // check again for error
+    if (res < 0) {
+        // output error occurred, report this, this is highly unexpected
+        fprintf(stderr, "Failed to format message buffer (second time)\n");
+        return false;
+    }
+
+    // now we can safely make the cast
+    res32 = (uint32_t)res;
+
+    // NOTE: cast to int is safe (since size is limited to ELOG_MAX_BUFFER_SIZE = 16KB)
+    if (res32 >= sizeLeft) {
         fprintf(stderr, "Failed to format string second time\n");
         return false;
     }
-    m_offset += res;
+    m_offset += res32;
     return true;
 }
 

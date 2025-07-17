@@ -21,11 +21,6 @@ namespace dbgutil {
 
 LinuxStackTraceProvider* LinuxStackTraceProvider::sInstance = nullptr;
 
-static DbgUtilErr getStackTraceHandler(void* data) {
-    RawStackTrace* stackTrace = (RawStackTrace*)data;
-    return getStackTraceProvider()->getStackTrace(nullptr, *stackTrace);
-}
-
 void LinuxStackTraceProvider::createInstance() {
     assert(sInstance == nullptr);
     sInstance = new (std::nothrow) LinuxStackTraceProvider();

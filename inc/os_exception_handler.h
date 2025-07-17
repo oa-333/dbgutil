@@ -14,6 +14,7 @@ class DBGUTIL_API OsExceptionHandler {
 public:
     OsExceptionHandler(const OsExceptionHandler&) = delete;
     OsExceptionHandler(OsExceptionHandler&&) = delete;
+    OsExceptionHandler& operator=(const OsExceptionHandler&) = delete;
     virtual ~OsExceptionHandler() {}
 
     /** @brief Initializes the symbol engine. */
@@ -52,7 +53,7 @@ private:
 
     void setTerminateHandler();
     void restoreTerminateHandler();
-    static void terminateHandler();
+    static void terminateHandler() noexcept;
 
     void handleTerminate();
 };

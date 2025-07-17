@@ -46,7 +46,7 @@ DbgUtilErr DwarfLineUtil::buildLineMatrix(DwarfData& dwarfData, FixedInputStream
         return rc;
     }
 
-    m_stateMachine.reset(m_defaultIsStmt);
+    m_stateMachine.reset(m_defaultIsStmt ? true : false);
     return execLineProgram(is);
 }
 
@@ -228,7 +228,7 @@ DbgUtilErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfDat
             uint64_t form = entryFmt[j].m_form;
             if (ctCode == DW_LNCT_path) {
                 std::string name;
-                DbgUtilErr rc = dwarfReadString(is, form, is64Bit, dwarfData, name);
+                rc = dwarfReadString(is, form, is64Bit, dwarfData, name);
                 if (rc != DBGUTIL_ERR_OK) {
                     return rc;
                 }
@@ -519,8 +519,13 @@ void DwarfLineUtil::execSpecialOpCode(uint8_t opCode) {
 }
 
 void DwarfLineUtil::advancePC(uint8_t opCode, bool advanceLine /* = false */) {
-    uint8_t adjustedOpCode = opCode - m_opCodeBase;
-    uint8_t opAdvance = adjustedOpCode / m_lineRange;
+    if (opCode < m_opCodeBase) {
+        LOG_DEBUG(sLogger, "ERROR: Invalid op-code %u, smaller than op-code-base %u",
+                  (unsigned)opCode, (unsigned)m_opCodeBase);
+        return;
+    }
+    uint8_t adjustedOpCode = (uint8_t)(opCode - m_opCodeBase);
+    uint8_t opAdvance = (uint8_t)(adjustedOpCode / m_lineRange);
 
     advanceAddress(opAdvance);
     if (advanceLine) {
@@ -553,7 +558,7 @@ DbgUtilErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& 
             LOG_DEBUG(sLogger, "Executed DW_LNE_end_sequence");
             // append row to matrix
             appendLineMatrix();
-            m_stateMachine.reset(m_defaultIsStmt);
+            m_stateMachine.reset(m_defaultIsStmt ? true : false);
             break;
 
         case DW_LNE_set_address: {

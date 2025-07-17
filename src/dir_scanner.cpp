@@ -59,8 +59,8 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
     // check for error
     DWORD errCode = GetLastError();
     if (errCode != ERROR_NO_MORE_FILES) {
-        LOG_SYS_ERROR_NUM(sLogger, FindNextFile, errCode,
-                          "Failed to search for next file in directory: %s", dirPath);
+        LOG_WIN32_ERROR_NUM(sLogger, FindNextFile, errCode,
+                            "Failed to search for next file in directory: %s", dirPath);
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
@@ -155,6 +155,10 @@ DbgUtilErr DirScanner::scanDirEntries(const char* dirPath, std::vector<DirEntryI
     class DirEntryCollector : public DirEntryVisitor {
     public:
         DirEntryCollector(std::vector<DirEntryInfo>& dirEntries) : m_dirEntries(dirEntries) {}
+        DirEntryCollector(const DirEntryCollector&) = delete;
+        DirEntryCollector(DirEntryCollector&&) = delete;
+        DirEntryCollector& operator=(const DirEntryCollector&) = delete;
+        ~DirEntryCollector() final {}
 
         void onDirEntry(const DirEntryInfo& dirEntry) final { m_dirEntries.push_back(dirEntry); }
 
@@ -169,6 +173,10 @@ DbgUtilErr DirScanner::scanDirFiles(const char* dirPath, std::vector<std::string
     class FileCollector : public DirEntryVisitor {
     public:
         FileCollector(std::vector<std::string>& fileNames) : m_fileNames(fileNames) {}
+        FileCollector(const FileCollector&) = delete;
+        FileCollector(FileCollector&&) = delete;
+        FileCollector& operator=(const FileCollector&) = delete;
+        ~FileCollector() final {}
 
         void onDirEntry(const DirEntryInfo& dirEntry) final {
             if (dirEntry.m_type == DirEntryType::DET_FILE) {
@@ -187,6 +195,10 @@ DbgUtilErr DirScanner::scanDirDirs(const char* dirPath, std::vector<std::string>
     class DirCollector : public DirEntryVisitor {
     public:
         DirCollector(std::vector<std::string>& dirNames) : m_dirNames(dirNames) {}
+        DirCollector(const DirCollector&) = delete;
+        DirCollector(DirCollector&&) = delete;
+        DirCollector& operator=(const DirCollector&) = delete;
+        ~DirCollector() final {}
 
         void onDirEntry(const DirEntryInfo& dirEntry) final {
             if (dirEntry.m_type == DirEntryType::DET_DIR) {

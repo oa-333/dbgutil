@@ -21,12 +21,16 @@ public:
 
 protected:
     StackFrameListener() {}
+    StackFrameListener(const StackFrameListener&) = delete;
+    StackFrameListener(StackFrameListener&&) = delete;
+    StackFrameListener& operator=(StackFrameListener&) = delete;
 };
 
 class DBGUTIL_API OsStackTraceProvider {
 public:
     OsStackTraceProvider(const OsStackTraceProvider&) = delete;
     OsStackTraceProvider(OsStackTraceProvider&&) = delete;
+    OsStackTraceProvider& operator=(OsStackTraceProvider&) = delete;
     virtual ~OsStackTraceProvider() {}
 
     /**

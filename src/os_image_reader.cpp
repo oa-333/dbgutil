@@ -54,7 +54,12 @@ void OsImageReader::close() {
 DbgUtilErr OsImageReader::searchSymbol(void* symAddress, std::string& symName,
                                        std::string& fileName, void** address) {
     // scan symbol table for relative address
-    uint64_t symOff = ((char*)symAddress) - ((char*)m_moduleBase);
+    if (symAddress < m_moduleBase) {
+        LOG_DEBUG(sLogger, "Attempt to search symbol %p in module starting at %p: out of range",
+                  symAddress, m_moduleBase);
+        return DBGUTIL_ERR_INVALID_ARGUMENT;
+    }
+    uint64_t symOff = (uint64_t)(((char*)symAddress) - ((char*)m_moduleBase));
     LOG_DEBUG(sLogger, "Searching for symbol %p at offset %u", symAddress, (unsigned)symOff);
     SymInfoSet::iterator itr =
         std::lower_bound(m_symInfoSet.begin(), m_symInfoSet.end(), symOff,

@@ -47,7 +47,12 @@ static void tlsCleanup(int event, void* userData) {
 class TlsKeyPurge : public DllPurgeFilter {
 public:
     TlsKeyPurge(TlsKey key) : m_key(key) {}
-    bool purge(ThreadDllEventCB callback, void* userData) final {
+    TlsKeyPurge(const TlsKeyPurge&) = delete;
+    TlsKeyPurge(TlsKeyPurge&&) = delete;
+    TlsKeyPurge& operator=(const TlsKeyPurge&) = delete;
+    ~TlsKeyPurge() final {}
+
+    bool purge(ThreadDllEventCB /* callback */, void* userData) final {
         TlsCleanupData* cleanupData = (TlsCleanupData*)userData;
         if (cleanupData != nullptr && cleanupData->m_key == m_key) {
             delete cleanupData;

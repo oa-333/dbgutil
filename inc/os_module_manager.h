@@ -27,6 +27,10 @@ struct DBGUTIL_API OsModuleInfo {
     OsModuleInfo(const char* modulePath = "", void* loadAddress = nullptr, uint64_t size = 0,
                  void* osData = nullptr)
         : m_modulePath(modulePath), m_loadAddress(loadAddress), m_size(size), m_osData(osData) {}
+    OsModuleInfo(const OsModuleInfo&) = default;
+    OsModuleInfo(OsModuleInfo&&) = delete;
+    OsModuleInfo& operator=(const OsModuleInfo&) = default;
+    ~OsModuleInfo() {}
 
     // NOTE: using std::string here will cause copy and trigger memory allocation, on the other hand
     // using character array will inflate the object size, and on each platform the limit is
@@ -76,6 +80,7 @@ class DBGUTIL_API OsModuleManager {
 public:
     OsModuleManager(const OsModuleManager&) = delete;
     OsModuleManager(OsModuleManager&&) = delete;
+    OsModuleManager& operator=(const OsModuleManager&) = delete;
     virtual ~OsModuleManager() {}
 
     /**

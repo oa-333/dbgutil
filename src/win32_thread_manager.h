@@ -36,6 +36,9 @@ public:
 
 private:
     Win32ThreadManager() {}
+    Win32ThreadManager(const Win32ThreadManager&) = delete;
+    Win32ThreadManager(Win32ThreadManager&&) = delete;
+    Win32ThreadManager& operator=(const Win32ThreadManager&) = delete;
     ~Win32ThreadManager() {}
 
     static Win32ThreadManager* sInstance;

@@ -79,8 +79,15 @@ DbgUtilErr BufferedFileReader::seek(size_t offset) {
         return DBGUTIL_ERR_OK;
     }
 
+    // NOTE: be careful here, since seekFile() excepts signed 64 bit value, but offset is unsigned,
+    // so we must check for overflow, otherwise cast is wrong
+    if (offset > INT64_MAX) {
+        LOG_ERROR(sLogger, "Request to seek file to offset %zu declined, offset too large", offset);
+        return DBGUTIL_ERR_INVALID_ARGUMENT;
+    }
+
     // otherwise we must seek to the required offset and refill buffer
-    DbgUtilErr rc = OsUtil::seekFile(m_fd, offset, SEEK_SET);
+    DbgUtilErr rc = OsUtil::seekFile(m_fd, (int64_t)offset, SEEK_SET);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to seek to offset %" PRIu64, offset);
         return rc;

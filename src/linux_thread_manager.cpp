@@ -61,7 +61,7 @@ namespace dbgutil {
 
 static Logger sLogger;
 
-static thread_local bool isHandlingSignal = false;
+// static thread_local bool isHandlingSignal = false;
 
 class SignalRequest {
 protected:
@@ -102,11 +102,11 @@ private:
     DbgUtilErr m_result;
 };
 
-static void verifyAsyncSignalSafe() {
+/*static void verifyAsyncSignalSafe() {
     if (isHandlingSignal) {
         fprintf(stderr, "*** VIOLATING ASYNC-SIGNAL SAFETY ***\n");
     }
-}
+}*/
 
 #ifdef DBGUTIL_MINGW
 static void apcRoutine(ULONG_PTR data) {
@@ -154,11 +154,11 @@ LinuxThreadManager* LinuxThreadManager::sInstance = nullptr;
 
 #ifdef DBGUTIL_LINUX
 static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
-    isHandlingSignal = true;
+    // isHandlingSignal = true;
     LOG_DEBUG(sLogger, "Received signal: %s (%d)", strsignal(sigNum), sigNum);
     SignalRequest* request = (SignalRequest*)sigInfo->si_value.sival_ptr;
     request->exec();
-    isHandlingSignal = false;
+    // isHandlingSignal = false;
 }
 #endif
 

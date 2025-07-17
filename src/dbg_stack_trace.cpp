@@ -83,7 +83,9 @@ class PrintFrameListener : public StackFrameListener {
 public:
     PrintFrameListener(int skip, StackEntryPrinter* printer, StackEntryFormatter* formatter)
         : m_skip(skip), m_printer(printer), m_formatter(formatter), m_frameIndex(0) {}
-
+    PrintFrameListener(const PrintFrameListener&) = delete;
+    PrintFrameListener(PrintFrameListener&&) = delete;
+    PrintFrameListener& operator=(const PrintFrameListener&) = delete;
     ~PrintFrameListener() final {}
 
     void onStackFrame(void* frameAddress) final {
@@ -110,7 +112,7 @@ private:
     int m_skip;
     StackEntryPrinter* m_printer;
     StackEntryFormatter* m_formatter;
-    int m_frameIndex;
+    uint32_t m_frameIndex;
 };
 
 DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackTrace) {
@@ -160,6 +162,12 @@ std::string stackTraceToString(const StackTrace& stackTrace, int skip /* = 0 */,
     }
     printer.onBeginStackTrace(threadId);
     for (const auto& stackEntry : stackTrace) {
+        // skip required number of frames
+        if (skip > 0) {
+            --skip;
+            continue;
+        }
+
         std::string entry = formatter->formatStackEntry(stackEntry);
         printer.onStackEntry(entry.c_str());
     }
@@ -191,6 +199,10 @@ DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
     public:
         StackTraceCollector(AppRawStackTrace& appStackTrace)
             : m_appStackTrace(appStackTrace), m_result(DBGUTIL_ERR_OK) {}
+        StackTraceCollector(const StackTraceCollector&) = delete;
+        StackTraceCollector(StackTraceCollector&&) = delete;
+        StackTraceCollector& operator=(const StackTraceCollector&) = delete;
+        ~StackTraceCollector() final {}
 
         void onThreadId(os_thread_id_t threadId) final {
             RawStackTrace rawStackTrace;

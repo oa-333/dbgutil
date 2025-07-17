@@ -208,7 +208,7 @@ DbgUtilErr Win32PEReader::readSectionHeaders() {
     for (uint32_t i = 0; i < m_fileHeader.NumberOfSections; ++i) {
         IMAGE_SECTION_HEADER* secHdr = &sectionHeaders[i];
         std::string secName;
-        DbgUtilErr rc = getSectionName(secHdr->Name, secName);
+        rc = getSectionName(secHdr->Name, secName);
         if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
@@ -299,7 +299,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                         return rc;
                     }
                     ++auxRecRead;
-                    m_miniSections[sym.SectionNumber - 1].insert(
+                    m_miniSections[((size_t)sym.SectionNumber) - 1].insert(
                         FuncSizeMap::value_type(sym.Value, auxSym.Section.Length));
                 }
                 // NOTE: when symbol offset is not present, we simply stretch to the next symbol
@@ -314,16 +314,17 @@ DbgUtilErr Win32PEReader::buildSymTab() {
             getSymbolName(sym.N.ShortName, sym.N.LongName, name);
             if (/*sym.Value != 0 &&*/ sym.SectionNumber > 0) {
                 // offset to some section, get offset relative to file start
-                if (sym.SectionNumber >= m_sections.size()) {
+                if (((size_t)sym.SectionNumber) >= m_sections.size()) {
                     LOG_DEBUG(sLogger, "WARN: Symbol %s referring invalid section %u", name.c_str(),
                               (unsigned)sym.SectionNumber);
                     continue;
                 }
-                uint64_t symOffset = m_sections[sym.SectionNumber - 1].m_virtualOffset + sym.Value;
+                uint64_t symOffset =
+                    m_sections[((size_t)sym.SectionNumber) - 1].m_virtualOffset + sym.Value;
                 uint64_t symSize = 0;
 
                 // check if we have function length in mini-section map
-                FuncSizeMap& funcSizeMap = m_miniSections[sym.SectionNumber - 1];
+                FuncSizeMap& funcSizeMap = m_miniSections[((size_t)sym.SectionNumber) - 1];
                 FuncSizeMap::iterator itr = funcSizeMap.find(sym.Value);
                 if (itr != funcSizeMap.end()) {
                     symSize = itr->second;
@@ -358,7 +359,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                 symInfo.m_size = m_symInfoSet[i + 1].m_offset - symInfo.m_offset;
             } else {
                 // last symbol boundary stretched to end of origin section
-                SectionInfo& originSection = m_sections[symInfo.m_originSectionIndex];
+                SectionInfo& originSection = m_sections[(size_t)symInfo.m_originSectionIndex];
                 uint64_t sectionEndOffset = originSection.m_virtualOffset + originSection.m_size;
                 symInfo.m_size = sectionEndOffset - symInfo.m_offset;
             }
@@ -373,7 +374,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
 DbgUtilErr Win32PEReader::getSectionName(unsigned char* nameRef, std::string& name) {
     if (nameRef[0] == '/') {
         // reference to string table
-        int strOff = std::stoi((char*)nameRef + 1);
+        unsigned long strOff = std::stoul((char*)nameRef + 1);
         if (strOff >= m_strTab.size()) {
             return DBGUTIL_ERR_DATA_CORRUPT;
         }
@@ -470,6 +471,7 @@ public:
 
     Win32PEReaderFactory(const Win32PEReaderFactory&) = delete;
     Win32PEReaderFactory(Win32PEReaderFactory&&) = delete;
+    Win32PEReaderFactory& operator=(const Win32PEReaderFactory&) = delete;
 
     OsImageReader* createImageReader() final { return new (std::nothrow) Win32PEReader(); }
 

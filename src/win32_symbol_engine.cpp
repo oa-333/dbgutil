@@ -63,6 +63,7 @@ DbgUtilErr Win32SymbolEngine::initialize() {
     }
 
     // get the containing directory
+    LOG_TRACE(sLogger, "Main module file path is: %s", mainModuleInfo.m_modulePath.c_str());
     rc = PathParser::getParentPath(mainModuleInfo.m_modulePath.c_str(), m_processDir);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to extract parent path from module '%s': %s",
@@ -110,8 +111,6 @@ DbgUtilErr Win32SymbolEngine::initialize() {
 }
 
 DbgUtilErr Win32SymbolEngine::terminate() {
-    Win32ModuleManager* moduleManager = Win32ModuleManager::getInstance();
-    HANDLE processHandle = moduleManager->getProcessHandle();
     if (!SymCleanup(m_processHandle)) {
         LOG_SYS_ERROR(sLogger, SymCleanup, "Failed to terminate debug symbol engine");
         return DBGUTIL_ERR_SYSTEM_FAILURE;
@@ -198,9 +197,6 @@ void Win32SymbolEngine::walkThreadStack(HANDLE hThread, CONTEXT& context,
         }
 
         void* addr = nullptr;
-        std::string funcName;
-        std::string fileName;
-        int lineNumber = 0;
         if (stackFrame.AddrPC.Offset != 0) {
             addr = (void*)stackFrame.AddrPC.Offset;
             listener->onStackFrame(addr);

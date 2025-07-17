@@ -19,6 +19,9 @@ struct DwarfSection {
 class DwarfData {
 public:
     DwarfData() {}
+    DwarfData(const DwarfData&) = default;
+    DwarfData(DwarfData&&) = delete;
+    DwarfData& operator=(const DwarfData&) = default;
     ~DwarfData() {}
 
     inline void addSection(const char* name, const DwarfSection& section) {
@@ -75,44 +78,44 @@ extern DbgUtilErr dwarfReadSLEB128(InputStream& is, int64_t& result);
 extern DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit,
                                   DwarfData& dwarfData, std::string& result);
 
-#define DWARF_READ_INIT_LEN(is, len, is64Bit)                     \
-    {                                                             \
-        DbgUtilErr rc = dwarfReadInitialLength(is, len, is64Bit); \
-        if (rc != DBGUTIL_ERR_OK) {                               \
-            return rc;                                            \
-        }                                                         \
+#define DWARF_READ_INIT_LEN(is, len, is64Bit)                          \
+    {                                                                  \
+        DbgUtilErr rcLocal = dwarfReadInitialLength(is, len, is64Bit); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                               \
+            return rcLocal;                                            \
+        }                                                              \
     }
 
-#define DWARF_READ_OFFSET(is, offset, is64Bit)                \
-    {                                                         \
-        DbgUtilErr rc = dwarfReadOffset(is, offset, is64Bit); \
-        if (rc != DBGUTIL_ERR_OK) {                           \
-            return rc;                                        \
-        }                                                     \
-    }
-
-#define DWARF_READ_ADDRESS(is, offset, addressSize)                \
+#define DWARF_READ_OFFSET(is, offset, is64Bit)                     \
     {                                                              \
-        DbgUtilErr rc = dwarfReadAddress(is, offset, addressSize); \
-        if (rc != DBGUTIL_ERR_OK) {                                \
-            return rc;                                             \
+        DbgUtilErr rcLocal = dwarfReadOffset(is, offset, is64Bit); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                           \
+            return rcLocal;                                        \
         }                                                          \
     }
 
-#define DWARF_READ_ULEB128(is, value)                \
-    {                                                \
-        DbgUtilErr rc = dwarfReadULEB128(is, value); \
-        if (rc != DBGUTIL_ERR_OK) {                  \
-            return rc;                               \
-        }                                            \
+#define DWARF_READ_ADDRESS(is, offset, addressSize)                     \
+    {                                                                   \
+        DbgUtilErr rcLocal = dwarfReadAddress(is, offset, addressSize); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                                \
+            return rcLocal;                                             \
+        }                                                               \
     }
 
-#define DWARF_READ_SLEB128(is, value)                \
-    {                                                \
-        DbgUtilErr rc = dwarfReadSLEB128(is, value); \
-        if (rc != DBGUTIL_ERR_OK) {                  \
-            return rc;                               \
-        }                                            \
+#define DWARF_READ_ULEB128(is, value)                     \
+    {                                                     \
+        DbgUtilErr rcLocal = dwarfReadULEB128(is, value); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                  \
+            return rcLocal;                               \
+        }                                                 \
+    }
+
+#define DWARF_READ_SLEB128(is, value)                     \
+    {                                                     \
+        DbgUtilErr rcLocal = dwarfReadSLEB128(is, value); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                  \
+            return rcLocal;                               \
+        }                                                 \
     }
 
 #define DWARF_READ_CONST1(is, value)          \

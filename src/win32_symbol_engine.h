@@ -43,7 +43,7 @@ public:
     /**
      * @brief Implement stack walking.
      * @note Since stack walking is tightly coupled with Windows debug symbol API, the functionality
-     * is implemented here and the @ref Win32StackTraceProvider delegates to here.
+     * is implemented here and the @ref Win32SymbolEngine delegates to here.
      * @param listener The frame listener.
      * @param context Call context (opaque).
      * @return The operation result.
@@ -52,6 +52,9 @@ public:
 
 private:
     Win32SymbolEngine();
+    Win32SymbolEngine(const Win32SymbolEngine&) = delete;
+    Win32SymbolEngine(Win32SymbolEngine&&) = delete;
+    Win32SymbolEngine& operator=(const Win32SymbolEngine&) = delete;
     ~Win32SymbolEngine() {}
 
     static Win32SymbolEngine* sInstance;

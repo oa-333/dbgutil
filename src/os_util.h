@@ -162,14 +162,14 @@ public:
     /**
      * @brief Moves the file pointer to the specified offset.
      * @param fd The file descriptor
-     * @param offset The offset.
+     * @param offset The offset (could be negative).
      * @param origin The seek method.
      * @param[out] resultOffset Optional parameter, receiving the resulting offset.
      * @param[out] sysErr Optional parameter, receiving system error code in case of error.
      * @return DbgUtilErr The operation result.
      */
-    static DbgUtilErr seekFile(int fd, uint64_t offset, int origin,
-                               uint64_t* resultOffset = nullptr, int* sysErr = nullptr);
+    static DbgUtilErr seekFile(int fd, int64_t offset, int origin, uint64_t* resultOffset = nullptr,
+                               int* sysErr = nullptr);
 
     /**
      * @brief Retrieves current file offset.

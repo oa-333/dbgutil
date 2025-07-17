@@ -70,12 +70,21 @@
         "iostream": "cpp",
         "bitset": "cpp",
         "csignal": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "cassert": "cpp"
     },
     "cSpell.words": [
         "dbgutil",
+        "HINSTANCE",
+        "IMAGEHLP",
+        "lseeki",
+        "MINIDUMP",
+        "MSVC",
         "NTSTATUS",
-        "publicheaders"
+        "publicheaders",
+        "SIGRTMIN",
+        "tgsigqueueinfo",
+        "UNDNAME"
     ],
     "cSpell.ignoreWords": [
         "LNCT",

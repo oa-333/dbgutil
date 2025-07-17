@@ -16,7 +16,7 @@
 #include "dbgutil_tls.h"
 #include "log_buffer.h"
 
-#define LOG_BUFFER_SIZE 1024
+#define MAX_LOGGERS ((size_t)1024)
 
 namespace dbgutil {
 
@@ -44,16 +44,21 @@ struct LogData {
 
 class DefaultLogHandler final : public LogHandler {
 public:
-    /** @brief Virtual destructor. */
-    ~DefaultLogHandler() {}
+    DefaultLogHandler() {}
+    DefaultLogHandler(const DefaultLogHandler&) = delete;
+    DefaultLogHandler(DefaultLogHandler&&) = delete;
+    DefaultLogHandler& operator=(DefaultLogHandler&) = delete;
+    ~DefaultLogHandler() final {}
 
-    LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName, uint32_t loggerId) {
+    LogSeverity onRegisterLogger(LogSeverity severity, const char* /* loggerName */,
+                                 size_t /* loggerId */) {
         return severity;
     }
 
-    void onUnregisterLogger(uint32_t loggerId) {}
+    void onUnregisterLogger(size_t /* loggerId */) {}
 
-    void onMsg(LogSeverity severity, uint32_t loggerId, const char* loggerName, const char* msg) {
+    void onMsg(LogSeverity severity, size_t /* loggerId */, const char* loggerName,
+               const char* msg) {
         fprintf(stderr, "[%s] <%s> %s\n", logSeverityToString(severity), loggerName, msg);
     }
 };
@@ -175,7 +180,7 @@ DbgUtilErr termLog() {
 
 void setLogSeverity(LogSeverity severity) { sLogSeverity = severity; }
 
-void setLoggerSeverity(uint32_t loggerId, LogSeverity severity) {
+void setLoggerSeverity(size_t loggerId, LogSeverity severity) {
     if (loggerId < sLoggers.size() && sLoggers[loggerId] != nullptr) {
         sLoggers[loggerId]->m_severity = severity;
     }
@@ -198,10 +203,7 @@ static void appendMsgV(LogData* logData, const char* fmt, va_list args) {
     va_end(apCopy);
 }
 
-static void appendMsg(LogData* logData, const char* msg) {
-    size_t requiredBytes = (strlen(msg) + 1);
-    logData->m_buffer.append(msg);
-}
+static void appendMsg(LogData* logData, const char* msg) { logData->m_buffer.append(msg); }
 
 static void finishLogData(LogData* logData) {
     if (isLogging(logData)) {
@@ -220,7 +222,12 @@ static void finishLogData(LogData* logData) {
 }
 
 void registerLogger(Logger& logger, const char* loggerName) {
-    logger.m_loggerId = (uint32_t)sLoggers.size();
+    if (sLoggers.size() > MAX_LOGGERS) {
+        fprintf(stderr, "Cannot register logger %s, reached limit %zu\n", loggerName, MAX_LOGGERS);
+        logger.m_loggerId = DBGUTIL_INVALID_LOGGER_ID;
+        return;
+    }
+    logger.m_loggerId = sLoggers.size();
     sLoggers.push_back(&logger);
     logger.m_loggerName = loggerName;
     if (sLogHandler != nullptr) {
@@ -230,20 +237,30 @@ void registerLogger(Logger& logger, const char* loggerName) {
 }
 
 void unregisterLogger(Logger& logger) {
+    if (logger.m_loggerId == DBGUTIL_INVALID_LOGGER_ID) {
+        // silently ignore
+        return;
+    }
     if (sLogHandler != nullptr) {
         sLogHandler->onUnregisterLogger(logger.m_loggerId);
     }
     if (logger.m_loggerId < sLoggers.size()) {
         sLoggers[logger.m_loggerId] = nullptr;
-        uint32_t maxLoggerId = 0;
-        for (int i = (int)sLoggers.size() - 1; i >= 0; --i) {
-            if (sLoggers[i] != nullptr) {
-                maxLoggerId = i;
-                break;
+
+        // find largest suffix of removed loggers
+        size_t maxLogTargetId = sLoggers.size() - 1;
+        bool done = false;
+        while (!done) {
+            if (sLoggers[maxLogTargetId] != nullptr) {
+                sLoggers.resize(maxLogTargetId + 1);
+                done = true;
+            } else if (maxLogTargetId == 0) {
+                // last one is also null
+                sLoggers.clear();
+                done = true;
+            } else {
+                --maxLogTargetId;
             }
-        }
-        if (maxLoggerId + 1 < sLoggers.size()) {
-            sLoggers.resize(maxLoggerId + 1);
         }
     }
 }
@@ -334,7 +351,7 @@ const char* sysErrorToStr(int sysErrorCode) {
 #ifdef DBGUTIL_WINDOWS
 char* win32SysErrorToStr(unsigned long sysErrorCode) {
     LPSTR messageBuffer = nullptr;
-    std::size_t size = FormatMessageA(
+    FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, sysErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
         NULL);

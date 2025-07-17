@@ -29,6 +29,9 @@ protected:
 
 private:
     Win32ExceptionHandler() {}
+    Win32ExceptionHandler(const Win32ExceptionHandler&) = delete;
+    Win32ExceptionHandler(Win32ExceptionHandler&&) = delete;
+    Win32ExceptionHandler& operator=(const Win32ExceptionHandler&) = delete;
     ~Win32ExceptionHandler() final {}
 
     static Win32ExceptionHandler* sInstance;
@@ -37,7 +40,7 @@ private:
     void registerExceptionHandler();
     void unregisterExceptionHandler();
 
-    static LONG WINAPI unhandledExceptionFilterStatic(_EXCEPTION_POINTERS* exceptionInfo);
+    static LONG WINAPI unhandledExceptionFilterStatic(_EXCEPTION_POINTERS* exceptionInfo) noexcept;
     void unhandledExceptionFilter(_EXCEPTION_POINTERS* exceptionInfo);
 };
 

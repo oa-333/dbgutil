@@ -69,23 +69,9 @@ DbgUtilErr PathParser::canonicalizePath(const char* path, std::string& canonPath
         return rc;
     }
 
-    // NOTE: compose path is naive and gives expected result only on Unix (it yields an absolute
-    // path starting with slash), so we have to be careful on Windows/MinGW, since a path can start
-    // with drive letter
-#ifdef DBGUTIL_WINDOWS
-    if (components.front().length() > 1 && components.front()[1] == ':') {
-        std::string tmpPath;
-        composePath(components.begin() + 1, components.end(), tmpPath);
-        // NOTE: the composes tmp path has a leading slash, so we just need to concatenate
-        assert(tmpPath[0] == DBGUTIL_PATH_SEP);
-        canonPath = components.front() + tmpPath;
-        LOG_TRACE(sLogger, "Formed canonical path: %s --> %s", path, canonPath.c_str());
-        return DBGUTIL_ERR_OK;
-    }
-#endif
-
     // compose back path from components
     composePath(components, canonPath);
+    LOG_TRACE(sLogger, "Formed canonical path: %s --> %s", path, canonPath.c_str());
     return DBGUTIL_ERR_OK;
 }
 
@@ -247,6 +233,21 @@ DbgUtilErr PathParser::composePath(const char* basePath, const char* subPath, st
 }
 
 void PathParser::composePath(const std::vector<std::string>& components, std::string& path) {
+    // NOTE: compose path (iterator variant) is naive and gives expected result only on Unix (it
+    // yields an absolute path starting with slash), so we have to be careful on Windows/MinGW,
+    // since a path can start with drive letter
+#ifdef DBGUTIL_WINDOWS
+    if (components.front().length() > 1 && components.front()[1] == ':') {
+        std::string tmpPath;
+        composePath(components.begin() + 1, components.end(), tmpPath);
+        // NOTE: the composes tmp path has a leading slash, so we just need to concatenate
+        assert(tmpPath[0] == DBGUTIL_PATH_SEP);
+        path = components.front() + tmpPath;
+        LOG_TRACE(sLogger, "Composed path: %s", path.c_str());
+        return;
+    }
+#endif
+
     composePath(components.begin(), components.end(), path);
 }
 

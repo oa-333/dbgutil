@@ -112,25 +112,14 @@ DbgUtilErr DwarfUtil::searchSymbol(void* symAddress, SymbolInfo& symbolInfo, voi
 
     // now search in range map the relocated address (as it appears when debug info was prepared)
     LOG_DEBUG(sLogger, "Searching for relocated address: %p", (void*)relocSymAddr);
-    RangeCuMultiMap::iterator itr = m_rangeCuMultiMap.lower_bound(relocSymAddr);
-    if (itr == m_rangeCuMultiMap.end()) {
+    RangeCuSet::iterator itr = m_rangeCUSet.lower_bound(relocSymAddr);
+    if (itr == m_rangeCUSet.end()) {
         return DBGUTIL_ERR_NOT_FOUND;
     }
 
-    const AddrRange& rangeData = itr->first;
+    const AddrRange& rangeData = *itr;
     if (rangeData.contains((uint64_t)relocSymAddr)) {
-        // return searchLineProg(symOff, cuData.m_lineProgOffset, symName, fileName, line);
-        // search in all listed offsets
-        OffsetSet& offsetSet = itr->second;
-        for (uint64_t offset : offsetSet) {
-            DbgUtilErr rc = searchSymbolInCU(searchData, rangeData.m_debugInfoOffset, symbolInfo);
-            if (rc == DBGUTIL_ERR_OK) {
-                return rc;
-            }
-            if (rc != DBGUTIL_ERR_NOT_FOUND) {
-                return rc;
-            }
-        }
+        return searchSymbolInCU(searchData, rangeData.m_debugInfoOffset, symbolInfo);
     }
     return DBGUTIL_ERR_NOT_FOUND;
 }
@@ -180,7 +169,6 @@ DbgUtilErr DwarfUtil::readCUData(uint64_t offset, CUData& cuData) {
 
     // read attribute values, according to spec in abbrev
     // we stop when we have name and stmt list
-    uint64_t lineSecOffset = 0;
     for (Attr& attr : attrs) {
         if (attr.m_name == DW_AT_name) {
             rc = dwarfReadString(is, attr.m_form, is64Bit, m_dwarfData, cuData.m_fileName);
@@ -340,9 +328,9 @@ DbgUtilErr DwarfUtil::readAbbrevDecl(uint64_t offset, uint64_t abbrevCode, uint6
     return DBGUTIL_ERR_NOT_FOUND;
 }
 
-DbgUtilErr DwarfUtil::readRangeListBounds(uint64_t rngOffset, uint64_t cuBaseAddr, bool is64Bit,
-                                          uint8_t addressSize, uint64_t& rangeLow,
-                                          uint64_t& rangeHigh) {
+DbgUtilErr DwarfUtil::readRangeListBounds(uint64_t rngOffset, uint64_t cuBaseAddr,
+                                          bool /* is64Bit */, uint8_t addressSize,
+                                          uint64_t& rangeLow, uint64_t& rangeHigh) {
     const DwarfSection& debugSection = m_dwarfData.getDebugRngLists();
     FixedInputStream is(debugSection.m_start + rngOffset, debugSection.m_size - rngOffset);
 
@@ -492,7 +480,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
 
         // the entry set must be aligned to a tuple size, which is addr size + range size
         // in case of address size 8 this means 16, and address size 4 requires alignment 8.
-        uint32_t align = addressSize * 2;
+        uint32_t align = ((uint32_t)addressSize) * 2;
         uint32_t alignDiff = is.getOffset() % align;
         if (alignDiff != 0) {
             LOG_DEBUG(sLogger, "Set start at offset %u is not aligned to %u, skipping %u bytes",
@@ -541,7 +529,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
                     // return DBGUTIL_ERR_DATA_CORRUPT;
                     continue;
                 }
-                if (!m_rangeCuMultiMap[AddrRange(addr, size, offset)].insert(offset).second) {
+                if (!m_rangeCUSet.insert(AddrRange(addr, size, offset)).second) {
                     LOG_DEBUG(sLogger, "ERROR: Duplicate offset %u for range %p - %p",
                               (unsigned)offset, (void*)addr, (void*)(addr + size));
                 }
@@ -551,8 +539,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
 
     // debug print
     if (canLog(sLogger, LS_DEBUG)) {
-        for (const auto& entry : m_rangeCuMultiMap) {
-            const AddrRange& range = entry.first;
+        for (const AddrRange& range : m_rangeCUSet) {
             LOG_DEBUG(sLogger, "Added range: 0x%p - 0x%p [%u]", (void*)range.m_from,
                       (void*)(range.m_from + range.m_size), (unsigned)range.m_debugInfoOffset);
         }
