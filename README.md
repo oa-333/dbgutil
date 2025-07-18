@@ -335,3 +335,23 @@ Pay attention that on non-Windows platforms, the given thread identifier is a sy
 and not the pthread_t handle.
 
 Also note the PRItid format specification that is defined properly per platform.
+
+### Retrieving Symbol Information
+
+It is possible to directly retrieve the debug symbol information for a given address:
+
+    void* symAddress = ...;
+    dbgutil::SymbolInfo symInfo;
+    DbgUtilErr rc = getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
+    if (rc == DBGUTIL_ERR_OK) {
+        // do something with symbol info
+    }
+
+The SymbolInfo struct contains the following information:
+
+- Containing module (base address, name)
+- Symbol name (demangled)
+- Symbol source location (file, line, possibly column)
+- Symbol memory location (start address of symbol, offset of given address within symbol bounds)
+
+Normally, this API should be used for locating function information and not for data.
