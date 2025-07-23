@@ -11,7 +11,7 @@ set_target_properties(dbgutil PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 #############################################################
 # C++ version, should be inherited from outer project
-# Otherwise defaults to C++ 20 standard on Windows, and C++ 23 on other platforms
+# Otherwise defaults to C++ 11
 #############################################################
 
 if (DEFINED CMAKE_CXX_STANDARD)
