@@ -17,6 +17,7 @@
 #include <condition_variable>
 #include <cstring>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 
 #include "dbgutil_common.h"

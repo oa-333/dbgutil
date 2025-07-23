@@ -40,6 +40,9 @@ private:
         uint64_t m_size;
         uint64_t m_debugInfoOffset;
 
+        AddrRange(uint64_t from, uint64_t size, uint64_t debugInfoOffset)
+            : m_from(from), m_size(size), m_debugInfoOffset(debugInfoOffset) {}
+
         inline bool operator==(const AddrRange& addrRange) const {
             return m_from == addrRange.m_from && m_size == addrRange.m_size;
         }

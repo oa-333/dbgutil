@@ -119,6 +119,8 @@ For CMake builds it is possible to use FetchContent as follows:
     )
     target_link_libraries(<your project name here> dbgutil)
 
+dbgutil supports C++ standard version 11 and above. If your project requires a higher version, make sure to define CMAKE_CXX_STANDARD accordingly before including dbgutil with FetchContent_Declare().
+
 In the future it may be uploaded to package managers (e.g. vcpkg).
 
 ## Help
