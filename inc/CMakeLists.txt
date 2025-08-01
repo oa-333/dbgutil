@@ -1,5 +1,5 @@
 target_sources(
-    dbgutil
+    libdbg
     PUBLIC
         FILE_SET publicheaders
         TYPE HEADERS
