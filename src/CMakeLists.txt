@@ -1,4 +1,4 @@
-target_sources(libdbg PRIVATE
+target_sources(dbg PRIVATE
     buffered_file_reader.cpp
     dbg_stack_trace.cpp
     dir_scanner.cpp

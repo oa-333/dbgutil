@@ -1,5 +1,5 @@
 target_sources(
-    libdbg
+    dbg
     PUBLIC
         FILE_SET publicheaders
         TYPE HEADERS
