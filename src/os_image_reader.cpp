@@ -102,7 +102,7 @@ DbgUtilErr OsImageReader::getSections(const char* prefix, std::vector<OsImageSec
     std::string strPrefix = (prefix == nullptr) ? "" : prefix;
     OsSectionMap::iterator itr = m_sectionMap.begin();
     while (itr != m_sectionMap.end()) {
-#if __cpp_lib_starts_ends_with >= 201711L
+#if defined(__cpp_lib_starts_ends_with) && __cpp_lib_starts_ends_with >= 201711L
         if (itr->first.starts_with(strPrefix)) {
 #else
         if (itr->first.rfind(strPrefix, 0) == 0) {

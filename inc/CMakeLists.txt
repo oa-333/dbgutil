@@ -10,7 +10,7 @@ target_sources(
             dbg_util_except.h
             dbg_util_flags.h
             dbg_util_log.h
-            dbg_util.h
+            libdbg.h
             os_exception_handler.h
             os_module_manager.h
             os_stack_trace.h

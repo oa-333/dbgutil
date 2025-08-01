@@ -1,5 +1,5 @@
-#ifndef __DBG_UTIL_H__
-#define __DBG_UTIL_H__
+#ifndef __LIBDBG_H__
+#define __LIBDBG_H__
 
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
@@ -21,13 +21,13 @@ namespace libdbg {
  * flags, please refer to the @ref dbg_util_flags.h header.
  * @return DBGUTIL_ERR_OK If succeeded, otherwise an error code.
  */
-extern DBGUTIL_API DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener = nullptr,
-                                          LogHandler* logHandler = nullptr,
-                                          LogSeverity severity = LS_FATAL, uint32_t flags = 0);
+extern DBGUTIL_API DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,
+                                         LogHandler* logHandler = nullptr,
+                                         LogSeverity severity = LS_FATAL, uint32_t flags = 0);
 
 /** @brief Terminates the debug utility library. */
-extern DBGUTIL_API DbgUtilErr termDbgUtil();
+extern DBGUTIL_API DbgUtilErr termLibDbg();
 
 }  // namespace libdbg
 
-#endif  // __DBG_UTIL_H__
+#endif  // __LIBDBG_H__

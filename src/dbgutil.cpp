@@ -1,4 +1,4 @@
-#include "dbg_util.h"
+#include "libdbg.h"
 
 #ifdef DBGUTIL_MSVC
 #include "win32_exception_handler.h"
@@ -58,9 +58,9 @@ static DbgUtilErr termLinuxDbgUtil();
         }                           \
     }
 
-DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
-                       LogHandler* logHandler /* = nullptr */,
-                       LogSeverity severity /* = LS_FATAL */, uint32_t flags /* = 0 */) {
+DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener /* = nullptr */,
+                      LogHandler* logHandler /* = nullptr */, LogSeverity severity /* = LS_FATAL */,
+                      uint32_t flags /* = 0 */) {
     // TLS and logger initialization is tricky, and must be done in parts
     initLog(logHandler, severity);
     initTls();
@@ -89,7 +89,7 @@ DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr termDbgUtil() {
+DbgUtilErr termLibDbg() {
     PathParser::termLogger();
     BufferedFileReader::termLogger();
     DirScanner::termLogger();

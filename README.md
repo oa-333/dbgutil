@@ -24,16 +24,16 @@ In order to use the library, first include the main header "dbg_util.h", and ini
     #include "dbg_util.h"
 
     // initialize the library
-    DbgUtilErr res = dbgutil::initDbgUtil();
+    DbgUtilErr res = libdbg::initLibDbg();
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
 
     // do application stuff
     // dump stack trace
-    dbgutil::dumpStackTrace();
+    libdbg::dumpStackTrace();
 
-    res = dbgutil::termDbgUtil();
+    res = libdbg::termLibDbg();
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -41,9 +41,9 @@ In order to use the library, first include the main header "dbg_util.h", and ini
 Sample output (MinGW):
 
     [Thread 45252 stack trace]
-     0# 0x7ffe5fc32597 dbgutil::printStackTraceContext() +167   at dbg_stack_trace.cpp:185 (libdbgutil.dll)
-     1# 0x7ff7f841b050 dbgutil::printStackTrace() +48           at dbg_stack_trace.h:238 (wal_test_mingw.exe)
-     2# 0x7ff7f841b015 dbgutil::dumpStackTrace() +37            at dbg_stack_trace.h:247 (wal_test_mingw.exe)
+     0# 0x7ffe5fc32597 libdbg::printStackTraceContext() +167   at dbg_stack_trace.cpp:185 (libdbgutil.dll)
+     1# 0x7ff7f841b050 libdbg::printStackTrace() +48           at dbg_stack_trace.h:238 (wal_test_mingw.exe)
+     2# 0x7ff7f841b015 libdbg::dumpStackTrace() +37            at dbg_stack_trace.h:247 (wal_test_mingw.exe)
      3# 0x7ff7f84130ff initRecovery() +1275                     at waL_test.cpp:304 (wal_test_mingw.exe)
      4# 0x7ff7f8412064 testLoadWALRecord() +122                 at waL_test.cpp:122 (wal_test_mingw.exe)
      5# 0x7ff7f8411ebb runTest() +47                            at waL_test.cpp:95 (wal_test_mingw.exe)
@@ -64,11 +64,11 @@ Here is a sample output of the exception handler (Linux):
     Extended exception information: Address not mapped to object
 
     2025-07-17 11:01:52.678 FATAL  [35850] dbgutil.linux_exception_handler [Thread 8c0a stack trace]
-     0# 0x77fb9a36b0b1 dbgutil::printStackTraceContext() +186   at dbg_stack_trace.cpp:193 (libdbgutil.so)
-     1# 0x77fb9a39f5be dbgutil::OsExceptionHandler::prepareCallStack() +74 at os_exception_handler.cpp:79 (libdbgutil.so)
-     2# 0x77fb9a390458 dbgutil::LinuxExceptionHandler::finalizeSignalHandling() +66 at linux_exception_handler.cpp:224 (libdbgutil.so)
-     3# 0x77fb9a3903f5 dbgutil::LinuxExceptionHandler::signalHandler() +307 at linux_exception_handler.cpp:214 (libdbgutil.so)
-     4# 0x77fb9a3902bf dbgutil::LinuxExceptionHandler::signalHandlerStatic() +55 at linux_exception_handler.cpp:191 (libdbgutil.so)
+     0# 0x77fb9a36b0b1 libdbg::printStackTraceContext() +186   at dbg_stack_trace.cpp:193 (libdbgutil.so)
+     1# 0x77fb9a39f5be libdbg::OsExceptionHandler::prepareCallStack() +74 at os_exception_handler.cpp:79 (libdbgutil.so)
+     2# 0x77fb9a390458 libdbg::LinuxExceptionHandler::finalizeSignalHandling() +66 at linux_exception_handler.cpp:224 (libdbgutil.so)
+     3# 0x77fb9a3903f5 libdbg::LinuxExceptionHandler::signalHandler() +307 at linux_exception_handler.cpp:214 (libdbgutil.so)
+     4# 0x77fb9a3902bf libdbg::LinuxExceptionHandler::signalHandlerStatic() +55 at linux_exception_handler.cpp:191 (libdbgutil.so)
      5# 0x77fb99c45330 N/A                                      at <N/A>  (libc.so.6)
      6# 0x58025499fca6 runSingleThreadedTest() +433             at elog_bench.cpp:1310 (elog_bench)
      7# 0x5802549a2ed4 testPerfSTQuantumCount4096() +131        at elog_bench.cpp:2084 (elog_bench)
@@ -146,15 +146,15 @@ Raw stack trace (frame addresses only), can be achieved as follows:
 
     #include "dbg_stack_trace.h"
 
-    DbgUtilErr res = dbgutil::RawStackTrace rawStackTrace;
+    DbgUtilErr res = libdbg::RawStackTrace rawStackTrace;
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
 
 In order to resolve all stack frames (i.e. get symbol info, file, line, module, etc.), do this:
 
-    dbgutil::StackTrace stackTrace;
-    res = dbgutil::resolveRawStackTrace(rawStackTrace, stackTrace);
+    libdbg::StackTrace stackTrace;
+    res = libdbg::resolveRawStackTrace(rawStackTrace, stackTrace);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -164,14 +164,14 @@ and doing symbol resolving some time later on the background.
 
 In order to simply get the fully resolved current stack trace, do the following:
 
-    std::string stackTraceStr = dbgutil::getStackTraceString();
+    std::string stackTraceStr = libdbg::getStackTraceString();
 
 Here is sample output (on Linux machine):
 
     2025-07-07 09:53:14.816 INFO   [46748] {main} <elog_root> [Thread 46748 (0xb69c) <main> stack trace]
  
-    0# 0x716a4879e618 dbgutil::printStackTraceContext() +185   at dbg_stack_trace.cpp:185 (libdbgutil.so)
-    1# 0x716a4903b8cf dbgutil::printStackTrace() +46           at dbg_stack_trace.h:238 (libelog.so)
+    0# 0x716a4879e618 libdbg::printStackTraceContext() +185   at dbg_stack_trace.cpp:185 (libdbgutil.so)
+    1# 0x716a4903b8cf libdbg::printStackTrace() +46           at dbg_stack_trace.h:238 (libelog.so)
     2# 0x716a4903b1c1 elog::ELogSystem::logStackTrace() +101   at elog_system.cpp:1527 (libelog.so)
     3# 0x5c4bddcbfb30 initRecovery() +973                      at waL_test.cpp:299 (wal_test_linux)
     4# 0x5c4bddcbeb04 testLoadWALRecord() +120                 at waL_test.cpp:122 (wal_test_linux)
@@ -186,13 +186,13 @@ Checkout the API at dbg_stack_trace.h for more details.
 
 If you would like to dump the current stack trace to the standard error stream, it can be done like this:
 
-    dbgutil::dumpStackTrace();
+    libdbg::dumpStackTrace();
 
 ### Dumping pstack-like application stack trace of all threads
 
 Occasionally, it may be desired to dump stack trace of all active threads. It may be achieved like this:
 
-    dbgutil::dumpAppStackTrace().
+    libdbg::dumpAppStackTrace().
 
 This is an experimental feature that may be susceptible to deadlocks, so it is advised to use this feature  
 with caution, perhaps only as a last resort before crashing.  
@@ -201,13 +201,13 @@ One might wonder why there is a need for such a full stack trace dump, since a c
 
 It is also possible to retrieve this dump as a string so it can be sent to a log file:
 
-    dbgutil::getAppStackTraceString();
+    libdbg::getAppStackTraceString();
 
 ### Exception Handling
 
 In order to enable exception handling, the dbgutil must be initialized with at least DBGUTIL_CATCH_EXCEPTIONS flag enabled:
 
-    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS);
 
 By default, dbgutil catches the following signals on Linux and MinGW:
 
@@ -223,13 +223,13 @@ On Windows, an unhandled exception filter is registered to catch all critical ex
 
 In addition, dbgutil can be ordered to catch std::terminate() as well:
 
-    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
 
 ### Sending Exception Report To Log
 
 If all that is required is to write exception information to log, then adding the DBGUTIL_LOG_EXCEPTIONS suffices:
 
-    dbgutil::initDbgUtil(nullptr, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
+    libdbg::initLibDbg(nullptr, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
 
 This will have all exception information sent to the installed [log handler](#log-handling).
 
@@ -237,15 +237,15 @@ This will have all exception information sent to the installed [log handler](#lo
 
 It is possible to register an exception listener, that will receive notifications about fatal events.  
 Currently only fatal exceptions, and std::terminate() are reported.  
-In order to register such a listener, first derive from OsExceptionListener, and then pass a pointer to initDbgUtil():
+In order to register such a listener, first derive from OsExceptionListener, and then pass a pointer to initLibDbg():
 
-    class MyExceptionListener : public dbgutil::OsExceptionListener {
+    class MyExceptionListener : public libdbg::OsExceptionListener {
         // implement pure virtual functions
     };
 
     static MyExceptionListener myExceptionListener;
 
-    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, 
+    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, 
         DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
 
 ### Generating Core Dumps on Windows/Linux during Crash Handling
@@ -254,7 +254,7 @@ It is possible to order dbgutil to generate core dump file before crashing.
 
 To enable this option, dbgutil should be initialized with the DBGUTIL_EXCEPTION_DUMP_CORE flag:
 
-    dbgutil::initDbgUtil(null, nullptr, LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
+    libdbg::initLibDbg(null, nullptr, LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
     
 On Windows this will have dbgutil generate a mini-dump file.  
 Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
@@ -264,7 +264,7 @@ so consider this is a best effort attempt.
 
 If all exception options are to be used, then this form can be used instead:
 
-    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_FLAGS_ALL);
+    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_FLAGS_ALL);
 
 ### Exception Handling Sequence
 
@@ -283,7 +283,7 @@ In order to receive exception messages, as well internal errors or traces, a log
 A default log handler that prints to the standard error stream can be used as follows:
 
     // initialize the library
-    DbgUtilErr res = dbgutil::initDbgUtil(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
+    DbgUtilErr res = libdbg::initLibDbg(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -293,9 +293,9 @@ standard logging system:
 
 
 
-    class MyLogHandler : public dbgutil::LogHandler {
+    class MyLogHandler : public libdbg::LogHandler {
     public:
-        dbgutil::LogSeverity onRegisterLogger(dbgutil::LogSeverity severity, const char* loggerName,
+        libdbg::LogSeverity onRegisterLogger(libdbg::LogSeverity severity, const char* loggerName,
                                               size_t loggerId) final {
             // TODO: handle event - logger initializing
             // if no special handling is required then don't override this method
@@ -307,7 +307,7 @@ standard logging system:
             // if no special handling is required then don't override this method
         }
 
-        void onMsg(dbgutil::LogSeverity severity, size_t loggerId, const char* loggerName,
+        void onMsg(libdbg::LogSeverity severity, size_t loggerId, const char* loggerName,
                    const char* msg) final {
             // TODO: redirect message to internal logging system, logger id may be used to 
             // locate mapped logger from onRegisterLogger()
@@ -321,7 +321,7 @@ standard logging system:
     // receive messages with INFO and higher log level
     // receive exception log messages
     // no exception listener used
-    DbgUtilErr res = dbgutil::initDbgUtil(nullptr, &logHandler, dbgutil::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
+    DbgUtilErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -332,7 +332,7 @@ It is possible to get a list of the identifiers of all active threads, as follow
 
     #include "os_thread_manager.h"
 
-    dbgutil::visitThreads([](dbgutil::os_thread_id_t threadId){
+    libdbg::visitThreads([](libdbg::os_thread_id_t threadId){
         printf("Got thread %" PRItid, threadId);
     });
 
@@ -346,7 +346,7 @@ Also note the PRItid format specification that is defined properly per platform.
 It is possible to directly retrieve the debug symbol information for a given address:
 
     void* symAddress = ...;
-    dbgutil::SymbolInfo symInfo;
+    libdbg::SymbolInfo symInfo;
     DbgUtilErr rc = getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
     if (rc == DBGUTIL_ERR_OK) {
         // do something with symbol info
