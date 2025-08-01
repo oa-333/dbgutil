@@ -8,7 +8,7 @@
 #include "dbgutil_common.h"
 #include "os_thread_manager.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32ThreadManager : public OsThreadManager {
 public:
@@ -47,7 +47,7 @@ private:
 extern DbgUtilErr initWin32ThreadManager();
 extern DbgUtilErr termWin32ThreadManager();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

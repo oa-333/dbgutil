@@ -17,7 +17,7 @@
 #include "win32_exception_handler.h"
 #include "win32_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -335,6 +335,6 @@ DbgUtilErr termWin32ExceptionHandler() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS

@@ -11,7 +11,7 @@
 #include "input_stream.h"
 #include "os_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class DwarfUtil {
 public:
@@ -105,6 +105,6 @@ private:
     DbgUtilErr readAddr(uint64_t offset, uint64_t& address, uint8_t addressSize);
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DWARF_UTIL_H__

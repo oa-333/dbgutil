@@ -5,7 +5,7 @@
 
 #include "dbg_util_def.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 #ifdef DBGUTIL_WINDOWS
 /**
@@ -58,6 +58,6 @@ protected:
     OsExceptionListener& operator=(const OsExceptionListener&) = delete;
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_UTIL_EXCEPT_H__

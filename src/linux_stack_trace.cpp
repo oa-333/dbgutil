@@ -17,7 +17,7 @@
 
 #define DBGUTIL_GET_STACK_TRACE_REQUEST 1
 
-namespace dbgutil {
+namespace libdbg {
 
 LinuxStackTraceProvider* LinuxStackTraceProvider::sInstance = nullptr;
 
@@ -107,6 +107,6 @@ DbgUtilErr termLinuxStackTrace() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_GCC

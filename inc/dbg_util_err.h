@@ -18,11 +18,11 @@
 #define DBGUTIL_ERR_DATA_CORRUPT 13
 #define DBGUTIL_ERR_RESOURCE_BUSY 14
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @typedef Error type. */
 typedef int DbgUtilErr;
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_UTIL_ERR_H__

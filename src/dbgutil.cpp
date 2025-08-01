@@ -37,7 +37,7 @@
 #include "path_parser.h"
 #include "win32_pe_reader.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 #ifdef DBGUTIL_WINDOWS
 static DbgUtilErr initWin32DbgUtil();
@@ -170,4 +170,4 @@ DbgUtilErr termLinuxDbgUtil() {
 
 os_thread_id_t getCurrentThreadId() { return OsUtil::getCurrentThreadId(); }
 
-}  // namespace dbgutil
+}  // namespace libdbg

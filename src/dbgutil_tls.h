@@ -7,7 +7,7 @@
 #include <pthread.h>
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @typedef Thread local storage key type. */
 #ifdef DBGUTIL_WINDOWS
@@ -68,6 +68,6 @@ extern void* getTls(TlsKey key);
  */
 extern bool setTls(TlsKey key, void* value);
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBGUTIL_TLS_H__

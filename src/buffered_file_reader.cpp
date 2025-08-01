@@ -8,7 +8,7 @@
 #include "dbgutil_log_imp.h"
 #include "os_util.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -170,4 +170,4 @@ DbgUtilErr BufferedFileReader::refillBuffer() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

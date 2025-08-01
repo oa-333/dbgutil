@@ -8,7 +8,7 @@
 #include "dbg_util_err.h"
 #include "dbg_util_log.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 #define DBGUTIL_INVALID_LOGGER_ID ((size_t)-1)
 
@@ -51,7 +51,7 @@ extern char* win32SysErrorToStr(unsigned long sysErrorCode);
 extern void win32FreeErrorStr(char* errStr);
 #endif
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 // general logging macro
 #define LOG(logger, severity, fmt, ...)               \

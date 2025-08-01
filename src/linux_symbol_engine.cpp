@@ -26,7 +26,7 @@
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 // NOTE: since gcc/g++ uses the PE32 image differently than the MSFT linker, we cannot use
 // directly Win32SymbolHandler. instead a more careful approach needs to take place (i.e. try to
@@ -279,6 +279,6 @@ DbgUtilErr termLinuxSymbolEngine() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif

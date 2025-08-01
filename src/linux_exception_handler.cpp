@@ -19,7 +19,7 @@
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -482,6 +482,6 @@ DbgUtilErr termLinuxExceptionHandler() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // not defined DBGUTIL_GCC

@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-namespace dbgutil {
+namespace libdbg {
 
 FixedInputStream::FixedInputStream(const char* buffer, size_t bufferSize, bool byRef /* = true */,
                                    bool requiresBigEndian /* = false */)
@@ -44,4 +44,4 @@ DbgUtilErr FixedInputStream::skipBytes(size_t length, size_t& bytesRead) {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

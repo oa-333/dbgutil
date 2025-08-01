@@ -8,7 +8,7 @@
 #include "fixed_input_stream.h"
 #include "os_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 struct DwarfLineStateMachine {
     uint64_t m_address;
@@ -146,6 +146,6 @@ private:
     void appendLineMatrix();
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DWARF_LINE_UTIL_H__

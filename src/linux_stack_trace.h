@@ -7,7 +7,7 @@
 
 #include "os_stack_trace.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class LinuxStackTraceProvider : public OsStackTraceProvider {
 public:
@@ -45,7 +45,7 @@ private:
 extern DbgUtilErr initLinuxStackTrace();
 extern DbgUtilErr termLinuxStackTrace();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_GCC
 

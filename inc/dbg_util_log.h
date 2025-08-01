@@ -6,7 +6,7 @@
 
 #include "dbg_util_def.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @enum Log severity constants */
 enum LogSeverity : uint32_t {
@@ -86,6 +86,6 @@ extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
 /** @def A special constant denoting default log handler (prints to standard error stream). */
 #define DBGUTIL_DEFAULT_LOG_HANDLER ((LogHandler*)-1)
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_UTIL_LOG_H__

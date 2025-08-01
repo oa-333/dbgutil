@@ -5,7 +5,7 @@
 
 #include "input_stream.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Input stream over a given fixed buffer. */
 class FixedInputStream : public InputStream {
@@ -71,6 +71,6 @@ private:
     size_t m_offset;
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __FIXED_INPUT_STREAM_H__

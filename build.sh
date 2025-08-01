@@ -16,7 +16,7 @@ PLATFORM=$(uname -s)
 BUILD_TYPE=Debug
 OS=`uname -o`
 if [ "$OS" = "Msys" ]; then
-    INSTALL_DIR=/c/install/dbgutil
+    INSTALL_DIR=/c/install/libdbg
 else
     INSTALL_DIR=~/install/dbgutil
 fi

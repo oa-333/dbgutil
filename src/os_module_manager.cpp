@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace dbgutil {
+namespace libdbg {
 
 static OsModuleManager* sModuleManager = nullptr;
 
@@ -124,4 +124,4 @@ OsModuleManager* getModuleManager() {
     return sModuleManager;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

@@ -9,7 +9,7 @@
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 // the main interface with this service, according to existing use cases, is as follows:
 //
@@ -175,6 +175,6 @@ extern DBGUTIL_API void setModuleManager(OsModuleManager* moduleManager);
 /** @brief Retrieves the installed module manager implementation. */
 extern DBGUTIL_API OsModuleManager* getModuleManager();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_MODULE_MANAGER_H__

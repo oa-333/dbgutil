@@ -11,7 +11,7 @@
 
 #include "dbgutil_log_imp.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -213,4 +213,4 @@ DbgUtilErr DirScanner::scanDirDirs(const char* dirPath, std::vector<std::string>
     return visitDirEntries(dirPath, &dirCollector);
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

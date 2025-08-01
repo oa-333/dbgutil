@@ -7,7 +7,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 LogBuffer::~LogBuffer() {
 #ifndef __MINGW32__
@@ -123,4 +123,4 @@ bool LogBuffer::append(const char* msg, size_t len /* = 0 */) {
     return true;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

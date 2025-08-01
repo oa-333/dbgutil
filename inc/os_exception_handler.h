@@ -7,7 +7,7 @@
 #include "dbg_util_err.h"
 #include "dbg_util_except.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Parent interface for exception handler. */
 class DBGUTIL_API OsExceptionHandler {
@@ -64,6 +64,6 @@ extern DBGUTIL_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
 /** @brief Retrieves the installed exception handler implementation. */
 extern DBGUTIL_API OsExceptionHandler* getExceptionHandler();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_EXCEPTION_HANDLER_H__

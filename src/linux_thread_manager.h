@@ -10,7 +10,7 @@
 #include "dbgutil_common.h"
 #include "os_thread_manager.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief An active executor used for executing some operation on a target thread context. */
 class ThreadExecutor {
@@ -79,7 +79,7 @@ private:
 extern DbgUtilErr initLinuxThreadManager();
 extern DbgUtilErr termLinuxThreadManager();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_GCC
 

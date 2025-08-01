@@ -18,7 +18,7 @@
 
 #define MAX_LOGGERS ((size_t)1024)
 
-namespace dbgutil {
+namespace libdbg {
 
 // log severity string constants
 static const char* sLogSeverityStr[] = {"FATAL", "ERROR", "WARN",  "NOTICE",
@@ -362,4 +362,4 @@ void win32FreeErrorStr(char* errStr) { LocalFree(errStr); }
 
 #endif
 
-}  // namespace dbgutil
+}  // namespace libdbg

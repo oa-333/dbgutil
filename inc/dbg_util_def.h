@@ -45,7 +45,7 @@
 #define strcasecmp _stricmp
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @typedef Platform-independent thread id type. */
 #ifdef DBGUTIL_WINDOWS
@@ -63,6 +63,6 @@ typedef unsigned long long app_time_t;
 /** @brief Retrieves current thread identifier. */
 extern DBGUTIL_API os_thread_id_t getCurrentThreadId();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_UTIL_DEF_H__

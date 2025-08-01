@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace dbgutil {
+namespace libdbg {
 
 #define DBGUTIL_DLL_PROCESS_ATTACH 1
 #define DBGUTIL_DLL_PROCESS_DETACH 2
@@ -54,7 +54,7 @@ extern void deregisterDllCallback(ThreadDllEventCB callback);
 extern void* getDllCallbackUserData(ThreadDllEventCB callback);
 extern void purgeDllCallback(DllPurgeFilter* filter);
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

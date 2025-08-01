@@ -6,7 +6,7 @@
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @typedef Raw stack trace. */
 typedef std::vector<void*> RawStackTrace;
@@ -69,6 +69,6 @@ extern DBGUTIL_API void setStackTraceProvider(OsStackTraceProvider* provider);
 /** @brief Retrieves the installed stack trace provider. */
 extern DBGUTIL_API OsStackTraceProvider* getStackTraceProvider();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_STACK_TRACE_H__

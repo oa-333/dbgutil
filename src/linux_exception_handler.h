@@ -10,7 +10,7 @@
 
 #include "os_exception_handler.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class LinuxExceptionHandler : public OsExceptionHandler {
 public:
@@ -72,7 +72,7 @@ extern DbgUtilErr initLinuxExceptionHandler();
 
 extern DbgUtilErr termLinuxExceptionHandler();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // not defined DBGUTIL_MSVC
 

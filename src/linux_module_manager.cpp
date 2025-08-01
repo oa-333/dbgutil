@@ -25,7 +25,7 @@
 // can it co-exist with Win32ModuleManager (but only one of them is registered as the
 // OsModuleManager)?
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -253,6 +253,6 @@ DbgUtilErr termLinuxModuleManager() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_LINUX

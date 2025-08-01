@@ -8,7 +8,7 @@
 #include "dbg_util_err.h"
 #include "dbg_util_log.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /**
  * @brief Converts error code to string.
@@ -39,6 +39,6 @@ extern uint32_t getGlobalFlags();
  */
 extern size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBGUTIL_COMMON_H__

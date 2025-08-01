@@ -6,7 +6,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @enum Directory entry type constants. */
 enum class DirEntryType : uint32_t {
@@ -80,6 +80,6 @@ private:
     ~DirScanner() {}
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DIR_SCANNER_H__

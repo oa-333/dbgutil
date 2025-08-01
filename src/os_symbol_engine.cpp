@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace dbgutil {
+namespace libdbg {
 
 static OsSymbolEngine* sSymbolEngine = nullptr;
 
@@ -17,4 +17,4 @@ OsSymbolEngine* getSymbolEngine() {
     return sSymbolEngine;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

@@ -7,7 +7,7 @@
 
 #include "os_stack_trace.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32StackTraceProvider : public OsStackTraceProvider {
 public:
@@ -48,7 +48,7 @@ private:
 extern DbgUtilErr initWin32StackTrace();
 extern DbgUtilErr termWin32StackTrace();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

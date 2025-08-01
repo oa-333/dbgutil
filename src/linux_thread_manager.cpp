@@ -58,7 +58,7 @@
 // condition variables, but with one small downside, it requires tight loop for result collecting.
 // This can be adjusted with some polling mechanism. For now a tight loop is used with yield().
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -361,6 +361,6 @@ DbgUtilErr termLinuxThreadManager() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_GCC

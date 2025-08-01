@@ -7,7 +7,7 @@
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Symbol infomation. */
 struct DBGUTIL_API SymbolInfo {
@@ -103,6 +103,6 @@ extern DBGUTIL_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
 /** @brief Retrieves the installed symbol engine implementation. */
 extern DBGUTIL_API OsSymbolEngine* getSymbolEngine();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_SYMBOL_ENGINE_H__

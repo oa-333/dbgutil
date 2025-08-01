@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstring>
 
-namespace dbgutil {
+namespace libdbg {
 
 static uint32_t sFlags = 0;
 
@@ -57,4 +57,4 @@ size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLe
     return copyLen;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

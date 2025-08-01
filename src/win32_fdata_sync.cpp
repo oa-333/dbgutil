@@ -37,7 +37,7 @@
 // #include <winternl.h>
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 static int initialize_ntdll() { return 0; };
 
@@ -70,5 +70,5 @@ int win32FDataSync(int fd) {
     return errCond.value();*/
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 #endif

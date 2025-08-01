@@ -8,7 +8,7 @@
 #include "os_stack_trace.h"
 #include "os_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32SymbolEngine : public OsSymbolEngine {
 public:
@@ -71,7 +71,7 @@ private:
 extern DbgUtilErr initWin32SymbolEngine();
 extern DbgUtilErr termWin32SymbolEngine();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

@@ -7,7 +7,7 @@
 #include "dbgutil_log_imp.h"
 #include "os_module_manager.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class LinuxModuleManager : public OsModuleManager {
 public:
@@ -50,7 +50,7 @@ private:
 extern DbgUtilErr initLinuxModuleManager();
 extern DbgUtilErr termLinuxModuleManager();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_LINUX
 

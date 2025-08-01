@@ -13,7 +13,7 @@
 #include "dbgutil_common.h"
 #include "os_image_reader.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class ElfReader : public OsImageReader {
 public:
@@ -70,7 +70,7 @@ private:
 extern DbgUtilErr initElfReader();
 extern DbgUtilErr termElfReader();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_LINUX
 

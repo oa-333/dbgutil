@@ -14,7 +14,7 @@
 #include "os_module_manager.h"
 #include "os_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 // cached module data for symbol search
 struct SymbolModuleData {
@@ -96,7 +96,7 @@ private:
 extern DbgUtilErr initLinuxSymbolEngine();
 extern DbgUtilErr termLinuxSymbolEngine();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_GCC
 

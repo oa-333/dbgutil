@@ -10,7 +10,7 @@
 
 #include "dbgutil_log_imp.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -185,6 +185,6 @@ BEGIN_TEARDOWN_JOB(OsModuleManager) {
 }
 END_TEARDOWN_JOB(OsModuleManager)*/
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS

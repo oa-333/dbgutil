@@ -23,7 +23,7 @@
 #include "dbgutil_log_imp.h"
 #include "win32_thread_manager.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -111,6 +111,6 @@ DbgUtilErr termWin32ThreadManager() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS

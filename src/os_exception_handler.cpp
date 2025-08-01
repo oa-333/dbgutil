@@ -7,7 +7,7 @@
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -135,4 +135,4 @@ OsExceptionHandler* getExceptionHandler() {
     return sExceptionHandler;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

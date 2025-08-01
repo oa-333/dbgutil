@@ -15,7 +15,7 @@
 #define DBGUTIL_PATH_SEP_CHARS "/"
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -266,4 +266,4 @@ void PathParser::composePath(std::vector<std::string>::const_iterator from,
     }
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

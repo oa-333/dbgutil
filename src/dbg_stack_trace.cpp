@@ -10,7 +10,7 @@
 #include "os_util.h"
 #include "path_parser.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 // TODO: consider prettier alignment by aggregating all frames and then deciding alignment for file
 // name, but this requires API change
@@ -264,4 +264,4 @@ void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = null
     }
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

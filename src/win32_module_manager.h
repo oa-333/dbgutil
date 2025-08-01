@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32ModuleManager : public OsModuleManager {
 public:
@@ -58,7 +58,7 @@ private:
 extern DbgUtilErr initWin32ModuleManager();
 extern DbgUtilErr termWin32ModuleManager();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

@@ -7,7 +7,7 @@
 #include "dbg_util_flags.h"
 #include "dbg_util_log.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /**
  * @brief Initializes the debug utility library with internal logging enabled.
@@ -28,6 +28,6 @@ extern DBGUTIL_API DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener
 /** @brief Terminates the debug utility library. */
 extern DBGUTIL_API DbgUtilErr termDbgUtil();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_UTIL_H__

@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace dbgutil {
+namespace libdbg {
 
 typedef std::vector<DllListener*> ListenerList;
 static ListenerList sListeners;
@@ -92,7 +92,7 @@ static void notifyProcessDetach() {
     }
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
                     DWORD fdwReason,           // reason for calling function
@@ -106,11 +106,11 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
             break;
 
         case DLL_THREAD_ATTACH:
-            dbgutil::notifyThreadAttach();
+            libdbg::notifyThreadAttach();
             break;
 
         case DLL_THREAD_DETACH:
-            dbgutil::notifyThreadDetach();
+            libdbg::notifyThreadDetach();
             break;
 
         case DLL_PROCESS_DETACH:
@@ -120,10 +120,10 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
             }
 
             // Perform any necessary cleanup.
-            dbgutil::notifyProcessDetach();
+            libdbg::notifyProcessDetach();
             break;
     }
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
-#endif
+#endif  // DBGUTIL_WINDOWS

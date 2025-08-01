@@ -3,7 +3,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Base abstract class for input stream objects. */
 class InputStream {
@@ -131,6 +131,6 @@ private:
     bool m_requiresBigEndian;
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __INPUT_STREAM_H__

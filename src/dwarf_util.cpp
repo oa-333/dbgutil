@@ -8,7 +8,7 @@
 #include "dwarf_line_util.h"
 #include "fixed_input_stream.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -568,4 +568,4 @@ DbgUtilErr DwarfUtil::searchSymbolInCU(const DwarfSearchData& searchData, uint64
     return searchLineProg(searchData, cuData.m_lineProgOffset, symbolInfo);
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

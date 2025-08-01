@@ -8,7 +8,7 @@
 #include "dbgutil_log_imp.h"
 #include "os_util.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -163,4 +163,4 @@ OsImageReaderFactory* getImageReaderFactory() {
     return sFactory;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

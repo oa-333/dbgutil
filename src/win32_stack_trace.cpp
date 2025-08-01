@@ -15,7 +15,7 @@
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -121,6 +121,6 @@ DbgUtilErr termWin32StackTrace() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS

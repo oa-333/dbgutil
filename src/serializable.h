@@ -29,7 +29,7 @@
 #endif
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Serializable interface. */
 class Serializable {
@@ -277,6 +277,6 @@ protected:
         }                                                          \
     }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __SERIALIZABLE_H__

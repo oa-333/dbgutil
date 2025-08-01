@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace dbgutil {
+namespace libdbg {
 
 static OsStackTraceProvider* sProvider = nullptr;
 
@@ -34,4 +34,4 @@ OsStackTraceProvider* getStackTraceProvider() {
     return sProvider;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

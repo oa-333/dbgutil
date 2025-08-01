@@ -6,7 +6,7 @@
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief A thread visitor used to traverse all threads. */
 class DBGUTIL_API ThreadVisitor {
@@ -64,6 +64,6 @@ inline void visitThreadIds(F f) {
     getThreadManager()->visitThreadIds(&visitor);
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_THREAD_MANGER_H__

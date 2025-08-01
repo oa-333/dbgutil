@@ -7,7 +7,7 @@
 #include "input_stream.h"
 #include "serializable.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 struct DwarfSection {
     char* m_start;
@@ -161,6 +161,6 @@ extern DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit,
         return DBGUTIL_ERR_NOT_IMPLEMENTED; \
     }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DWARF_COMMON_H__

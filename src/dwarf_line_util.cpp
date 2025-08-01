@@ -10,7 +10,7 @@
 #include "dbgutil_log_imp.h"
 #include "dwarf_def.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -594,4 +594,4 @@ DbgUtilErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& 
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

@@ -50,7 +50,7 @@ extern int initialize_ntdll();
 #include "winternl.h"
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -633,4 +633,4 @@ DbgUtilErr OsUtil::unlockSpinLock(csi_spinlock_t& spinLock) {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

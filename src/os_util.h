@@ -59,7 +59,7 @@
 #endif
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 #ifdef DBGUTIL_MSVC
 typedef CRITICAL_SECTION csi_spinlock_t;
@@ -291,6 +291,6 @@ public:
     static DbgUtilErr unlockSpinLock(csi_spinlock_t& spinLock);
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_UTIL_H__

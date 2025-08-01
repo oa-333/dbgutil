@@ -6,7 +6,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief A syntactical path parsing utility class. */
 class PathParser {
@@ -143,6 +143,6 @@ public:
                             std::vector<std::string>::const_iterator to, std::string& path);
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __PATH_PARSER_H__

@@ -2,7 +2,7 @@
 
 #include "dwarf_def.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 DbgUtilErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit) {
     uint32_t lenPrefix = 0;
@@ -142,4 +142,4 @@ bool DwarfData::checkDebugSections() {
                       m_debugRngLists) /*&& getSection(".debug_addr", m_debugAddr)*/;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

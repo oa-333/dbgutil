@@ -15,7 +15,7 @@
 #include "dbgutil_win32_dll_event.h"
 #endif
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -141,4 +141,4 @@ bool setTls(TlsKey key, void* value) {
     return true;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg

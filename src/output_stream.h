@@ -3,7 +3,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief Base abstract class for output stream objects. */
 class OutputStream {
@@ -39,6 +39,6 @@ private:
     bool m_requiresBigEndian;
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OUTPUT_STREAM_H__

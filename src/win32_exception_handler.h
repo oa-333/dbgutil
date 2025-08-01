@@ -7,7 +7,7 @@
 
 #include "os_exception_handler.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32ExceptionHandler : public OsExceptionHandler {
 public:
@@ -48,7 +48,7 @@ extern DbgUtilErr initWin32ExceptionHandler();
 
 extern DbgUtilErr termWin32ExceptionHandler();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

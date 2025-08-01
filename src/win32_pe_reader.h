@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace dbgutil {
+namespace libdbg {
 
 class Win32PEReader : public OsImageReader {
 public:
@@ -54,7 +54,7 @@ private:
 extern DbgUtilErr initWin32PEReader();
 extern DbgUtilErr termWin32PEReader();
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS
 

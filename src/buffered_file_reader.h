@@ -5,7 +5,7 @@
 
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief A buffered file reader. */
 class BufferedFileReader {
@@ -101,6 +101,6 @@ private:
     DbgUtilErr refillBuffer();
 };
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __BUFFERED_FILE_READER_H__

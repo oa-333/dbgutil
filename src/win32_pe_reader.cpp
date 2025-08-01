@@ -12,7 +12,7 @@
 #include "os_util.h"
 #include "win32_pe_reader.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 static Logger sLogger;
 
@@ -498,6 +498,6 @@ extern DbgUtilErr termWin32PEReader() {
     return DBGUTIL_ERR_OK;
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // DBGUTIL_WINDOWS

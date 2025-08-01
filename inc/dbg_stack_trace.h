@@ -10,7 +10,7 @@
 #include "os_symbol_engine.h"
 #include "os_thread_manager.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief A fully resolved single stack entry. */
 struct DBGUTIL_API StackEntry {
@@ -437,6 +437,6 @@ inline std::string getAppStackTraceString(int skip, StackEntryFormatter* formatt
     return printer.getStackTrace();
 }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __DBG_STACK_TRACE_H__

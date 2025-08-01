@@ -7,7 +7,7 @@
 #include "buffered_file_reader.h"
 #include "dbgutil_common.h"
 
-namespace dbgutil {
+namespace libdbg {
 
 /** @brief A platform independent section definition in a binary image. */
 struct OsImageSection {
@@ -191,6 +191,6 @@ extern OsImageReaderFactory* getImageReaderFactory();
 /** @brief Creates an image reader. */
 inline OsImageReader* createImageReader() { return getImageReaderFactory()->createImageReader(); }
 
-}  // namespace dbgutil
+}  // namespace libdbg
 
 #endif  // __OS_IMAGE_READER_H__
