@@ -1,6 +1,6 @@
 // avoid including windows header, otherwise MinGW compilation fails
 #define DBGUTIL_NO_WINDOWS_HEADER
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 // this is good only for Microsoft Visual C++ compiler
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file

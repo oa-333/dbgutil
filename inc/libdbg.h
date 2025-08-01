@@ -1,7 +1,7 @@
 #ifndef __LIBDBG_H__
 #define __LIBDBG_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 #include "libdbg_err.h"
 #include "libdbg_except.h"
 #include "libdbg_flags.h"

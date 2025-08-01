@@ -1,4 +1,4 @@
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN

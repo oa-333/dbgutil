@@ -5,7 +5,7 @@ target_sources(
         TYPE HEADERS
         FILES
             dbg_stack_trace.h
-            dbg_util_def.h
+            libdbg_def.h
             libdbg_err.h
             libdbg_except.h
             libdbg_flags.h

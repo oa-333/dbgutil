@@ -1,7 +1,7 @@
 #ifndef __DBGUTIL_TLS_H__
 #define __DBGUTIL_TLS_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifndef DBGUTIL_WINDOWS
 #include <pthread.h>

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 #include "libdbg_err.h"
 
 namespace libdbg {

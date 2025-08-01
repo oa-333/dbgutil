@@ -1,5 +1,5 @@
 #define DBGUTIL_NO_WINDOWS_HEADER
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 // it turns out that when running from within MinGW/UCRT console, then signal handlers can be
 // registered, but when running from Windows console Windows exception handler is in effect.

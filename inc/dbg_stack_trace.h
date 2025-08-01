@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 #include "os_stack_trace.h"
 #include "os_symbol_engine.h"
 #include "os_thread_manager.h"

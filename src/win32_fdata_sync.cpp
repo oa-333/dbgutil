@@ -4,7 +4,7 @@
 // we must be careful here, because we need ot have Windows Driver Kit headers included as well
 // so to avoid conflict, we must avoid including windows headers
 #define DBGUTIL_NO_WINDOWS_HEADER
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 // no we can include headers in the correct order
 // first include WDK headers (enclosed in ifdef to avoid code formatting doing reordering)

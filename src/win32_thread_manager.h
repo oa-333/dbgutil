@@ -1,7 +1,7 @@
 #ifndef __WIN32_THREAD_MANAGER_H__
 #define __WIN32_THREAD_MANAGER_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifdef DBGUTIL_WINDOWS
 

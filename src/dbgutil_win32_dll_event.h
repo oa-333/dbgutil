@@ -1,7 +1,7 @@
 #ifndef __DBGUTIL_WIN32_DLL_EVENT_H__
 #define __DBGUTIL_WIN32_DLL_EVENT_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifdef DBGUTIL_WINDOWS
 

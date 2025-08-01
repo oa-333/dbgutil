@@ -1,7 +1,7 @@
 #ifndef __LINUX_STACK_TRACE_H__
 #define __LINUX_STACK_TRACE_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifdef DBGUTIL_GCC
 

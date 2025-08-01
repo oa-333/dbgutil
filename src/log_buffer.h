@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 namespace libdbg {
 

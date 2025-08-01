@@ -1,5 +1,5 @@
-#ifndef __DBG_UTIL_DEF_H__
-#define __DBG_UTIL_DEF_H__
+#ifndef __LIBDBG_DEF_H__
+#define __LIBDBG_DEF_H__
 
 // Windows/MSVC
 #ifdef _MSC_VER
@@ -65,4 +65,4 @@ extern DBGUTIL_API os_thread_id_t getCurrentThreadId();
 
 }  // namespace libdbg
 
-#endif  // __DBG_UTIL_DEF_H__
+#endif  // __LIBDBG_DEF_H__

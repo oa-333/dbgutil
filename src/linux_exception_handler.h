@@ -1,7 +1,7 @@
 #ifndef __LINUX_EXCEPTION_HANDLER_H__
 #define __LINUX_EXCEPTION_HANDLER_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifndef DBGUTIL_MSVC
 

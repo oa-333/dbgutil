@@ -1,7 +1,7 @@
 #ifndef __ELF_UTIL_H__
 #define __ELF_UTIL_H__
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 
 #ifdef DBGUTIL_LINUX
 

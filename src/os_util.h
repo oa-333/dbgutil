@@ -6,7 +6,7 @@
 #include <ctime>
 #include <vector>
 
-#include "dbg_util_def.h"
+#include "libdbg_def.h"
 #include "libdbg_err.h"
 
 // header required for spin locks
