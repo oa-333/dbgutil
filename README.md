@@ -24,7 +24,7 @@ In order to use the library, first include the main header "libdbg.h", and initi
     #include "libdbg.h"
 
     // initialize the library
-    LibDbgErr res = libdbg::initLibDbg();
+    libdbg::LibDbgErr res = libdbg::initLibDbg();
     if (res != LIBDBG_ERR_OK) {
         // handle error
     }
@@ -146,7 +146,7 @@ Raw stack trace (frame addresses only), can be achieved as follows:
 
     #include "dbg_stack_trace.h"
 
-    LibDbgErr res = libdbg::RawStackTrace rawStackTrace;
+    libdbg::LibDbgErr res = libdbg::RawStackTrace rawStackTrace;
     if (res != LIBDBG_ERR_OK) {
         // handle error
     }
@@ -228,7 +228,7 @@ In addition, libdbg can be ordered to catch std::terminate() as well:
 
 If all that is required is to write exception information to log, then adding the LIBDBG_LOG_EXCEPTIONS suffices:
 
-    libdbg::initLibDbg(nullptr, nullptr, LS_FATAL, LIBDBG_CATCH_EXCEPTIONS | LIBDBG_LOG_EXCEPTIONS);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, LIBDBG_CATCH_EXCEPTIONS | LIBDBG_LOG_EXCEPTIONS);
 
 This will have all exception information sent to the installed [log handler](#log-handling).
 
@@ -244,7 +244,7 @@ In order to register such a listener, first derive from OsExceptionListener, and
 
     static MyExceptionListener myExceptionListener;
 
-    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, 
+    libdbg::initLibDbg(&myExceptionListener, nullptr, libdbg::LS_FATAL, 
         LIBDBG_CATCH_EXCEPTIONS | LIBDBG_SET_TERMINATE_HANDLER);
 
 ### Generating Core Dumps on Windows/Linux during Crash Handling
@@ -253,7 +253,7 @@ It is possible to order libdbg to generate core dump file before crashing.
 
 To enable this option, libdbg should be initialized with the LIBDBG_EXCEPTION_DUMP_CORE flag:
 
-    libdbg::initLibDbg(null, nullptr, LS_FATAL, LIBDBG_EXCEPTION_DUMP_CORE);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, LIBDBG_EXCEPTION_DUMP_CORE);
     
 On Windows this will have libdbg generate a mini-dump file.  
 Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
@@ -263,7 +263,7 @@ so consider this is a best effort attempt.
 
 If all exception options are to be used, then this form can be used instead:
 
-    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, LIBDBG_FLAGS_ALL);
+    libdbg::initLibDbg(&myExceptionListener, nullptr, libdbg::LS_FATAL, LIBDBG_FLAGS_ALL);
 
 ### Exception Handling Sequence
 
@@ -282,12 +282,12 @@ In order to receive exception messages, as well internal errors or traces, a log
 A default log handler that prints to the standard error stream can be used as follows:
 
     // initialize the library
-    LibDbgErr res = libdbg::initLibDbg(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
+    libdbg::LibDbgErr res = libdbg::initLibDbg(LIBDBG_DEFAULT_LOG_HANDLER, libdbg::LS_FATAL);
     if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
-It is possible to derive from LogHandler, and redirect dbgutil log messages into the application's standard logging system:
+It is possible to derive from LogHandler, and redirect libdbg log messages into the application's standard logging system:
 
     class MyLogHandler : public libdbg::LogHandler {
     public:
@@ -295,7 +295,7 @@ It is possible to derive from LogHandler, and redirect dbgutil log messages into
                                               size_t loggerId) final {
             // TODO: handle event - logger initializing
             // if no special handling is required then don't override this method
-            // it may be handing here to map dbgutil logger to application logger
+            // it may be handing here to map libdbg logger to application logger
         }
 
         void onUnregisterLogger(size_t loggerId) final {
@@ -317,7 +317,7 @@ It is possible to derive from LogHandler, and redirect dbgutil log messages into
     // receive messages with INFO and higher log level
     // receive exception log messages
     // no exception listener used
-    LibDbgErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, LIBDBG_LOG_EXCEPTIONS);
+    libdbg::LibDbgErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, LIBDBG_LOG_EXCEPTIONS);
     if (res != LIBDBG_ERR_OK) {
         // handle error
     }
