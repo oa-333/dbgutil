@@ -1,5 +1,5 @@
-#ifndef __DBGUTIL_TLS_H__
-#define __DBGUTIL_TLS_H__
+#ifndef __LIBDBG_TLS_H__
+#define __LIBDBG_TLS_H__
 
 #include "libdbg_def.h"
 
@@ -17,7 +17,7 @@ typedef pthread_key_t TlsKey;
 #endif
 
 /** @def Invalid TLS key value. */
-#define DBGUTIL_INVALID_TLS_KEY ((TlsKey) - 1)
+#define LIBDBG_INVALID_TLS_KEY ((TlsKey) - 1)
 
 /** @typedef TLS destructor function type. */
 typedef void (*tlsDestructorFunc)(void*);
@@ -70,4 +70,4 @@ extern bool setTls(TlsKey key, void* value);
 
 }  // namespace libdbg
 
-#endif  // __DBGUTIL_TLS_H__
+#endif  // __LIBDBG_TLS_H__

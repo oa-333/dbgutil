@@ -3,7 +3,7 @@ target_sources(dbgutil PRIVATE
     ./dbg_stack_trace.cpp
     ./libdbg_common.cpp
     ./libdbg_log_imp.cpp
-    ./dbgutil_tls.cpp
+    ./libdbg_tls.cpp
     ./dbgutil_win32_dll_event.cpp
     ./dbgutil.cpp
     ./dir_scanner.cpp

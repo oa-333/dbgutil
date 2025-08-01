@@ -11,9 +11,9 @@
 #include <cstring>
 #include <vector>
 
-#include "dbgutil_tls.h"
 #include "libdbg_common.h"
 #include "libdbg_log_imp.h"
+#include "libdbg_tls.h"
 #include "log_buffer.h"
 
 #define MAX_LOGGERS ((size_t)1024)
@@ -65,7 +65,7 @@ public:
 
 // use TLS instead of thread_local due to MinGW bug (static thread_local variable destruction
 // sometimes takes place twice, not clear under which conditions)
-static TlsKey sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
+static TlsKey sLogDataKey = LIBDBG_INVALID_TLS_KEY;
 
 inline LogData* allocLogData() { return new (std::nothrow) LogData(); }
 
@@ -113,7 +113,7 @@ inline void ensureLogDataExists() {
 }
 
 inline LibDbgErr createLogDataKey() {
-    if (sLogDataKey != DBGUTIL_INVALID_TLS_KEY) {
+    if (sLogDataKey != LIBDBG_INVALID_TLS_KEY) {
         fprintf(stderr, "Cannot create record builder TLS key, already created\n");
         return false;
     }
@@ -124,14 +124,14 @@ inline LibDbgErr createLogDataKey() {
 }
 
 inline LibDbgErr destroyLogDataKey() {
-    if (sLogDataKey == DBGUTIL_INVALID_TLS_KEY) {
+    if (sLogDataKey == LIBDBG_INVALID_TLS_KEY) {
         // silently ignore the request
         return LIBDBG_ERR_OK;
     }
     if (!destroyTls(sLogDataKey)) {
         return LIBDBG_ERR_SYSTEM_FAILURE;
     }
-    sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
+    sLogDataKey = LIBDBG_INVALID_TLS_KEY;
     return LIBDBG_ERR_OK;
 }
 
