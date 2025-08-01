@@ -3,9 +3,9 @@
 #include <cassert>
 
 #include "dbg_stack_trace.h"
-#include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "libdbg_flags.h"
 
 namespace libdbg {
 
@@ -80,14 +80,14 @@ const char* OsExceptionHandler::prepareCallStack(void* context) {
 }
 
 void OsExceptionHandler::setTerminateHandler() {
-    if (getGlobalFlags() & DBGUTIL_SET_TERMINATE_HANDLER) {
+    if (getGlobalFlags() & LIBDBG_SET_TERMINATE_HANDLER) {
         m_prevTerminateHandler = std::get_terminate();
         std::set_terminate(&OsExceptionHandler::terminateHandler);
     }
 }
 
 void OsExceptionHandler::restoreTerminateHandler() {
-    if (getGlobalFlags() & DBGUTIL_SET_TERMINATE_HANDLER) {
+    if (getGlobalFlags() & LIBDBG_SET_TERMINATE_HANDLER) {
         std::set_terminate(m_prevTerminateHandler);
     }
 }
@@ -109,7 +109,7 @@ void OsExceptionHandler::handleTerminate() {
     }
 
     // send to log
-    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, "std::terminate() called, call stack information:\n\n%s\n",
                   sCallStackBuf);
     }

@@ -8,7 +8,7 @@ target_sources(
             dbg_util_def.h
             dbg_util_err.h
             dbg_util_except.h
-            dbg_util_flags.h
+            libdbg_flags.h
             libdbg_log.h
             libdbg.h
             os_exception_handler.h

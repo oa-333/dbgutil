@@ -13,9 +13,9 @@
 #include <cinttypes>
 
 #include "dbg_stack_trace.h"
-#include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "libdbg_flags.h"
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"
 
@@ -227,13 +227,13 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
     dispatchExceptionInfo(exInfo);
 
     // nevertheless, we also send to log
-    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, exInfo.m_fullExceptionInfo);
         LOG_FATAL(sLogger, exInfo.m_callStack);
     }
 
     // generate core
-    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() && LIBDBG_EXCEPTION_DUMP_CORE) {
         LOG_FATAL(sLogger, "Aborting after fatal exception, see details above.");
         abort();
     }
@@ -425,7 +425,7 @@ DbgUtilErr LinuxExceptionHandler::initializeEx() {
     // we take the same consideration also in Win32ExceptionHandler
 #ifdef DBGUTIL_MINGW
     if (getenv("MSYSTEM") != nullptr) {
-        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
             LOG_DEBUG(sLogger, "Registering signal handler for MinGW under MSYSTEM runtime");
             registerExceptionHandlers();
         }
@@ -433,7 +433,7 @@ DbgUtilErr LinuxExceptionHandler::initializeEx() {
         LOG_DEBUG(sLogger, "Signal handler for MinGW not registered, not under MSYSTEM runtime");
     }
 #else
-    if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
+    if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
         registerExceptionHandlers();
     }
 #endif

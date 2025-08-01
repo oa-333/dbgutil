@@ -11,9 +11,9 @@
 #include <cassert>
 #include <cinttypes>
 
-#include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "libdbg_flags.h"
 #include "win32_exception_handler.h"
 #include "win32_symbol_engine.h"
 
@@ -218,13 +218,13 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
     dispatchExceptionInfo(exInfo);
 
     // nevertheless, we also send to log
-    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, exInfo.m_fullExceptionInfo);
         LOG_FATAL(sLogger, exInfo.m_callStack);
     }
 
     // finally, attempt to dump core
-    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() && LIBDBG_EXCEPTION_DUMP_CORE) {
         LOG_WARN(sLogger, "Dumping core");
         Win32SymbolEngine::getInstance()->dumpCore(exceptionInfo);
         LOG_WARN(sLogger, "Finished dumping core");
@@ -286,7 +286,7 @@ DbgUtilErr Win32ExceptionHandler::initializeEx() {
         LOG_DEBUG(sLogger,
                   "Exception handler for MinGW not registered, running under MSYSTEM runtime");
     } else {
-        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
             registerExceptionHandler();
         }
     }
@@ -299,7 +299,7 @@ DbgUtilErr Win32ExceptionHandler::terminateEx() {
     size_t retSize = 0;
     (void)getenv_s(&retSize, buf, BUF_SIZE, "MSYSTEM");
     if (retSize != 0) {
-        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
             unregisterExceptionHandler();
         }
     }

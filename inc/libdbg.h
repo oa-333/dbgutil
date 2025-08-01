@@ -4,7 +4,7 @@
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
 #include "dbg_util_except.h"
-#include "dbg_util_flags.h"
+#include "libdbg_flags.h"
 #include "libdbg_log.h"
 
 namespace libdbg {
@@ -18,7 +18,7 @@ namespace libdbg {
  * @param severity Optionally control the log severity of reported log messages. Any log messages
  * below this severity will be discarded. By default only fatal messages are sent to log.
  * @param flags Optional flags controlling the behavior of dbgutil. For a comprehensive list of
- * flags, please refer to the @ref dbg_util_flags.h header.
+ * flags, please refer to the @ref libdbg_flags.h header.
  * @return DBGUTIL_ERR_OK If succeeded, otherwise an error code.
  */
 extern DBGUTIL_API DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,

@@ -205,9 +205,9 @@ It is also possible to retrieve this dump as a string so it can be sent to a log
 
 ### Exception Handling
 
-In order to enable exception handling, the dbgutil must be initialized with at least DBGUTIL_CATCH_EXCEPTIONS flag enabled:
+In order to enable exception handling, the dbgutil must be initialized with at least LIBDBG_CATCH_EXCEPTIONS flag enabled:
 
-    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, LIBDBG_CATCH_EXCEPTIONS);
 
 By default, dbgutil catches the following signals on Linux and MinGW:
 
@@ -223,13 +223,13 @@ On Windows, an unhandled exception filter is registered to catch all critical ex
 
 In addition, dbgutil can be ordered to catch std::terminate() as well:
 
-    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+    libdbg::initLibDbg(nullptr, nullptr, libdbg::LS_FATAL, LIBDBG_CATCH_EXCEPTIONS | LIBDBG_SET_TERMINATE_HANDLER);
 
 ### Sending Exception Report To Log
 
-If all that is required is to write exception information to log, then adding the DBGUTIL_LOG_EXCEPTIONS suffices:
+If all that is required is to write exception information to log, then adding the LIBDBG_LOG_EXCEPTIONS suffices:
 
-    libdbg::initLibDbg(nullptr, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
+    libdbg::initLibDbg(nullptr, nullptr, LS_FATAL, LIBDBG_CATCH_EXCEPTIONS | LIBDBG_LOG_EXCEPTIONS);
 
 This will have all exception information sent to the installed [log handler](#log-handling).
 
@@ -246,15 +246,15 @@ In order to register such a listener, first derive from OsExceptionListener, and
     static MyExceptionListener myExceptionListener;
 
     libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, 
-        DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
+        LIBDBG_CATCH_EXCEPTIONS | LIBDBG_SET_TERMINATE_HANDLER);
 
 ### Generating Core Dumps on Windows/Linux during Crash Handling
 
 It is possible to order dbgutil to generate core dump file before crashing.  
 
-To enable this option, dbgutil should be initialized with the DBGUTIL_EXCEPTION_DUMP_CORE flag:
+To enable this option, dbgutil should be initialized with the LIBDBG_EXCEPTION_DUMP_CORE flag:
 
-    libdbg::initLibDbg(null, nullptr, LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
+    libdbg::initLibDbg(null, nullptr, LS_FATAL, LIBDBG_EXCEPTION_DUMP_CORE);
     
 On Windows this will have dbgutil generate a mini-dump file.  
 Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
@@ -264,7 +264,7 @@ so consider this is a best effort attempt.
 
 If all exception options are to be used, then this form can be used instead:
 
-    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_FLAGS_ALL);
+    libdbg::initLibDbg(&myExceptionListener, nullptr, LS_FATAL, LIBDBG_FLAGS_ALL);
 
 ### Exception Handling Sequence
 
@@ -321,7 +321,7 @@ standard logging system:
     // receive messages with INFO and higher log level
     // receive exception log messages
     // no exception listener used
-    DbgUtilErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
+    DbgUtilErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, LIBDBG_LOG_EXCEPTIONS);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
