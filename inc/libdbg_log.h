@@ -1,5 +1,5 @@
-#ifndef __DBG_UTIL_LOG_H__
-#define __DBG_UTIL_LOG_H__
+#ifndef __LIBDBG_LOG_H__
+#define __LIBDBG_LOG_H__
 
 #include <cinttypes>
 #include <cstddef>
@@ -88,4 +88,4 @@ extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
 
 }  // namespace libdbg
 
-#endif  // __DBG_UTIL_LOG_H__
+#endif  // __LIBDBG_LOG_H__

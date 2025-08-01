@@ -6,7 +6,7 @@
 
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
-#include "dbg_util_log.h"
+#include "libdbg_log.h"
 
 namespace libdbg {
 

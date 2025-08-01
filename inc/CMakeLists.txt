@@ -9,7 +9,7 @@ target_sources(
             dbg_util_err.h
             dbg_util_except.h
             dbg_util_flags.h
-            dbg_util_log.h
+            libdbg_log.h
             libdbg.h
             os_exception_handler.h
             os_module_manager.h
