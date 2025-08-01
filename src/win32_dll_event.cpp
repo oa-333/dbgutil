@@ -1,4 +1,4 @@
-#include "dbgutil_win32_dll_event.h"
+#include "win32_dll_event.h"
 
 #ifdef LIBDBG_WINDOWS
 
@@ -70,7 +70,7 @@ static void notifyThreadAttach() {
         listener->onThreadDllAttach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(DBGUTIL_DLL_THREAD_ATTACH, cbPair.second);
+        (*cbPair.first)(LIBDBG_DLL_THREAD_ATTACH, cbPair.second);
     }
 }
 
@@ -79,7 +79,7 @@ static void notifyThreadDetach() {
         listener->onThreadDllDetach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(DBGUTIL_DLL_THREAD_DETACH, cbPair.second);
+        (*cbPair.first)(LIBDBG_DLL_THREAD_DETACH, cbPair.second);
     }
 }
 
@@ -88,7 +88,7 @@ static void notifyProcessDetach() {
         listener->onProcessDllDetach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(DBGUTIL_DLL_PROCESS_DETACH, cbPair.second);
+        (*cbPair.first)(LIBDBG_DLL_PROCESS_DETACH, cbPair.second);
     }
 }
 

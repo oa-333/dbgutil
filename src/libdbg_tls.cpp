@@ -12,7 +12,7 @@
 #include <cstdio>
 #include <new>
 
-#include "dbgutil_win32_dll_event.h"
+#include "win32_dll_event.h"
 #endif
 
 namespace libdbg {
@@ -28,7 +28,7 @@ struct TlsCleanupData {
 
 static void tlsCleanup(int event, void* userData) {
     TlsCleanupData* cleanupData = (TlsCleanupData*)userData;
-    if (event == DBGUTIL_DLL_THREAD_DETACH) {
+    if (event == LIBDBG_DLL_THREAD_DETACH) {
         // fprintf(stderr, "Running TLS cleanup at %p\n", cleanupData);
         if (cleanupData == nullptr) {
             // no cleanup data, we give up

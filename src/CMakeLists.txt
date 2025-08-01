@@ -4,8 +4,8 @@ target_sources(dbgutil PRIVATE
     ./libdbg_common.cpp
     ./libdbg_log_imp.cpp
     ./libdbg_tls.cpp
-    ./dbgutil_win32_dll_event.cpp
-    ./dbgutil.cpp
+    ./win32_dll_event.cpp
+    ./libdbg.cpp
     ./dir_scanner.cpp
     ./dwarf_common.cpp
     ./dwarf_def.cpp
