@@ -89,6 +89,7 @@ The dbgutil package depends on libunwind on Linux/MinGW, and dbghelp.dll on Wind
 The supported debug format on Linux/MinGW systems is DWARF 5,  
 Any toolchain that produces ELF or PE32 binary image with DWARF 5 (or pdb) debug information is a possible candidate for usage with dbgutil. On platforms/toolchains without explicit support, a few compile time preprocessor definitions may be added in order to enable such support.
 
+Feature/pull requests and bug reports are welcome.
 
 ### Installing
 
