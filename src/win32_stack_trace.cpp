@@ -10,8 +10,8 @@
 
 #include <cassert>
 
-#include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "libdbg_common.h"
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
 

@@ -13,8 +13,8 @@
 #include <cinttypes>
 
 #include "dbg_stack_trace.h"
-#include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "libdbg_common.h"
 #include "libdbg_flags.h"
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"

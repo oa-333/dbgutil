@@ -1,5 +1,5 @@
-#ifndef __DBGUTIL_COMMON_H__
-#define __DBGUTIL_COMMON_H__
+#ifndef __LIBDBG_COMMON_H__
+#define __LIBDBG_COMMON_H__
 
 #include <cstdint>
 #include <string>
@@ -37,8 +37,8 @@ extern uint32_t getGlobalFlags();
  * @param srcLen The source length (optional, can run faster if provided).
  * @return The number of characters copied.
  */
-extern size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
+extern size_t libdbg_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
 
 }  // namespace libdbg
 
-#endif  // __DBGUTIL_COMMON_H__
+#endif  // __LIBDBG_COMMON_H__

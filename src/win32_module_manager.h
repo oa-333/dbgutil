@@ -1,7 +1,7 @@
 #ifndef __WIN32_MODULE_MANAGER_H__
 #define __WIN32_MODULE_MANAGER_H__
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 #ifdef LIBDBG_WINDOWS
 #include "dbgutil_log_imp.h"

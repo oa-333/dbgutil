@@ -3,8 +3,8 @@
 
 #include <unordered_map>
 
-#include "dbgutil_common.h"
 #include "input_stream.h"
+#include "libdbg_common.h"
 #include "serializable.h"
 
 namespace libdbg {

@@ -11,9 +11,9 @@
 #include <cstring>
 #include <vector>
 
-#include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
 #include "dbgutil_tls.h"
+#include "libdbg_common.h"
 #include "log_buffer.h"
 
 #define MAX_LOGGERS ((size_t)1024)

@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 namespace libdbg {
 
@@ -34,7 +34,7 @@ bool LogBuffer::resize(size_t newSize) {
         }
         m_dynamicBuffer = newBuffer;
         if (shouldCopy) {
-            dbgutil_strncpy(m_dynamicBuffer, m_fixedBuffer, m_bufferSize);
+            libdbg_strncpy(m_dynamicBuffer, m_fixedBuffer, m_bufferSize);
         }
         m_bufferSize = actualNewSize;
     }
@@ -119,7 +119,7 @@ bool LogBuffer::append(const char* msg, size_t len /* = 0 */) {
     if (!ensureBufferLength(len)) {
         return false;
     }
-    m_offset += dbgutil_strncpy(getRef() + m_offset, msg, size() - m_offset, len);
+    m_offset += libdbg_strncpy(getRef() + m_offset, msg, size() - m_offset, len);
     return true;
 }
 

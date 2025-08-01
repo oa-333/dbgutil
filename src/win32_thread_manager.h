@@ -5,7 +5,7 @@
 
 #ifdef LIBDBG_WINDOWS
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 #include "os_thread_manager.h"
 
 namespace libdbg {

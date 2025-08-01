@@ -1,7 +1,7 @@
 #ifndef __LINUX_MODULE_MANAGER_H__
 #define __LINUX_MODULE_MANAGER_H__
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 #ifdef LIBDBG_LINUX
 #include "dbgutil_log_imp.h"

@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 #include "os_image_reader.h"
 
 namespace libdbg {

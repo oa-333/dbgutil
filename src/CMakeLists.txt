@@ -1,7 +1,7 @@
 target_sources(dbgutil PRIVATE
     ./buffered_file_reader.cpp
     ./dbg_stack_trace.cpp
-    ./dbgutil_common.cpp
+    ./libdbg_common.cpp
     ./dbgutil_log_imp.cpp
     ./dbgutil_tls.cpp
     ./dbgutil_win32_dll_event.cpp

@@ -7,7 +7,7 @@
 
 #include <pthread.h>
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 #include "os_thread_manager.h"
 
 namespace libdbg {

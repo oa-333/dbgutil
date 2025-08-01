@@ -1,7 +1,7 @@
 #ifndef __INPUT_STREAM_H__
 #define __INPUT_STREAM_H__
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 namespace libdbg {
 

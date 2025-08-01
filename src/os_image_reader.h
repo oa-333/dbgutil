@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "buffered_file_reader.h"
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 namespace libdbg {
 

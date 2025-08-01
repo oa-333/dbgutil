@@ -1,7 +1,7 @@
 #ifndef __WIN32_PE_READER_H__
 #define __WIN32_PE_READER_H__
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 #include "os_image_reader.h"
 
 #ifdef LIBDBG_WINDOWS

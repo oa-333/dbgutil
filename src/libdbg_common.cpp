@@ -1,4 +1,4 @@
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 #include <cassert>
 #include <cstring>
@@ -36,7 +36,7 @@ void setGlobalFlags(uint32_t flags) { sFlags = flags; }
 
 uint32_t getGlobalFlags() { return sFlags; }
 
-size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen /* = 0 */) {
+size_t libdbg_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen /* = 0 */) {
     assert(destLen > 0);
     if (srcLen == 0) {
         srcLen = strlen(src);

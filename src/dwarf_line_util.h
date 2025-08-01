@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "dbgutil_common.h"
 #include "dwarf_common.h"
 #include "fixed_input_stream.h"
+#include "libdbg_common.h"
 #include "os_symbol_engine.h"
 
 namespace libdbg {

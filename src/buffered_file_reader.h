@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "dbgutil_common.h"
+#include "libdbg_common.h"
 
 namespace libdbg {
 

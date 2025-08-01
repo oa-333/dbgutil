@@ -6,9 +6,9 @@
 #include <iomanip>
 #include <sstream>
 
-#include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
 #include "dwarf_def.h"
+#include "libdbg_common.h"
 
 namespace libdbg {
 

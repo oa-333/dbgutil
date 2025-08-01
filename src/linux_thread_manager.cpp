@@ -20,9 +20,9 @@
 #include <thread>
 #include <unordered_map>
 
-#include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
 #include "dir_scanner.h"
+#include "libdbg_common.h"
 #include "linux_thread_manager.h"
 #include "os_util.h"
 
