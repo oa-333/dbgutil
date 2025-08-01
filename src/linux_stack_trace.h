@@ -25,15 +25,15 @@ public:
      * @param listener The stack frame listener.
      * @param context The call context. Pass null to capture current thread call stack.
      */
-    DbgUtilErr walkStack(StackFrameListener* listener, void* context) final;
+    LibDbgErr walkStack(StackFrameListener* listener, void* context) final;
 
     /**
      * @brief Retrieves stack trace for a specific thread.
      * @param threadId The thread id.
      * @param[out] stackTrace The resulting stack trace.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
+    LibDbgErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
 
 private:
     LinuxStackTraceProvider() {}
@@ -42,8 +42,8 @@ private:
     static LinuxStackTraceProvider* sInstance;
 };
 
-extern DbgUtilErr initLinuxStackTrace();
-extern DbgUtilErr termLinuxStackTrace();
+extern LibDbgErr initLinuxStackTrace();
+extern LibDbgErr termLinuxStackTrace();
 
 }  // namespace libdbg
 

@@ -91,16 +91,16 @@ private:
 class ExternRequest : public SignalRequest {
 public:
     ExternRequest(ThreadExecutor* executor = nullptr)
-        : m_executor(executor), m_result(DBGUTIL_ERR_OK) {}
+        : m_executor(executor), m_result(LIBDBG_ERR_OK) {}
 
-    inline DbgUtilErr getResult() const { return m_result; }
+    inline LibDbgErr getResult() const { return m_result; }
 
 protected:
     void execImpl() { m_result = m_executor->execRequest(); }
 
 private:
     ThreadExecutor* m_executor;
-    DbgUtilErr m_result;
+    LibDbgErr m_result;
 };
 
 /*static void verifyAsyncSignalSafe() {
@@ -118,11 +118,11 @@ static void apcRoutine(ULONG_PTR data) {
 #endif
 
 #ifdef DBGUTIL_MINGW
-static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
+static LibDbgErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
     HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, osThreadId);
     if (hThread == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to get thread %" PRItid " handle", osThreadId);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     // if (!QueueUserAPC2(apcRoutine, hThread, NULL, QUEUE_USER_APC_FLAGS_SPECIAL_USER_APC)) {
@@ -130,13 +130,13 @@ static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalReque
         LOG_WIN32_ERROR(sLogger, QueueUserAPC, "Failed to queue user APC to thread %" PRItid,
                         osThreadId);
         CloseHandle(hThread);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     CloseHandle(hThread);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #else
-static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
+static LibDbgErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
     siginfo_t si;
     si.si_code = SI_QUEUE;
     si.si_pid = getpid();
@@ -145,9 +145,9 @@ static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalReque
     if (rt_tgsigqueueinfo(getpid(), osThreadId, SIG_EXEC_REQUEST, &si) == -1) {
         LOG_SYS_ERROR(sLogger, rt_sigqueueinfo, "Failed to send signal to thread %" PRItid,
                       osThreadId);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
@@ -164,7 +164,7 @@ static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
 #endif
 
 #ifdef DBGUTIL_LINUX
-static DbgUtilErr registerSignalHandler(int sigNum) {
+static LibDbgErr registerSignalHandler(int sigNum) {
     struct sigaction sa = {};
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_sigaction = signalHandler;
@@ -172,13 +172,13 @@ static DbgUtilErr registerSignalHandler(int sigNum) {
     int res = sigaction(sigNum, &sa, nullptr);
     if (res != 0) {
         LOG_SYS_ERROR(sLogger, sigaction, "Failed to register signal handler");
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     LOG_DEBUG(sLogger, "Registered signal %d handler", sigNum);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-static DbgUtilErr unregisterSignalHandler(int sigNum) {
+static LibDbgErr unregisterSignalHandler(int sigNum) {
     struct sigaction sa = {};
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_sigaction = nullptr;
@@ -186,10 +186,10 @@ static DbgUtilErr unregisterSignalHandler(int sigNum) {
     int res = sigaction(sigNum, &sa, nullptr);
     if (res != 0) {
         LOG_SYS_ERROR(sLogger, sigaction, "Failed to unregister signal handler");
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     LOG_DEBUG(sLogger, "Unregistered signal %d handler", sigNum);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
@@ -210,20 +210,20 @@ void LinuxThreadManager::destroyInstance() {
     sInstance = nullptr;
 }
 
-DbgUtilErr LinuxThreadManager::initialize() {
+LibDbgErr LinuxThreadManager::initialize() {
 #ifndef DBGUTIL_MINGW
     return registerSignalHandler(SIG_EXEC_REQUEST);
 #else
     // MinGW does not implement signals well, so we need a workaround using QueueUserAPC2
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 #endif
 }
 
-DbgUtilErr LinuxThreadManager::terminate() {
+LibDbgErr LinuxThreadManager::terminate() {
 #ifdef DBGUTIL_LINUX
     return unregisterSignalHandler(SIG_EXEC_REQUEST);
 #else
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 #endif
 }
 
@@ -265,33 +265,33 @@ private:
     }
 };
 
-DbgUtilErr LinuxThreadManager::visitThreadIds(ThreadVisitor* visitor) {
+LibDbgErr LinuxThreadManager::visitThreadIds(ThreadVisitor* visitor) {
 #ifdef DBGUTIL_MINGW
     // divert to Win32
     return Win32ThreadManager::getInstance()->visitThreadIds(visitor);
 #else
     // take a snapshot of all running threads through /proc/self/task
     ThreadIdVisitor dirVisitor(visitor);
-    DbgUtilErr rc = DirScanner::visitDirEntries("/proc/self/task", &dirVisitor);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = DirScanner::visitDirEntries("/proc/self/task", &dirVisitor);
+    if (rc != LIBDBG_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to list directory entries under /proc/self/task: %s",
                   errorCodeToStr(rc));
         return rc;
     }
 
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 #endif
 }
 
-DbgUtilErr LinuxThreadManager::getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle) {
+LibDbgErr LinuxThreadManager::getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle) {
     class GetThreadHandleExecutor : public ThreadExecutor {
     public:
         GetThreadHandleExecutor() {}
         ~GetThreadHandleExecutor() final {}
 
-        DbgUtilErr execRequest() final {
+        LibDbgErr execRequest() final {
             m_threadHandle = pthread_self();
-            return DBGUTIL_ERR_OK;
+            return LIBDBG_ERR_OK;
         }
 
         inline os_thread_id_t getThreadHandle() const { return m_threadHandle; }
@@ -301,28 +301,28 @@ DbgUtilErr LinuxThreadManager::getThreadHandle(os_thread_id_t threadId, pthread_
     };
 
     GetThreadHandleExecutor requestExecutor;
-    DbgUtilErr result = DBGUTIL_ERR_OK;
-    DbgUtilErr rc = execThreadRequest(threadId, &requestExecutor, result);
-    if (rc == DBGUTIL_ERR_OK) {
+    LibDbgErr result = LIBDBG_ERR_OK;
+    LibDbgErr rc = execThreadRequest(threadId, &requestExecutor, result);
+    if (rc == LIBDBG_ERR_OK) {
         rc = result;
-        if (rc == DBGUTIL_ERR_OK) {
+        if (rc == LIBDBG_ERR_OK) {
             threadHandle = requestExecutor.getThreadHandle();
         }
     }
     return rc;
 }
 
-DbgUtilErr LinuxThreadManager::execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
-                                                 DbgUtilErr& requestResult) {
+LibDbgErr LinuxThreadManager::execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
+                                                LibDbgErr& requestResult) {
     // if requesting to execute on current thread then we don't need to send a signal
     if (threadId == OsUtil::getCurrentThreadId()) {
         requestResult = executor->execRequest();
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     ExternRequest request(executor);
-    DbgUtilErr rc = execThreadSignalRequest(threadId, &request);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = execThreadSignalRequest(threadId, &request);
+    if (rc != LIBDBG_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to send exec-request signal to thread %" PRItid, threadId);
         return rc;
     }
@@ -336,29 +336,29 @@ DbgUtilErr LinuxThreadManager::execThreadRequest(os_thread_id_t threadId, Thread
     requestResult = request.getResult();
     LOG_DEBUG(sLogger, "Waiting DONE with result: %s", errorCodeToStr(requestResult));
 
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr initLinuxThreadManager() {
+LibDbgErr initLinuxThreadManager() {
     registerLogger(sLogger, "linux_thread_manager");
     LinuxThreadManager::createInstance();
-    DbgUtilErr rc = LinuxThreadManager::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = LinuxThreadManager::getInstance()->initialize();
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     setThreadManager(LinuxThreadManager::getInstance());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termLinuxThreadManager() {
+LibDbgErr termLinuxThreadManager() {
     setThreadManager(nullptr);
-    DbgUtilErr rc = LinuxThreadManager::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = LinuxThreadManager::getInstance()->terminate();
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     LinuxThreadManager::destroyInstance();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

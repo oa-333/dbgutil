@@ -7,7 +7,7 @@
 #include <string>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 
 namespace libdbg {
 
@@ -88,9 +88,9 @@ public:
      * @note If the module is not found then a system call is triggered.
      * @param address The address to search.
      * @param[out] moduleInfo The resulting module information.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr getModuleByAddress(void* address, OsModuleInfo& moduleInfo);
+    virtual LibDbgErr getModuleByAddress(void* address, OsModuleInfo& moduleInfo);
 
     /**
      * @brief Searches for a module by name.
@@ -98,13 +98,13 @@ public:
      * @param[out] moduleInfo The resulting module information.
      * @param shouldRefreshModuleList Optionally specifies whether the module should be refreshed if
      * the module was not found (by default no refreshing takes place).
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr getModuleByName(const char* name, OsModuleInfo& moduleInfo,
-                               bool shouldRefreshModuleList = false);
+    LibDbgErr getModuleByName(const char* name, OsModuleInfo& moduleInfo,
+                              bool shouldRefreshModuleList = false);
 
     /** @brief Queries for the main executable module of the current process. */
-    DbgUtilErr getMainModule(OsModuleInfo& moduleInfo);
+    LibDbgErr getMainModule(OsModuleInfo& moduleInfo);
 
     /**
      * @brief Traverses loaded modules. Consider calling @ref refreshModuleList() to traverse an
@@ -114,26 +114,26 @@ public:
      * moduleInfo, bool& shouldStop)". If the visitor function returns error code the module
      * traversal stops, and the error code is returned to the caller. If the shouldStop flag is set
      * to true by the visitor, then the module traversal stops, and E_OK is returned to the caller.
-     * @return DbgUtilErr
+     * @return LibDbgErr
      */
     template <typename F>
-    inline DbgUtilErr forEachModule(F f) {
+    inline LibDbgErr forEachModule(F f) {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         for (const OsModuleInfo& moduleInfo : m_moduleSet) {
             bool shouldStop = false;
-            DbgUtilErr rc = f(moduleInfo, shouldStop);
-            if (rc != DBGUTIL_ERR_OK) {
+            LibDbgErr rc = f(moduleInfo, shouldStop);
+            if (rc != LIBDBG_ERR_OK) {
                 return rc;
             }
             if (shouldStop) {
                 break;
             }
         }
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     /** @brief Refreshes the module list. */
-    virtual DbgUtilErr refreshModuleList() = 0;
+    virtual LibDbgErr refreshModuleList() = 0;
 
 protected:
     OsModuleManager() : m_mainModuleValid(false) {}
@@ -145,7 +145,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    virtual DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) = 0;
+    virtual LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) = 0;
 
     /** @brief Clears the module set. */
     void clearModuleSet();
@@ -166,7 +166,7 @@ private:
     bool m_mainModuleValid;
     OsModuleInfo m_mainModule;
 
-    DbgUtilErr searchModule(const char* name, OsModuleInfo& moduleInfo);
+    LibDbgErr searchModule(const char* name, OsModuleInfo& moduleInfo);
 };
 
 /** @brief Installs a module manager implementation. */

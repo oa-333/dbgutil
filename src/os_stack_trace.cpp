@@ -6,7 +6,7 @@ namespace libdbg {
 
 static OsStackTraceProvider* sProvider = nullptr;
 
-DbgUtilErr OsStackTraceProvider::getStackTrace(void* context, RawStackTrace& stackTrace) {
+LibDbgErr OsStackTraceProvider::getStackTrace(void* context, RawStackTrace& stackTrace) {
     struct StackFrameCollector : public StackFrameListener {
         StackFrameCollector(RawStackTrace& stackTrace) : m_stackTrace(stackTrace) {}
         StackFrameCollector(const StackFrameCollector&) = delete;

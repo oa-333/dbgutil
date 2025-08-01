@@ -24,8 +24,8 @@ In order to use the library, first include the main header "dbg_util.h", and ini
     #include "dbg_util.h"
 
     // initialize the library
-    DbgUtilErr res = libdbg::initLibDbg();
-    if (res != DBGUTIL_ERR_OK) {
+    LibDbgErr res = libdbg::initLibDbg();
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -34,7 +34,7 @@ In order to use the library, first include the main header "dbg_util.h", and ini
     libdbg::dumpStackTrace();
 
     res = libdbg::termLibDbg();
-    if (res != DBGUTIL_ERR_OK) {
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -146,8 +146,8 @@ Raw stack trace (frame addresses only), can be achieved as follows:
 
     #include "dbg_stack_trace.h"
 
-    DbgUtilErr res = libdbg::RawStackTrace rawStackTrace;
-    if (res != DBGUTIL_ERR_OK) {
+    LibDbgErr res = libdbg::RawStackTrace rawStackTrace;
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -155,7 +155,7 @@ In order to resolve all stack frames (i.e. get symbol info, file, line, module, 
 
     libdbg::StackTrace stackTrace;
     res = libdbg::resolveRawStackTrace(rawStackTrace, stackTrace);
-    if (res != DBGUTIL_ERR_OK) {
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -283,8 +283,8 @@ In order to receive exception messages, as well internal errors or traces, a log
 A default log handler that prints to the standard error stream can be used as follows:
 
     // initialize the library
-    DbgUtilErr res = libdbg::initLibDbg(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
-    if (res != DBGUTIL_ERR_OK) {
+    LibDbgErr res = libdbg::initLibDbg(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -321,8 +321,8 @@ standard logging system:
     // receive messages with INFO and higher log level
     // receive exception log messages
     // no exception listener used
-    DbgUtilErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, LIBDBG_LOG_EXCEPTIONS);
-    if (res != DBGUTIL_ERR_OK) {
+    LibDbgErr res = libdbg::initLibDbg(nullptr, &logHandler, libdbg::LS_INFO, LIBDBG_LOG_EXCEPTIONS);
+    if (res != LIBDBG_ERR_OK) {
         // handle error
     }
 
@@ -347,8 +347,8 @@ It is possible to directly retrieve the debug symbol information for a given add
 
     void* symAddress = ...;
     libdbg::SymbolInfo symInfo;
-    DbgUtilErr rc = getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
-    if (rc == DBGUTIL_ERR_OK) {
+    LibDbgErr rc = getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
+    if (rc == LIBDBG_ERR_OK) {
         // do something with symbol info
     }
 

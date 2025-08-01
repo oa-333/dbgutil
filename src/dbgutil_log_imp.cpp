@@ -112,27 +112,27 @@ inline void ensureLogDataExists() {
     }
 }
 
-inline DbgUtilErr createLogDataKey() {
+inline LibDbgErr createLogDataKey() {
     if (sLogDataKey != DBGUTIL_INVALID_TLS_KEY) {
         fprintf(stderr, "Cannot create record builder TLS key, already created\n");
         return false;
     }
     if (!createTls(sLogDataKey, freeLogData)) {
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-inline DbgUtilErr destroyLogDataKey() {
+inline LibDbgErr destroyLogDataKey() {
     if (sLogDataKey == DBGUTIL_INVALID_TLS_KEY) {
         // silently ignore the request
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
     if (!destroyTls(sLogDataKey)) {
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 static LogData* getLogData() {
@@ -167,11 +167,11 @@ void initLog(LogHandler* logHandler, LogSeverity severity) {
     sLogSeverity = severity;
 }
 
-DbgUtilErr finishInitLog() { return createLogDataKey(); }
+LibDbgErr finishInitLog() { return createLogDataKey(); }
 
-DbgUtilErr beginTermLog() { return destroyLogDataKey(); }
+LibDbgErr beginTermLog() { return destroyLogDataKey(); }
 
-DbgUtilErr termLog() {
+LibDbgErr termLog() {
     // NOTE: it is expected that at this point there are no log data lists at any thread
     // the recommended behavior is to arrive here after all application threads have terminated,
     // such that in each thread the TLS destructor was called

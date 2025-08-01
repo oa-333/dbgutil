@@ -45,25 +45,25 @@ public:
     }
 };
 
-DbgUtilErr OsExceptionHandler::initialize() {
+LibDbgErr OsExceptionHandler::initialize() {
     registerLogger(sLogger, "os_exception_handler");
     setTerminateHandler();
-    DbgUtilErr res = initializeEx();
-    if (res != DBGUTIL_ERR_OK) {
+    LibDbgErr res = initializeEx();
+    if (res != LIBDBG_ERR_OK) {
         restoreTerminateHandler();
         unregisterLogger(sLogger);
     }
     return res;
 }
 
-DbgUtilErr OsExceptionHandler::terminate() {
-    DbgUtilErr res = terminateEx();
-    if (res != DBGUTIL_ERR_OK) {
+LibDbgErr OsExceptionHandler::terminate() {
+    LibDbgErr res = terminateEx();
+    if (res != LIBDBG_ERR_OK) {
         return res;
     }
     restoreTerminateHandler();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 void OsExceptionHandler::dispatchExceptionInfo(const OsExceptionInfo& exceptionInfo) {

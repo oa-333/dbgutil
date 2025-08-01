@@ -41,9 +41,9 @@ public:
      * @param path The path to the image file on the file system.
      * @param moduleBase The base address of the corresponding loaded module in memory (may be
      * required for address relocation computations).
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr open(const char* path, void* moduleBase);
+    virtual LibDbgErr open(const char* path, void* moduleBase);
 
     /** @brief Closes the binary image file. */
     virtual void close();
@@ -54,25 +54,25 @@ public:
      * @param[out] symbolName The name of the resulting symbol (if symbol was found).
      * @param[out] fileName The file containing the symbol (if symbol was found).
      * @param[out] address The actual start address of the symbol.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr searchSymbol(void* symAddress, std::string& symName, std::string& fileName,
-                                    void** address);
+    virtual LibDbgErr searchSymbol(void* symAddress, std::string& symName, std::string& fileName,
+                                   void** address);
 
     /**
      * @brief Retrieves a section by name.
      * @param name The name of the section to search.
      * @param[out] section The resulting section (if found).
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr getSection(const char* name, OsImageSection& section);
+    LibDbgErr getSection(const char* name, OsImageSection& section);
 
     /**
      * @brief Retrieves sections by name prefix.
      * @param prefix The section name prefix to search.
      * @param[out] sections The resulting sections found.
      */
-    DbgUtilErr getSections(const char* prefix, std::vector<OsImageSection>& sections);
+    LibDbgErr getSections(const char* prefix, std::vector<OsImageSection>& sections);
 
     /**
      * @brief Visits sections, optionally filtering by a prefix.
@@ -81,10 +81,10 @@ public:
      * @param f The visitor function.
      */
     template <typename F>
-    inline DbgUtilErr forEachSection(const char* prefix, F f) {
+    inline LibDbgErr forEachSection(const char* prefix, F f) {
         std::vector<OsImageSection> sections;
-        DbgUtilErr rc = getSections(prefix, sections);
-        if (rc != DBGUTIL_ERR_OK) {
+        LibDbgErr rc = getSections(prefix, sections);
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         for (const OsImageSection& section : sections) {
@@ -92,7 +92,7 @@ public:
                 break;
             }
         }
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     /** @brief Queries whether this is a 64 bit binary image. */
@@ -106,7 +106,7 @@ public:
 
 protected:
     /** @brief Implement image reading. */
-    virtual DbgUtilErr readImage() = 0;
+    virtual LibDbgErr readImage() = 0;
 
     /** @brief Reset object state. */
     virtual void resetData() {}
@@ -164,7 +164,7 @@ protected:
     typedef std::unordered_map<std::string, SectionBuffer> MaterializedSectionMap;
     MaterializedSectionMap m_materializedSectionMap;
 
-    DbgUtilErr materializeSection(OsImageSection& section);
+    LibDbgErr materializeSection(OsImageSection& section);
 };
 
 /** @brief Abstract factory for creating image readers. */

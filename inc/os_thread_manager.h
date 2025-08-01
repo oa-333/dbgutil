@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 
 namespace libdbg {
 
@@ -40,7 +40,7 @@ public:
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    virtual DbgUtilErr visitThreadIds(ThreadVisitor* visitor) = 0;
+    virtual LibDbgErr visitThreadIds(ThreadVisitor* visitor) = 0;
 
 protected:
     OsThreadManager() {}

@@ -5,7 +5,7 @@
 #include <string>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 
 namespace libdbg {
 
@@ -91,7 +91,7 @@ public:
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    virtual DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) = 0;
+    virtual LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) = 0;
 
 protected:
     OsSymbolEngine() {}

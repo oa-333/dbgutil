@@ -16,7 +16,7 @@ public:
      * @return false If not enough bytes were present to read the value.
      */
     template <typename T>
-    inline DbgUtilErr write(const T& value) {
+    inline LibDbgErr write(const T& value) {
         return writeBytes((const char*)&value, sizeof(T));
     }
 
@@ -24,9 +24,9 @@ public:
      * @brief Writes a buffer to the output stream.
      * @param buffer The buffer to write.
      * @param length The length of the buffer.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr writeBytes(const char* buffer, uint32_t length) = 0;
+    virtual LibDbgErr writeBytes(const char* buffer, uint32_t length) = 0;
 
     /** @brief Specifies whether bytes sent through this stream require big endian byte order. */
     bool requiresBigEndian() const { return m_requiresBigEndian; }

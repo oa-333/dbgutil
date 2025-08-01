@@ -74,7 +74,7 @@ public:
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
+    LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
 
 private:
     LinuxSymbolEngine();
@@ -86,15 +86,15 @@ private:
     SymbolModuleSet m_symbolModuleSet;
     std::shared_mutex m_lock;
 
-    DbgUtilErr collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
-                                 SymbolInfo& symbolInfo);
+    LibDbgErr collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
+                                SymbolInfo& symbolInfo);
 
     SymbolModuleData* findSymbolModule(void* address);
     void prepareModuleData(SymbolModuleData* symModData);
 };
 
-extern DbgUtilErr initLinuxSymbolEngine();
-extern DbgUtilErr termLinuxSymbolEngine();
+extern LibDbgErr initLinuxSymbolEngine();
+extern LibDbgErr termLinuxSymbolEngine();
 
 }  // namespace libdbg
 

@@ -39,9 +39,9 @@ public:
      * @param buffer Received the bytes peek from the stream.
      * @param length The amount of bytes to peek.
      * @param[out] bytesRead The number of bytes actually peeked.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr peekBytes(char* buffer, size_t length, size_t& bytesRead) override;
+    LibDbgErr peekBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Reads bytes from the stream.
@@ -50,9 +50,9 @@ public:
      * @param buffer Received the bytes read from the stream.
      * @param length The amount of bytes to read.
      * @param[out] bytesRead The number of bytes actually read.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr readBytes(char* buffer, size_t length, size_t& bytesRead) override;
+    LibDbgErr readBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Skips the number of specified bytes in the stream.
@@ -60,9 +60,9 @@ public:
      * possible bytes are skipped and E_OK is returned.
      * @param length The amount of bytes to skip.
      * @param[out] bytesRead The number of bytes actually skipped.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr skipBytes(size_t length, size_t& bytesRead) override;
+    LibDbgErr skipBytes(size_t length, size_t& bytesRead) override;
 
 private:
     std::vector<char> m_buf;

@@ -63,7 +63,7 @@ int win32FDataSync(int fd) {
     return EFAULT;  //  TODO: is this meaningful?
     /*ULONG errCode = RtlNtStatusToDosError(status);
     SetLastError(errCode);
-    rc = DBGUTIL_ERR_SYSTEM_FAILURE;
+    rc = LIBDBG_ERR_SYSTEM_FAILURE;
     errno = EFAULT;  //  TODO: is this meaningful?*/
     /*const std::error_condition errCond =
         std::system_category().default_error_condition(errCode);

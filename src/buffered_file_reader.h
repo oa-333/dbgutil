@@ -23,21 +23,21 @@ public:
      * @brief Opens the reader over a file.
      * @param filePath The path of the file to read.
      * @param bufferSize The buffer size used in reading.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr open(const char* filePath, size_t bufferSize = DEFAULT_BUFFER_SIZE);
+    LibDbgErr open(const char* filePath, size_t bufferSize = DEFAULT_BUFFER_SIZE);
 
     /** @brief Closed the buffered reader. */
-    DbgUtilErr close();
+    LibDbgErr close();
 
     /** @brief Queries whether the reader is open. */
     inline bool isOpen() const { return m_fd != 0; }
 
     /** @brief Retrieves the current offset (from begining of file) of the reader. */
-    DbgUtilErr getOffset(size_t& offset) const;
+    LibDbgErr getOffset(size_t& offset) const;
 
     /** @brief Sets file pointer to a specified position (offset from begining of file). */
-    DbgUtilErr seek(size_t offset);
+    LibDbgErr seek(size_t offset);
 
     /** @brief Queries whether the reader has reached the end of the file. */
     inline bool eof() const { return m_eof; }
@@ -46,10 +46,10 @@ public:
      * @brief Reads a typed value.
      * @tparam T The type of the value.
      * @param[out] value The resulting value.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
     template <typename T>
-    inline DbgUtilErr read(T& value) {
+    inline LibDbgErr read(T& value) {
         return readFull((char*)&value, sizeof(T));
     }
 
@@ -63,9 +63,9 @@ public:
      * @return E_EOF If not all bytes could be read due to end of file. If bytesReadRef was passed,
      * then it will contain the actual number of bytes read. (note this is different than @ref
      * read()).
-     * @return DbgUtilErr Any other error.
+     * @return LibDbgErr Any other error.
      */
-    DbgUtilErr readFull(char* buffer, size_t len, size_t* bytesReadRef = nullptr);
+    LibDbgErr readFull(char* buffer, size_t len, size_t* bytesReadRef = nullptr);
 
     /**
      * @brief Reads data from the buffered file reader.
@@ -77,18 +77,18 @@ public:
      * this case E_EOF is not returned.
      * @return E_EOF If end of file has already been reached prior to this call. This indicates no
      * bytes were read at all (bytesRead is returned with value 0).
-     * @return DbgUtilErr Any other error code.
+     * @return LibDbgErr Any other error code.
      */
-    DbgUtilErr read(char* buffer, size_t len, size_t& bytesRead);
+    LibDbgErr read(char* buffer, size_t len, size_t& bytesRead);
 
     /**
      * @brief Skips the number of specified bytes in the buffered file reader.
      * @note If the file is exhausted, then E_EOF is returned, otherwise the number of
      * possible bytes are skipped and E_OK is returned.
      * @param length The amount of bytes to skip.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    inline DbgUtilErr skip(size_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
+    inline LibDbgErr skip(size_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
 
 private:
     int m_fd;
@@ -98,7 +98,7 @@ private:
     size_t m_bufferOffset;
     bool m_eof;
 
-    DbgUtilErr refillBuffer();
+    LibDbgErr refillBuffer();
 };
 
 }  // namespace libdbg

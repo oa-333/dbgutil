@@ -24,25 +24,25 @@ void Win32PEReader::resetData() {
     m_sections.clear();
 }
 
-DbgUtilErr Win32PEReader::readImage() {
+LibDbgErr Win32PEReader::readImage() {
     // image begins with DOS stub
     // at offset 0x3c there is the offset to the PE signature
     // it is not documented how many bytes comprise the offset
     // it will be found by trial and error
-    DbgUtilErr rc = m_fileReader.seek(0x3C);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = m_fileReader.seek(0x3C);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     uint32_t peOffset = 0;
     rc = m_fileReader.read(peOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     LOG_DEBUG(sLogger, "PE data for module %s starts at offset %u", m_imagePath.c_str(), peOffset);
 
     // seek to PE offset
     rc = m_fileReader.seek(peOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -50,45 +50,45 @@ DbgUtilErr Win32PEReader::readImage() {
     const uint32_t PE_SIG_SIZE = 4;
     char sig[PE_SIG_SIZE] = {};
     rc = m_fileReader.readFull(sig, PE_SIG_SIZE);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // now verify we have the PE signature at the specified offset
     if (sig[0] != 'P' || sig[1] != 'E' || sig[2] != 0 || sig[3] != 0) {
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
 
     // now we can take a look at the COFF header
     rc = m_fileReader.read(m_fileHeader);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // check machine is supported
     WORD machine = m_fileHeader.Machine;
     if (machine != IMAGE_FILE_MACHINE_AMD64 && machine != IMAGE_FILE_MACHINE_I386) {
-        return DBGUTIL_ERR_NOT_IMPLEMENTED;
+        return LIBDBG_ERR_NOT_IMPLEMENTED;
     }
 
     // must be an executable image
     if ((m_fileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == 0) {
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
 
     // skip system files
     if ((m_fileHeader.Characteristics & IMAGE_FILE_SYSTEM) != 0) {
-        return DBGUTIL_ERR_NOT_IMPLEMENTED;
+        return LIBDBG_ERR_NOT_IMPLEMENTED;
     }
 
     // skip if no symbols are found
     if (m_fileHeader.PointerToSymbolTable == 0) {
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
 
     // skip if no optional header found (this is an error indicating corrupt file)
     if (m_fileHeader.SizeOfOptionalHeader == 0) {
-        return DBGUTIL_ERR_DATA_CORRUPT;
+        return LIBDBG_ERR_DATA_CORRUPT;
     }
 
     // check for 32/64 image type
@@ -100,14 +100,14 @@ DbgUtilErr Win32PEReader::readImage() {
     // remember offset (required for optional header scanning)
     uint64_t headersOffset = 0;
     rc = m_fileReader.getOffset(headersOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // check for PE format type (must be PE32 or PE32+)
     WORD magic = 0;
     rc = m_fileReader.read(magic);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     if (magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
@@ -115,7 +115,7 @@ DbgUtilErr Win32PEReader::readImage() {
     } else if (magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
         m_isPE32Plus = false;
     } else {
-        return DBGUTIL_ERR_NOT_IMPLEMENTED;
+        return LIBDBG_ERR_NOT_IMPLEMENTED;
     }
 
     // we need to get string table as soon as possible, for inferring names
@@ -124,7 +124,7 @@ DbgUtilErr Win32PEReader::readImage() {
 
     // seek to string table
     rc = m_fileReader.seek(strTabOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -132,7 +132,7 @@ DbgUtilErr Win32PEReader::readImage() {
     // NOTE: size includes size field itself
     char strTabSizeBuf[4];
     rc = m_fileReader.readFull(strTabSizeBuf, 4);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     uint32_t strTabSize = *(uint32_t*)strTabSizeBuf;
@@ -142,26 +142,26 @@ DbgUtilErr Win32PEReader::readImage() {
     // NOTE: string offsets used in PE image assume string table starts with 4-bytes table size, so
     // we first seek back 4 bytes
     rc = m_fileReader.seek(strTabOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // NOTE: reading also first 4-bytes of string table size
     m_strTab.resize(strTabSize);
     rc = m_fileReader.readFull(&m_strTab[0], strTabSize);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // now seek back to headers offset
     rc = m_fileReader.seek(headersOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // scan headers
     rc = m_isPE32Plus ? scanHdrs64() : scanHdrs32();
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -169,14 +169,14 @@ DbgUtilErr Win32PEReader::readImage() {
 
     // discard string table, it is not required anymore
     m_strTab.clear();
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32PEReader::scanHdrs32() {
+LibDbgErr Win32PEReader::scanHdrs32() {
     // optional header is found right after file header
     IMAGE_OPTIONAL_HEADER32 optHdr = {};
-    DbgUtilErr rc = m_fileReader.read(optHdr);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = m_fileReader.read(optHdr);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     m_relocBase = optHdr.ImageBase;
@@ -185,11 +185,11 @@ DbgUtilErr Win32PEReader::scanHdrs32() {
     return readSectionHeaders();
 }
 
-DbgUtilErr Win32PEReader::scanHdrs64() {
+LibDbgErr Win32PEReader::scanHdrs64() {
     // optional header is found right after file header
     IMAGE_OPTIONAL_HEADER64 optHdr = {};
-    DbgUtilErr rc = m_fileReader.read(optHdr);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = m_fileReader.read(optHdr);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     m_relocBase = optHdr.ImageBase;
@@ -198,18 +198,18 @@ DbgUtilErr Win32PEReader::scanHdrs64() {
     return readSectionHeaders();
 }
 
-DbgUtilErr Win32PEReader::readSectionHeaders() {
+LibDbgErr Win32PEReader::readSectionHeaders() {
     std::vector<IMAGE_SECTION_HEADER> sectionHeaders(m_fileHeader.NumberOfSections);
-    DbgUtilErr rc = m_fileReader.readFull(
+    LibDbgErr rc = m_fileReader.readFull(
         (char*)&sectionHeaders[0], sizeof(IMAGE_SECTION_HEADER) * m_fileHeader.NumberOfSections);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     for (uint32_t i = 0; i < m_fileHeader.NumberOfSections; ++i) {
         IMAGE_SECTION_HEADER* secHdr = &sectionHeaders[i];
         std::string secName;
         rc = getSectionName(secHdr->Name, secName);
-        if (rc != DBGUTIL_ERR_OK) {
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         LOG_DEBUG(sLogger, "Section %s starts at file offset %u (virtual offset %u), with size: %u",
@@ -219,16 +219,16 @@ DbgUtilErr Win32PEReader::readSectionHeaders() {
                  .insert(OsSectionMap::value_type(
                      secName, {secName, secHdr->PointerToRawData, secHdr->Misc.VirtualSize, 0}))
                  .second) {
-            return DBGUTIL_ERR_DATA_CORRUPT;
+            return LIBDBG_ERR_DATA_CORRUPT;
         }
         m_sections.push_back(
             {secName, secHdr->PointerToRawData, secHdr->VirtualAddress, secHdr->Misc.VirtualSize});
     }
     m_miniSections.resize(m_sections.size());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32PEReader::buildSymTab() {
+LibDbgErr Win32PEReader::buildSymTab() {
     DWORD symTabOffset = m_fileHeader.PointerToSymbolTable;
     uint32_t symCount = m_fileHeader.NumberOfSymbols;
 
@@ -248,8 +248,8 @@ DbgUtilErr Win32PEReader::buildSymTab() {
     // then the symbol is a section name. function - for .ef records the value indicates the size of
     // the function code. file - source file name, followed by auxiliary records.
 
-    DbgUtilErr rc = m_fileReader.seek(symTabOffset);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = m_fileReader.seek(symTabOffset);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -257,7 +257,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
     IMAGE_SYMBOL sym = {};
     for (uint32_t i = 0; i < symCount; ++i) {
         rc = m_fileReader.read(sym);
-        if (rc != DBGUTIL_ERR_OK) {
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         // check for file name entry
@@ -269,12 +269,12 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                 std::string fileName;
                 IMAGE_AUX_SYMBOL auxSym = {};
                 rc = m_fileReader.read(auxSym);
-                if (rc != DBGUTIL_ERR_OK) {
+                if (rc != LIBDBG_ERR_OK) {
                     return rc;
                 }
                 ++auxRecRead;
                 rc = getFileName(auxSym.File.Name, fileName);
-                if (rc != DBGUTIL_ERR_OK) {
+                if (rc != LIBDBG_ERR_OK) {
                     LOG_ERROR(sLogger,
                               "Failed to build symbol table, unable to retrieve file name");
                     return rc;
@@ -295,7 +295,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                     // could not find documentation for this...
                     IMAGE_AUX_SYMBOL auxSym = {};
                     rc = m_fileReader.read(auxSym);
-                    if (rc != DBGUTIL_ERR_OK) {
+                    if (rc != LIBDBG_ERR_OK) {
                         return rc;
                     }
                     ++auxRecRead;
@@ -341,7 +341,7 @@ DbgUtilErr Win32PEReader::buildSymTab() {
 
         // move to next symbol, skip its auxiliary records
         rc = m_fileReader.skip((auxRecCount - auxRecRead) * sizeof(IMAGE_AUX_SYMBOL));
-        if (rc != DBGUTIL_ERR_OK) {
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         symCount -= (auxRecCount - auxRecRead);
@@ -368,18 +368,18 @@ DbgUtilErr Win32PEReader::buildSymTab() {
                   (void*)(symInfo.m_offset + symInfo.m_size), symInfo.m_name.c_str());
     }
 
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32PEReader::getSectionName(unsigned char* nameRef, std::string& name) {
+LibDbgErr Win32PEReader::getSectionName(unsigned char* nameRef, std::string& name) {
     if (nameRef[0] == '/') {
         // reference to string table
         unsigned long strOff = std::stoul((char*)nameRef + 1);
         if (strOff >= m_strTab.size()) {
-            return DBGUTIL_ERR_DATA_CORRUPT;
+            return LIBDBG_ERR_DATA_CORRUPT;
         }
         name = &m_strTab[strOff];
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     if (nameRef[7] == 0) {
@@ -395,17 +395,17 @@ DbgUtilErr Win32PEReader::getSectionName(unsigned char* nameRef, std::string& na
             name = tmp;
         } else {
             LOG_ERROR(sLogger, "Failed to securely copy section name");
-            return DBGUTIL_ERR_INTERNAL_ERROR;
+            return LIBDBG_ERR_INTERNAL_ERROR;
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32PEReader::getSymbolName(unsigned char* shortName, unsigned long* longName,
-                                        std::string& name) {
+LibDbgErr Win32PEReader::getSymbolName(unsigned char* shortName, unsigned long* longName,
+                                       std::string& name) {
     if (longName[0] == 0) {
         if (longName[1] >= m_strTab.size()) {
-            return DBGUTIL_ERR_INVALID_ARGUMENT;
+            return LIBDBG_ERR_INVALID_ARGUMENT;
         }
         name = &m_strTab[longName[1]];
     } else {
@@ -421,14 +421,14 @@ DbgUtilErr Win32PEReader::getSymbolName(unsigned char* shortName, unsigned long*
                 name = tmp;
             } else {
                 LOG_ERROR(sLogger, "Failed to securely copy symbol name");
-                return DBGUTIL_ERR_INTERNAL_ERROR;
+                return LIBDBG_ERR_INTERNAL_ERROR;
             }
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32PEReader::getFileName(unsigned char* rawName, std::string& name) {
+LibDbgErr Win32PEReader::getFileName(unsigned char* rawName, std::string& name) {
     if (rawName[IMAGE_SIZEOF_SYMBOL - 1] == 0) {
         name = (char*)rawName;
     } else {
@@ -441,10 +441,10 @@ DbgUtilErr Win32PEReader::getFileName(unsigned char* rawName, std::string& name)
             name = tmp;
         } else {
             LOG_ERROR(sLogger, "Failed to securely copy file name");
-            return DBGUTIL_ERR_INTERNAL_ERROR;
+            return LIBDBG_ERR_INTERNAL_ERROR;
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 class Win32PEReaderFactory : public OsImageReaderFactory {
@@ -484,18 +484,18 @@ private:
 
 Win32PEReaderFactory* Win32PEReaderFactory::sInstance = nullptr;
 
-extern DbgUtilErr initWin32PEReader() {
+extern LibDbgErr initWin32PEReader() {
     registerLogger(sLogger, "win32_pe_reader");
     Win32PEReaderFactory::createInstance();
     setImageReaderFactory(Win32PEReaderFactory::getInstance());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-extern DbgUtilErr termWin32PEReader() {
+extern LibDbgErr termWin32PEReader() {
     setImageReaderFactory(nullptr);
     Win32PEReaderFactory::destroyInstance();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

@@ -213,9 +213,9 @@ private:
  * thread, or is passed by OS through an exception/signal handler.
  * @param[out] stackTrace The resulting stack trace.
  * @param context[opt] OS-specific thread context. Pass null to print current thread call stack.
- * @return DbgUtilErr The operation result.
+ * @return LibDbgErr The operation result.
  */
-inline DbgUtilErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nullptr) {
+inline LibDbgErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nullptr) {
     return getStackTraceProvider()->getStackTrace(context, stackTrace);
 }
 
@@ -223,22 +223,22 @@ inline DbgUtilErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nu
  * @brief Converts raw stack frames to resolved stack frames.
  * @param rawStackTrace The raw stack trace.
  * @param[out] stackTrace The resulting resolved stack trace.
- * @return DbgUtilErr The operation result.
+ * @return LibDbgErr The operation result.
  */
-extern DBGUTIL_API DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace,
-                                                   StackTrace& stackTrace);
+extern DBGUTIL_API LibDbgErr resolveRawStackTrace(RawStackTrace& rawStackTrace,
+                                                  StackTrace& stackTrace);
 
 /**
  * @brief Retrieves a fully resolved stack trace of a thread by an optional context. Context is
  * either captured by calling thread, or is passed by OS through an exception/signal handler.
  * @param[out] stackTrace The resulting resolved stack trace.
  * @param context[opt] OS-specific thread context. Pass null to capture current thread call stack.
- * @return DbgUtilErr The operation result.
+ * @return LibDbgErr The operation result.
  */
-inline DbgUtilErr getStackTrace(StackTrace& stackTrace, void* context = nullptr) {
+inline LibDbgErr getStackTrace(StackTrace& stackTrace, void* context = nullptr) {
     RawStackTrace rawStackTrace;
-    DbgUtilErr err = getRawStackTrace(rawStackTrace, context);
-    if (err != DBGUTIL_ERR_OK) {
+    LibDbgErr err = getRawStackTrace(rawStackTrace, context);
+    if (err != LIBDBG_ERR_OK) {
         return err;
     }
     return resolveRawStackTrace(rawStackTrace, stackTrace);
@@ -378,7 +378,7 @@ typedef std::vector<std::pair<os_thread_id_t, RawStackTrace>> AppRawStackTrace;
  * @brief Retrieves raw stack trace of all currently running threads in the application.
  * @param[out] appStackTrace The resulting stack traces for all threads.
  */
-extern DBGUTIL_API DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace);
+extern DBGUTIL_API LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace);
 
 /**
  * @brief Converts application raw stack frames to resolved stack frames in string form.

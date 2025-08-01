@@ -5,7 +5,7 @@
 #include <string>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 #include "libdbg_log.h"
 
 namespace libdbg {
@@ -21,12 +21,12 @@ struct Logger {
 extern void initLog(LogHandler* logHandler, LogSeverity severity);
 
 // call this after TLS is initialized
-extern DbgUtilErr finishInitLog();
+extern LibDbgErr finishInitLog();
 
 // call this before TLS is terminated
-extern DbgUtilErr beginTermLog();
+extern LibDbgErr beginTermLog();
 
-extern DbgUtilErr termLog();
+extern LibDbgErr termLog();
 
 extern void registerLogger(Logger& logger, const char* loggerName);
 

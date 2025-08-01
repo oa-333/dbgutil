@@ -68,8 +68,8 @@ public:
     static void initLogger();
     static void termLogger();
 
-    DbgUtilErr getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
-                           FixedInputStream& is, SymbolInfo& symbolInfo);
+    LibDbgErr getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
+                          FixedInputStream& is, SymbolInfo& symbolInfo);
 
 private:
     struct FileInfo {
@@ -124,25 +124,25 @@ private:
         uint64_t m_form;
     };
 
-    DbgUtilErr buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is);
+    LibDbgErr buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is);
 
-    DbgUtilErr searchLineMatrix(const DwarfSearchData& searchData, SymbolInfo& symbolInfo);
+    LibDbgErr searchLineMatrix(const DwarfSearchData& searchData, SymbolInfo& symbolInfo);
 
-    DbgUtilErr readHeader(FixedInputStream& is, DwarfData& dwarfData);
+    LibDbgErr readHeader(FixedInputStream& is, DwarfData& dwarfData);
 
-    DbgUtilErr readFormatList(FixedInputStream& is, std::vector<DirEntryFmtDesc>& entryFmt);
+    LibDbgErr readFormatList(FixedInputStream& is, std::vector<DirEntryFmtDesc>& entryFmt);
 
-    DbgUtilErr readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
+    LibDbgErr readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
 
-    DbgUtilErr readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
+    LibDbgErr readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
 
-    DbgUtilErr execLineProgram(FixedInputStream& is);
+    LibDbgErr execLineProgram(FixedInputStream& is);
 
-    DbgUtilErr execStandardOpCode(uint8_t opCode, FixedInputStream& is);
+    LibDbgErr execStandardOpCode(uint8_t opCode, FixedInputStream& is);
     void execSpecialOpCode(uint8_t opCode);
     void advancePC(uint8_t opCode, bool advanceLine = true);
     void advanceAddress(uint64_t opAdvance);
-    DbgUtilErr execExtendedOpCode(uint64_t opCode, FixedInputStream& is);
+    LibDbgErr execExtendedOpCode(uint64_t opCode, FixedInputStream& is);
     void appendLineMatrix();
 };
 

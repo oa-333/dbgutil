@@ -22,10 +22,10 @@ public:
 
 protected:
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initializeEx() final;
+    LibDbgErr initializeEx() final;
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminateEx() final;
+    LibDbgErr terminateEx() final;
 
 private:
     Win32ExceptionHandler() {}
@@ -44,9 +44,9 @@ private:
     void unhandledExceptionFilter(_EXCEPTION_POINTERS* exceptionInfo);
 };
 
-extern DbgUtilErr initWin32ExceptionHandler();
+extern LibDbgErr initWin32ExceptionHandler();
 
-extern DbgUtilErr termWin32ExceptionHandler();
+extern LibDbgErr termWin32ExceptionHandler();
 
 }  // namespace libdbg
 

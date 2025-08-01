@@ -17,7 +17,7 @@ namespace libdbg {
 class Win32ModuleManager : public OsModuleManager {
 public:
     /** @brief Creates the singleton instance of the module manager for Windows platform. */
-    static DbgUtilErr createInstance();
+    static LibDbgErr createInstance();
 
     /** @brief Retrieves a reference to the single instance of the module manager. */
     static Win32ModuleManager* getInstance();
@@ -26,7 +26,7 @@ public:
     static void destroyInstance();
 
     /** @brief Refreshes the module list. */
-    DbgUtilErr refreshModuleList() final;
+    LibDbgErr refreshModuleList() final;
 
     inline HANDLE getProcessHandle() { return m_processHandle; }
 
@@ -37,7 +37,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
+    LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
 
 private:
     Win32ModuleManager();
@@ -50,13 +50,13 @@ private:
 
     HANDLE m_processHandle;
 
-    DbgUtilErr initProcessHandle();
+    LibDbgErr initProcessHandle();
 
-    DbgUtilErr getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo);
+    LibDbgErr getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo);
 };
 
-extern DbgUtilErr initWin32ModuleManager();
-extern DbgUtilErr termWin32ModuleManager();
+extern LibDbgErr initWin32ModuleManager();
+extern LibDbgErr termWin32ModuleManager();
 
 }  // namespace libdbg
 

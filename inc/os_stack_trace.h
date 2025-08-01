@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 
 namespace libdbg {
 
@@ -37,30 +37,30 @@ public:
      * @brief Walks the call stack from possibly the given context point.
      * @param listener The stack frame listener.
      * @param context The call context. Pass null to capture current thread call stack.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr walkStack(StackFrameListener* listener, void* context) = 0;
+    virtual LibDbgErr walkStack(StackFrameListener* listener, void* context) = 0;
 
     /**
      * @brief Retrieves stack trace for a specific thread by id.
      * @param threadId The thread id.
      * @param[out] stackTrace The resulting stack trace.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) = 0;
+    virtual LibDbgErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) = 0;
 
     /**
      * @brief Retrieves stack trace of a thread by context.
      * @param context The call context. Pass null to capture current thread call stack.
      * @param[out] stackTrace The resulting stack trace.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr getStackTrace(void* conetxt, RawStackTrace& stackTrace);
+    LibDbgErr getStackTrace(void* conetxt, RawStackTrace& stackTrace);
 
 protected:
     OsStackTraceProvider() {}
 
-    // DbgUtilErr collectThreadStackTrace;
+    // LibDbgErr collectThreadStackTrace;
 };
 
 /** @brief Installs a stack trace provider. */

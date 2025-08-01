@@ -38,7 +38,7 @@ void LinuxStackTraceProvider::destroyInstance() {
     sInstance = nullptr;
 }
 
-DbgUtilErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
+LibDbgErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
     unw_context_t unw_context;
     if (context == nullptr) {
         unw_getcontext(&unw_context);
@@ -57,11 +57,11 @@ DbgUtilErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void
         void* addr = (void*)ip;
         listener->onStackFrame(addr);
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
-                                                        RawStackTrace& stackTrace) {
+LibDbgErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
+                                                       RawStackTrace& stackTrace) {
     // for current thread do regular stack walking
     if (threadId == OsUtil::getCurrentThreadId()) {
         return getStackTrace(nullptr, stackTrace);
@@ -76,7 +76,7 @@ DbgUtilErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
         GetStackTraceExecutor(RawStackTrace& stackTrace) : m_stackTrace(stackTrace) {}
         ~GetStackTraceExecutor() final {}
 
-        DbgUtilErr execRequest() final {
+        LibDbgErr execRequest() final {
             return getStackTraceProvider()->getStackTrace(nullptr, m_stackTrace);
         }
 
@@ -85,26 +85,26 @@ DbgUtilErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     };
 
     GetStackTraceExecutor executor(stackTrace);
-    DbgUtilErr result = DBGUTIL_ERR_OK;
-    DbgUtilErr rc =
+    LibDbgErr result = LIBDBG_ERR_OK;
+    LibDbgErr rc =
         LinuxThreadManager::getInstance()->execThreadRequest(threadId, &executor, result);
-    if (rc == DBGUTIL_ERR_OK) {
+    if (rc == LIBDBG_ERR_OK) {
         rc = result;
     }
     return rc;
 #endif
 }
 
-DbgUtilErr initLinuxStackTrace() {
+LibDbgErr initLinuxStackTrace() {
     LinuxStackTraceProvider::createInstance();
     setStackTraceProvider(LinuxStackTraceProvider::getInstance());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termLinuxStackTrace() {
+LibDbgErr termLinuxStackTrace() {
     setStackTraceProvider(nullptr);
     LinuxStackTraceProvider::destroyInstance();
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

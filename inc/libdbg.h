@@ -2,7 +2,7 @@
 #define __LIBDBG_H__
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 #include "libdbg_except.h"
 #include "libdbg_flags.h"
 #include "libdbg_log.h"
@@ -19,14 +19,14 @@ namespace libdbg {
  * below this severity will be discarded. By default only fatal messages are sent to log.
  * @param flags Optional flags controlling the behavior of dbgutil. For a comprehensive list of
  * flags, please refer to the @ref libdbg_flags.h header.
- * @return DBGUTIL_ERR_OK If succeeded, otherwise an error code.
+ * @return LIBDBG_ERR_OK If succeeded, otherwise an error code.
  */
-extern DBGUTIL_API DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,
-                                         LogHandler* logHandler = nullptr,
-                                         LogSeverity severity = LS_FATAL, uint32_t flags = 0);
+extern DBGUTIL_API LibDbgErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,
+                                        LogHandler* logHandler = nullptr,
+                                        LogSeverity severity = LS_FATAL, uint32_t flags = 0);
 
 /** @brief Terminates the debug utility library. */
-extern DBGUTIL_API DbgUtilErr termLibDbg();
+extern DBGUTIL_API LibDbgErr termLibDbg();
 
 }  // namespace libdbg
 

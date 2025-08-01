@@ -22,17 +22,17 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initialize();
+    LibDbgErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminate();
+    LibDbgErr terminate();
 
     /**
      * @brief Traverses all running threads.
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
+    LibDbgErr visitThreadIds(ThreadVisitor* visitor) final;
 
 private:
     Win32ThreadManager() {}
@@ -44,8 +44,8 @@ private:
     static Win32ThreadManager* sInstance;
 };
 
-extern DbgUtilErr initWin32ThreadManager();
-extern DbgUtilErr termWin32ThreadManager();
+extern LibDbgErr initWin32ThreadManager();
+extern LibDbgErr termWin32ThreadManager();
 
 }  // namespace libdbg
 

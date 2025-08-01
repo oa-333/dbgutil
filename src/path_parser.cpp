@@ -22,10 +22,10 @@ static Logger sLogger;
 void PathParser::initLogger() { registerLogger(sLogger, "path_parser"); }
 void PathParser::termLogger() { unregisterLogger(sLogger); }
 
-DbgUtilErr PathParser::canonicalizePath(const char* path, std::vector<std::string>& components) {
+LibDbgErr PathParser::canonicalizePath(const char* path, std::vector<std::string>& components) {
     std::vector<std::string> pathComps;
-    DbgUtilErr rc = parsePath(path, pathComps);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = parsePath(path, pathComps);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -36,12 +36,12 @@ DbgUtilErr PathParser::canonicalizePath(const char* path, std::vector<std::strin
             if (components.empty()) {
                 std::string currentDir;
                 rc = OsUtil::getCurrentDir(currentDir);
-                if (rc != DBGUTIL_ERR_OK) {
+                if (rc != LIBDBG_ERR_OK) {
                     return rc;
                 }
                 std::vector<std::string> dirComponents;
                 rc = parsePath(currentDir.c_str(), dirComponents);
-                if (rc != DBGUTIL_ERR_OK) {
+                if (rc != LIBDBG_ERR_OK) {
                     return rc;
                 }
                 components.insert(components.end(), dirComponents.begin(), dirComponents.end());
@@ -50,7 +50,7 @@ DbgUtilErr PathParser::canonicalizePath(const char* path, std::vector<std::strin
             if (components.empty()) {
                 LOG_ERROR(sLogger, "Cannot canonicalize path, invalid path specification: %s",
                           path);
-                return DBGUTIL_ERR_INVALID_ARGUMENT;
+                return LIBDBG_ERR_INVALID_ARGUMENT;
             } else {
                 components.pop_back();
             }
@@ -58,36 +58,36 @@ DbgUtilErr PathParser::canonicalizePath(const char* path, std::vector<std::strin
             components.push_back(comp);
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::canonicalizePath(const char* path, std::string& canonPath) {
+LibDbgErr PathParser::canonicalizePath(const char* path, std::string& canonPath) {
     // break path into canonicalized components
     std::vector<std::string> components;
-    DbgUtilErr rc = canonicalizePath(path, components);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = canonicalizePath(path, components);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // compose back path from components
     composePath(components, canonPath);
     LOG_TRACE(sLogger, "Formed canonical path: %s --> %s", path, canonPath.c_str());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::normalizePath(const char* path, std::string& canonPath) {
+LibDbgErr PathParser::normalizePath(const char* path, std::string& canonPath) {
     std::vector<std::string> components;
-    DbgUtilErr rc = normalizePath(path, components);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = normalizePath(path, components);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // compose back path from components
     composePath(components, canonPath);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::normalizePath(const char* path, std::vector<std::string>& components) {
+LibDbgErr PathParser::normalizePath(const char* path, std::vector<std::string>& components) {
     // process components: discard '.', pop for '..', otherwise push
     std::vector<std::string> compStack;
     for (const std::string& comp : components) {
@@ -97,7 +97,7 @@ DbgUtilErr PathParser::normalizePath(const char* path, std::vector<std::string>&
             if (compStack.empty()) {
                 LOG_ERROR(sLogger, "Cannot canonicalize path, invalid path specification: %s",
                           path);
-                return DBGUTIL_ERR_INVALID_ARGUMENT;
+                return LIBDBG_ERR_INVALID_ARGUMENT;
             } else {
                 compStack.pop_back();
             }
@@ -105,14 +105,14 @@ DbgUtilErr PathParser::normalizePath(const char* path, std::vector<std::string>&
             compStack.push_back(comp);
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::isPathLegal(const char* path) {
+LibDbgErr PathParser::isPathLegal(const char* path) {
     // break path into canonicalized components
     std::vector<std::string> components;
-    DbgUtilErr rc = canonicalizePath(path, components);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = canonicalizePath(path, components);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -138,29 +138,29 @@ bool PathParser::isPathAbsolute(const char* path) {
 #endif
 }
 
-DbgUtilErr PathParser::isPathComponentListLegal(const std::vector<std::string>& components) {
+LibDbgErr PathParser::isPathComponentListLegal(const std::vector<std::string>& components) {
     for (const std::string& comp : components) {
-        DbgUtilErr rc = isPathComponentLegal(comp.c_str());
-        if (rc != DBGUTIL_ERR_OK) {
+        LibDbgErr rc = isPathComponentLegal(comp.c_str());
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::isPathComponentLegal(const char* pathComponent) {
+LibDbgErr PathParser::isPathComponentLegal(const char* pathComponent) {
     // basically only normal ascii chars are allowed: a-z, A-Z, 0-9, _, -
     // these are strictly forbidden: <>:;"'|\/?@#$%^&*()=+`
     std::string pathCompStr = pathComponent;
     std::string illegalChars = "<>:;\"'|\\/?@#$%^&*()=+`";
     if (pathCompStr.find_first_of(illegalChars) != std::string::npos) {
         LOG_ERROR(sLogger, "Invalid path component: %s", pathComponent);
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::parsePath(const char* path, std::vector<std::string>& components) {
+LibDbgErr PathParser::parsePath(const char* path, std::vector<std::string>& components) {
     // we parse a path by separator char
     // note: we allow mixing forward anf backward slash
     std::string pathStr = path;
@@ -176,14 +176,14 @@ DbgUtilErr PathParser::parsePath(const char* path, std::vector<std::string>& com
         }
     }
     components.push_back(pathStr.substr(prevPos));
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::getParentPath(const char* path, std::string& parentPath) {
+LibDbgErr PathParser::getParentPath(const char* path, std::string& parentPath) {
     // break path into components
     std::vector<std::string> components;
-    DbgUtilErr rc = parsePath(path, components);
-    if (rc == DBGUTIL_ERR_OK) {
+    LibDbgErr rc = parsePath(path, components);
+    if (rc == LIBDBG_ERR_OK) {
         // note: the parent of root directory is the root directory
         if (components.size() > 0) {
             components.resize(components.size() - 1);
@@ -193,37 +193,37 @@ DbgUtilErr PathParser::getParentPath(const char* path, std::string& parentPath) 
     return rc;
 }
 
-DbgUtilErr PathParser::getFileName(const char* path, std::string& fileName) {
+LibDbgErr PathParser::getFileName(const char* path, std::string& fileName) {
     // break path into components
     std::vector<std::string> components;
-    DbgUtilErr rc = parsePath(path, components);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = parsePath(path, components);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     if (components.size() == 0) {
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
     fileName = components[components.size() - 1];
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr PathParser::composePath(const char* basePath, const char* subPath, std::string& path,
-                                   bool canonicalize /* = true */) {
+LibDbgErr PathParser::composePath(const char* basePath, const char* subPath, std::string& path,
+                                  bool canonicalize /* = true */) {
     if (!canonicalize) {
         path = std::string(basePath) + DBGUTIL_PATH_SEP + subPath;
         // TODO: MinGW can have mixed forward and backward slash, so it need more normalizing
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     if (isPathAbsolute(subPath)) {
         LOG_ERROR(sLogger, "Cannot compose base path '%s' with sub-path '%s': sub-path is absolute",
                   basePath, subPath);
-        return DBGUTIL_ERR_INVALID_ARGUMENT;
+        return LIBDBG_ERR_INVALID_ARGUMENT;
     }
 
     std::string canonBasePath;
-    DbgUtilErr rc = canonicalizePath(basePath, canonBasePath);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = canonicalizePath(basePath, canonBasePath);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 

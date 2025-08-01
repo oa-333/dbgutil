@@ -6,14 +6,14 @@ namespace libdbg {
 
 static OsModuleManager* sModuleManager = nullptr;
 
-DbgUtilErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
+LibDbgErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
     // allow many readers to query for the module together
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         OsModuleSet::const_iterator itr = m_moduleSet.lower_bound(address);
         if (itr != m_moduleSet.end() && itr->contains(address)) {
             moduleInfo = *itr;
-            return DBGUTIL_ERR_OK;
+            return LIBDBG_ERR_OK;
         }
     }
 
@@ -21,8 +21,8 @@ DbgUtilErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& modu
     // this may cause duplicates, but this is a small sacrifice for allowing higher concurrency
     // NOTE: on Unix/Linux systems this may require a full refresh of the list (when querying for
     // symbol in the address space of the main executable image)
-    DbgUtilErr rc = getOsModuleByAddress(address, moduleInfo);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = getOsModuleByAddress(address, moduleInfo);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -33,22 +33,22 @@ DbgUtilErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& modu
         // race condition, take the details from the first one who succeeded
         moduleInfo = *itrRes.first;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& moduleInfo,
-                                            bool shouldRefreshModuleList /* = false */) {
-    DbgUtilErr rc = searchModule(name, moduleInfo);
-    if (rc == DBGUTIL_ERR_OK) {
+LibDbgErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& moduleInfo,
+                                           bool shouldRefreshModuleList /* = false */) {
+    LibDbgErr rc = searchModule(name, moduleInfo);
+    if (rc == LIBDBG_ERR_OK) {
         return rc;
     }
 
     if (!shouldRefreshModuleList) {
-        return DBGUTIL_ERR_NOT_FOUND;
+        return LIBDBG_ERR_NOT_FOUND;
     }
 
     rc = refreshModuleList();
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
@@ -56,25 +56,25 @@ DbgUtilErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& modu
     return searchModule(name, moduleInfo);
 }
 
-DbgUtilErr OsModuleManager::getMainModule(OsModuleInfo& moduleInfo) {
+LibDbgErr OsModuleManager::getMainModule(OsModuleInfo& moduleInfo) {
     // use read lock for query
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         if (m_mainModuleValid) {
             moduleInfo = m_mainModule;
-            return DBGUTIL_ERR_OK;
+            return LIBDBG_ERR_OK;
         }
     }
 
     // get module info outside of lock scope, we don't care about race condition
-    DbgUtilErr rc = getOsModuleByAddress(nullptr, moduleInfo);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = getOsModuleByAddress(nullptr, moduleInfo);
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 
     // cache result and return
     setMainModule(moduleInfo);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 void OsModuleManager::clearModuleSet() {
@@ -99,18 +99,18 @@ void OsModuleManager::setMainModule(const OsModuleInfo& moduleInfo) {
     }
 }
 
-DbgUtilErr OsModuleManager::searchModule(const char* name, OsModuleInfo& moduleInfo) {
+LibDbgErr OsModuleManager::searchModule(const char* name, OsModuleInfo& moduleInfo) {
     // thread-safe search
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         for (const OsModuleInfo& modInfo : m_moduleSet) {
             if (modInfo.m_modulePath.find(name) != std::string::npos) {
                 moduleInfo = modInfo;
-                return DBGUTIL_ERR_OK;
+                return LIBDBG_ERR_OK;
             }
         }
     }
-    return DBGUTIL_ERR_NOT_FOUND;
+    return LIBDBG_ERR_NOT_FOUND;
 }
 
 void setModuleManager(OsModuleManager* moduleManager) {

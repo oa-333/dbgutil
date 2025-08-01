@@ -5,7 +5,7 @@
 #include <string>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 #include "libdbg_log.h"
 
 namespace libdbg {
@@ -16,7 +16,7 @@ namespace libdbg {
  * @param errorCode The error code to convert.
  * @return const char* The resulting error string. This will never be null.
  */
-extern const char* errorCodeToStr(DbgUtilErr rc);
+extern const char* errorCodeToStr(LibDbgErr rc);
 
 /** @brief Sets the global flags settings for dbgutil. */
 extern void setGlobalFlags(uint32_t flags);

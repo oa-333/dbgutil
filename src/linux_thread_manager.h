@@ -17,7 +17,7 @@ class ThreadExecutor {
 public:
     virtual ~ThreadExecutor() {}
 
-    virtual DbgUtilErr execRequest() = 0;
+    virtual LibDbgErr execRequest() = 0;
 
 protected:
     ThreadExecutor() {}
@@ -35,25 +35,25 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initialize();
+    LibDbgErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminate();
+    LibDbgErr terminate();
 
     /**
      * @brief Traverses all running threads.
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
+    LibDbgErr visitThreadIds(ThreadVisitor* visitor) final;
 
     /**
      * @brief Retrieves thread handle by id.
      * @param threadId The thread id.
      * @param threadHandle The resulting thread handle.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    DbgUtilErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
+    LibDbgErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
 
     /**
      * @brief Requests to execute an operation on another thread (blocking call).
@@ -61,13 +61,13 @@ public:
      * @param executor The request executor.
      * @param[out] requestResult The request execution result (valid only if entire function
      * result is ok).
-     * @return DbgUtilErr The operation result. This refers only to the ability to post the
+     * @return LibDbgErr The operation result. This refers only to the ability to post the
      * operation to be executed on the target thread, and then collecting the result. The actual
      * result of the operation being executed on the target thread, is returned via the @ref
      * opResult out parameter.
      */
-    DbgUtilErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
-                                 DbgUtilErr& requestResult);
+    LibDbgErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
+                                LibDbgErr& requestResult);
 
 private:
     LinuxThreadManager() {}
@@ -76,8 +76,8 @@ private:
     static LinuxThreadManager* sInstance;
 };
 
-extern DbgUtilErr initLinuxThreadManager();
-extern DbgUtilErr termLinuxThreadManager();
+extern LibDbgErr initLinuxThreadManager();
+extern LibDbgErr termLinuxThreadManager();
 
 }  // namespace libdbg
 

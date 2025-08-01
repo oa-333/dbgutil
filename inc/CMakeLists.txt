@@ -6,7 +6,7 @@ target_sources(
         FILES
             dbg_stack_trace.h
             dbg_util_def.h
-            dbg_util_err.h
+            libdbg_err.h
             libdbg_except.h
             libdbg_flags.h
             libdbg_log.h

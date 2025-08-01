@@ -274,7 +274,7 @@ void Win32ExceptionHandler::destroyInstance() {
     sInstance = nullptr;
 }
 
-DbgUtilErr Win32ExceptionHandler::initializeEx() {
+LibDbgErr Win32ExceptionHandler::initializeEx() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
@@ -290,10 +290,10 @@ DbgUtilErr Win32ExceptionHandler::initializeEx() {
             registerExceptionHandler();
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr Win32ExceptionHandler::terminateEx() {
+LibDbgErr Win32ExceptionHandler::terminateEx() {
     const size_t BUF_SIZE = 64;
     char buf[BUF_SIZE];
     size_t retSize = 0;
@@ -303,36 +303,36 @@ DbgUtilErr Win32ExceptionHandler::terminateEx() {
             unregisterExceptionHandler();
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr initWin32ExceptionHandler() {
+LibDbgErr initWin32ExceptionHandler() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
     registerLogger(sLogger, "win32_exception_handler");
     Win32ExceptionHandler::createInstance();
-    DbgUtilErr rc = Win32ExceptionHandler::getInstance()->initialize();
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = Win32ExceptionHandler::getInstance()->initialize();
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
 #ifdef DBGUTIL_MSVC
     setExceptionHandler(Win32ExceptionHandler::getInstance());
 #endif
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termWin32ExceptionHandler() {
+LibDbgErr termWin32ExceptionHandler() {
 #ifdef DBGUTIL_MSVC
     setExceptionHandler(nullptr);
 #endif
-    DbgUtilErr rc = Win32ExceptionHandler::getInstance()->terminate();
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = Win32ExceptionHandler::getInstance()->terminate();
+    if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
     Win32ExceptionHandler::destroyInstance();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

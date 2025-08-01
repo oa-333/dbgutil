@@ -4,7 +4,7 @@
 
 namespace libdbg {
 
-DbgUtilErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit) {
+LibDbgErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit) {
     uint32_t lenPrefix = 0;
     DBGUTIL_DESERIALIZE_INT32(is, lenPrefix);
     if (len < 0xffffff00) {
@@ -12,15 +12,15 @@ DbgUtilErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit)
         is64Bit = false;
     } else {
         if (len != 0xffffffff) {
-            return DBGUTIL_ERR_DATA_CORRUPT;
+            return LIBDBG_ERR_DATA_CORRUPT;
         }
         DBGUTIL_DESERIALIZE_INT64(is, len);
         is64Bit = true;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr dwarfReadOffset(InputStream& is, uint64_t& offset, bool is64Bit) {
+LibDbgErr dwarfReadOffset(InputStream& is, uint64_t& offset, bool is64Bit) {
     if (is64Bit) {
         DBGUTIL_DESERIALIZE_INT64(is, offset);
     } else {
@@ -28,10 +28,10 @@ DbgUtilErr dwarfReadOffset(InputStream& is, uint64_t& offset, bool is64Bit) {
         DBGUTIL_DESERIALIZE_INT32(is, offset32);
         offset = offset32;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr dwarfReadAddress(InputStream& is, uint64_t& offset, uint64_t addressSize) {
+LibDbgErr dwarfReadAddress(InputStream& is, uint64_t& offset, uint64_t addressSize) {
     if (addressSize == 8) {
         DBGUTIL_DESERIALIZE_INT64(is, offset);
     } else if (addressSize == 4) {
@@ -39,12 +39,12 @@ DbgUtilErr dwarfReadAddress(InputStream& is, uint64_t& offset, uint64_t addressS
         DBGUTIL_DESERIALIZE_INT32(is, offset32);
         offset = offset32;
     } else {
-        return DBGUTIL_ERR_NOT_IMPLEMENTED;
+        return LIBDBG_ERR_NOT_IMPLEMENTED;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr dwarfReadULEB128(InputStream& is, uint64_t& result) {
+LibDbgErr dwarfReadULEB128(InputStream& is, uint64_t& result) {
     result = 0;
     uint32_t shift = 0;
     while (true) {
@@ -64,10 +64,10 @@ DbgUtilErr dwarfReadULEB128(InputStream& is, uint64_t& result) {
             break;
         }
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr dwarfReadSLEB128(InputStream& is, int64_t& result) {
+LibDbgErr dwarfReadSLEB128(InputStream& is, int64_t& result) {
     result = 0;
     uint32_t shift = 0;
     bool signBitSet = 0;
@@ -99,11 +99,11 @@ DbgUtilErr dwarfReadSLEB128(InputStream& is, int64_t& result) {
     if ((shift < size) && signBitSet) {
         result |= -(1 << shift);
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, DwarfData& dwarfData,
-                           std::string& result) {
+LibDbgErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, DwarfData& dwarfData,
+                          std::string& result) {
     if (form == DW_FORM_string) {
         // read string directly from input stream
         DBGUTIL_DESERIALIZE_NT_STRING(is, result);
@@ -113,7 +113,7 @@ DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, DwarfDa
         DWARF_READ_OFFSET(is, strOffset, is64Bit);
         const DwarfSection& section = dwarfData.getDebugStr();
         if (strOffset >= section.m_size) {
-            return DBGUTIL_ERR_DATA_CORRUPT;
+            return LIBDBG_ERR_DATA_CORRUPT;
         }
         result = (char*)section.m_start + strOffset;
     } else if (form == DW_FORM_line_strp) {
@@ -122,14 +122,14 @@ DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, DwarfDa
         DWARF_READ_OFFSET(is, strOffset, is64Bit);
         const DwarfSection& section = dwarfData.getDebugLineStr();
         if (strOffset >= section.m_size) {
-            return DBGUTIL_ERR_DATA_CORRUPT;
+            return LIBDBG_ERR_DATA_CORRUPT;
         }
         result = (char*)section.m_start + strOffset;
     } else {
         // other forms are not supported
-        return DBGUTIL_ERR_NOT_IMPLEMENTED;
+        return LIBDBG_ERR_NOT_IMPLEMENTED;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 bool DwarfData::checkDebugSections() {

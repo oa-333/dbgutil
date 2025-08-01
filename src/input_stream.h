@@ -27,9 +27,9 @@ public:
      * @param buffer Received the bytes peek from the stream.
      * @param length The amount of bytes to peek.
      * @param[out] bytesRead The number of bytes actually peeked.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr peekBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
+    virtual LibDbgErr peekBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Reads bytes from the stream.
@@ -38,9 +38,9 @@ public:
      * @param buffer Received the bytes read from the stream.
      * @param length The amount of bytes to read.
      * @param[out] bytesRead The number of bytes actually read.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr readBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
+    virtual LibDbgErr readBytes(char* buffer, size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Skips the number of specified bytes in the stream.
@@ -48,9 +48,9 @@ public:
      * possible bytes are skipped and E_OK is returned.
      * @param length The amount of bytes to skip.
      * @param[out] bytesRead The number of bytes actually skipped.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
-    virtual DbgUtilErr skipBytes(size_t length, size_t& bytesRead) = 0;
+    virtual LibDbgErr skipBytes(size_t length, size_t& bytesRead) = 0;
 
     /**
      * @brief Peeks for a value.
@@ -58,22 +58,22 @@ public:
      * @param[out] value The value to peek.
      * @return E_OK If the value was read successfully.
      * @return E_END_OF_STREAM If not enough bytes were present to read the value.
-     * @return DbgUtilErr Any other error by the input stream implementation.
+     * @return LibDbgErr Any other error by the input stream implementation.
      */
     template <typename T>
-    inline DbgUtilErr peek(T& value) {
+    inline LibDbgErr peek(T& value) {
         if (size() < sizeof(T)) {
-            return DBGUTIL_ERR_END_OF_STREAM;
+            return LIBDBG_ERR_END_OF_STREAM;
         }
         size_t length = 0;
-        DbgUtilErr rc = peekBytes((char*)&value, sizeof(T), length);
-        if (rc != DBGUTIL_ERR_OK) {
+        LibDbgErr rc = peekBytes((char*)&value, sizeof(T), length);
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         if (length < sizeof(T)) {
-            return DBGUTIL_ERR_END_OF_STREAM;
+            return LIBDBG_ERR_END_OF_STREAM;
         }
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     /**
@@ -82,22 +82,22 @@ public:
      * @param[out] value The value to read.
      * @return E_OK If the value was read successfully.
      * @return E_END_OF_STREAM If not enough bytes were present to read the value.
-     * @return DbgUtilErr Any other error by the input stream implementation.
+     * @return LibDbgErr Any other error by the input stream implementation.
      */
     template <typename T>
-    inline DbgUtilErr read(T& value) {
+    inline LibDbgErr read(T& value) {
         if (size() < sizeof(T)) {
-            return DBGUTIL_ERR_END_OF_STREAM;
+            return LIBDBG_ERR_END_OF_STREAM;
         }
         size_t length = 0;
-        DbgUtilErr rc = readBytes(reinterpret_cast<char*>(&value), sizeof(T), length);
-        if (rc != DBGUTIL_ERR_OK) {
+        LibDbgErr rc = readBytes(reinterpret_cast<char*>(&value), sizeof(T), length);
+        if (rc != LIBDBG_ERR_OK) {
             return rc;
         }
         if (length < sizeof(T)) {
-            return DBGUTIL_ERR_END_OF_STREAM;
+            return LIBDBG_ERR_END_OF_STREAM;
         }
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
     /**
@@ -105,22 +105,22 @@ public:
      * @tparam F The bytes consumer function type.
      * @param f The function consuming bytes (one at a time). The function should return false to
      * stop consuming bytes.
-     * @return DbgUtilErr The operation result.
+     * @return LibDbgErr The operation result.
      */
     template <typename F>
-    inline DbgUtilErr readUntil(F f) {
+    inline LibDbgErr readUntil(F f) {
         uint8_t byte = 0;
         do {
             size_t bytesRead = 0;
-            DbgUtilErr rc = readBytes((char*)&byte, 1, bytesRead);
-            if (rc != DBGUTIL_ERR_OK) {
+            LibDbgErr rc = readBytes((char*)&byte, 1, bytesRead);
+            if (rc != LIBDBG_ERR_OK) {
                 return rc;
             }
             if (bytesRead == 0) {
-                return DBGUTIL_ERR_END_OF_STREAM;
+                return LIBDBG_ERR_END_OF_STREAM;
             }
         } while (f(byte));
-        return DBGUTIL_ERR_OK;
+        return LIBDBG_ERR_OK;
     }
 
 protected:

@@ -54,8 +54,8 @@ void LinuxSymbolEngine::destroyInstance() {
     sInstance = nullptr;
 }
 
-DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
-                                                SymbolInfo& symbolInfo) {
+LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
+                                               SymbolInfo& symbolInfo) {
     // get module details
     symbolInfo.m_moduleBaseAddress = symModData->m_moduleInfo.m_loadAddress;
     symbolInfo.m_moduleName = symModData->m_moduleInfo.m_modulePath;
@@ -64,9 +64,9 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
 
     // first search in binary image
     // this way we can also get start address of symbol and compute byte offset
-    DbgUtilErr rc = symModData->m_imageReader->searchSymbol(
+    LibDbgErr rc = symModData->m_imageReader->searchSymbol(
         symAddress, symbolInfo.m_symbolName, symbolInfo.m_fileName, &symbolInfo.m_startAddress);
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to find symbol %p in binary image: %s", symAddress,
                   errorCodeToStr(rc));
     } else {
@@ -86,7 +86,7 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
               (void*)symModData->m_imageReader->getRelocationBase());
     rc = symModData->m_dwarfUtil.searchSymbol(
         symAddress, symbolInfoDwarf, (void*)symModData->m_imageReader->getRelocationBase());
-    if (rc == DBGUTIL_ERR_OK) {
+    if (rc == LIBDBG_ERR_OK) {
         LOG_DEBUG(sLogger, "Dwarf info: sym name %s, file %s, line %u",
                   symbolInfoDwarf.m_symbolName.c_str(), symbolInfoDwarf.m_fileName.c_str(),
                   symbolInfoDwarf.m_lineNumber);
@@ -100,9 +100,9 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
     // give it a shot anyway if some detail is missing (logically, this will cover more edge cases)
     bool fromWin32SymHandler = false;
 #ifdef DBGUTIL_MINGW
-    if (rc != DBGUTIL_ERR_OK && rc == DBGUTIL_ERR_NOT_FOUND) {
+    if (rc != LIBDBG_ERR_OK && rc == LIBDBG_ERR_NOT_FOUND) {
         rc = Win32SymbolEngine::getInstance()->getSymbolInfo(symAddress, symbolInfo);
-        if (rc == DBGUTIL_ERR_OK) {
+        if (rc == LIBDBG_ERR_OK) {
             fromWin32SymHandler = true;
         }
     }
@@ -143,7 +143,7 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
         }
     }
 
-    if (rc != DBGUTIL_ERR_OK) {
+    if (rc != LIBDBG_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to get symbol %p info: %s", symAddress, errorCodeToStr(rc));
     }
     return rc;
@@ -164,9 +164,9 @@ SymbolModuleData* LinuxSymbolEngine::findSymbolModule(void* address) {
 void LinuxSymbolEngine::prepareModuleData(
     SymbolModuleData* symModData) {  // start with image reader
     symModData->m_imageReader = createImageReader();
-    DbgUtilErr rc = symModData->m_imageReader->open(symModData->m_moduleInfo.m_modulePath.c_str(),
-                                                    symModData->m_moduleInfo.m_loadAddress);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = symModData->m_imageReader->open(symModData->m_moduleInfo.m_modulePath.c_str(),
+                                                   symModData->m_moduleInfo.m_loadAddress);
+    if (rc != LIBDBG_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to open module image file %s for reading: %s",
                   symModData->m_moduleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
         // image reader is kept open, we might still be able to use it
@@ -192,7 +192,7 @@ void LinuxSymbolEngine::prepareModuleData(
         rc = symModData->m_dwarfUtil.open(
             symModData->m_dwarfData, symModData->m_moduleInfo.m_loadAddress,
             symModData->m_imageReader->getIs64Bit(), symModData->m_imageReader->getIsExe());
-        if (rc != DBGUTIL_ERR_OK) {
+        if (rc != LIBDBG_ERR_OK) {
             LOG_DEBUG(sLogger, "Failed to open dwarf data: %s", errorCodeToStr(rc));
         } else {
             symModData->m_dwarfUtilValid = true;
@@ -200,7 +200,7 @@ void LinuxSymbolEngine::prepareModuleData(
     }
 }
 
-DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
+LibDbgErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
     // search module with read-lock
     SymbolModuleData* symModData = nullptr;
     {
@@ -223,8 +223,8 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
     // first search in all system modules if address is relevant
     LOG_DEBUG(sLogger, "Searching for symbol %p", symAddress);
     OsModuleInfo moduleInfo;
-    DbgUtilErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
-    if (rc != DBGUTIL_ERR_OK || moduleInfo.m_loadAddress == nullptr) {
+    LibDbgErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
+    if (rc != LIBDBG_ERR_OK || moduleInfo.m_loadAddress == nullptr) {
         LOG_DEBUG(sLogger, "Failed to find module for symbol %p: %s", symAddress,
                   errorCodeToStr(rc));
         return rc;
@@ -265,18 +265,18 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
 
 LinuxSymbolEngine::LinuxSymbolEngine() {}
 
-DbgUtilErr initLinuxSymbolEngine() {
+LibDbgErr initLinuxSymbolEngine() {
     registerLogger(sLogger, "linux_symbol_engine");
     LinuxSymbolEngine::createInstance();
     setSymbolEngine(LinuxSymbolEngine::getInstance());
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termLinuxSymbolEngine() {
+LibDbgErr termLinuxSymbolEngine() {
     setSymbolEngine(nullptr);
     LinuxSymbolEngine::destroyInstance();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

@@ -40,27 +40,27 @@
 namespace libdbg {
 
 #ifdef DBGUTIL_WINDOWS
-static DbgUtilErr initWin32DbgUtil();
-static DbgUtilErr termWin32DbgUtil();
+static LibDbgErr initWin32DbgUtil();
+static LibDbgErr termWin32DbgUtil();
 #endif
 
 #ifndef DBGUTIL_MSVC
-static DbgUtilErr initLinuxDbgUtil();
-static DbgUtilErr termLinuxDbgUtil();
+static LibDbgErr initLinuxDbgUtil();
+static LibDbgErr termLinuxDbgUtil();
 #endif
 
 // helper macro
-#define EXEC_CHECK_OP(op)           \
-    {                               \
-        DbgUtilErr rc = op();       \
-        if (rc != DBGUTIL_ERR_OK) { \
-            return rc;              \
-        }                           \
+#define EXEC_CHECK_OP(op)          \
+    {                              \
+        LibDbgErr rc = op();       \
+        if (rc != LIBDBG_ERR_OK) { \
+            return rc;             \
+        }                          \
     }
 
-DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener /* = nullptr */,
-                      LogHandler* logHandler /* = nullptr */, LogSeverity severity /* = LS_FATAL */,
-                      uint32_t flags /* = 0 */) {
+LibDbgErr initLibDbg(OsExceptionListener* exceptionListener /* = nullptr */,
+                     LogHandler* logHandler /* = nullptr */, LogSeverity severity /* = LS_FATAL */,
+                     uint32_t flags /* = 0 */) {
     // TLS and logger initialization is tricky, and must be done in parts
     initLog(logHandler, severity);
     initTls();
@@ -86,10 +86,10 @@ DbgUtilErr initLibDbg(OsExceptionListener* exceptionListener /* = nullptr */,
     OsImageReader::initLogger();
     OsUtil::initLogger();
 
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termLibDbg() {
+LibDbgErr termLibDbg() {
     PathParser::termLogger();
     BufferedFileReader::termLogger();
     DirScanner::termLogger();
@@ -109,23 +109,23 @@ DbgUtilErr termLibDbg() {
     EXEC_CHECK_OP(beginTermLog);
     termTls();
     EXEC_CHECK_OP(termLog);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 #ifdef DBGUTIL_WINDOWS
-DbgUtilErr initWin32DbgUtil() {
+LibDbgErr initWin32DbgUtil() {
     EXEC_CHECK_OP(initWin32ModuleManager);
     EXEC_CHECK_OP(initWin32SymbolEngine);
     EXEC_CHECK_OP(initWin32ExceptionHandler);
     EXEC_CHECK_OP(initWin32ThreadManager);
     EXEC_CHECK_OP(initWin32StackTrace);
     EXEC_CHECK_OP(initWin32PEReader);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
 #ifndef DBGUTIL_MSVC
-DbgUtilErr initLinuxDbgUtil() {
+LibDbgErr initLinuxDbgUtil() {
     EXEC_CHECK_OP(initLinuxExceptionHandler);
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(initLinuxModuleManager);
@@ -136,24 +136,24 @@ DbgUtilErr initLinuxDbgUtil() {
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(initElfReader);
 #endif
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
 #ifdef DBGUTIL_WINDOWS
-DbgUtilErr termWin32DbgUtil() {
+LibDbgErr termWin32DbgUtil() {
     EXEC_CHECK_OP(termWin32PEReader);
     EXEC_CHECK_OP(termWin32StackTrace);
     EXEC_CHECK_OP(termWin32ExceptionHandler);
     EXEC_CHECK_OP(termWin32ThreadManager);
     EXEC_CHECK_OP(termWin32SymbolEngine);
     EXEC_CHECK_OP(termWin32ModuleManager);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
 #ifndef DBGUTIL_MSVC
-DbgUtilErr termLinuxDbgUtil() {
+LibDbgErr termLinuxDbgUtil() {
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(termElfReader);
 #endif
@@ -164,7 +164,7 @@ DbgUtilErr termLinuxDbgUtil() {
     EXEC_CHECK_OP(termLinuxModuleManager);
 #endif
     EXEC_CHECK_OP(termLinuxExceptionHandler);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 

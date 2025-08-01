@@ -4,7 +4,7 @@
 #include <exception>
 
 #include "dbg_util_def.h"
-#include "dbg_util_err.h"
+#include "libdbg_err.h"
 #include "libdbg_except.h"
 
 namespace libdbg {
@@ -18,10 +18,10 @@ public:
     virtual ~OsExceptionHandler() {}
 
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initialize();
+    LibDbgErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminate();
+    LibDbgErr terminate();
 
     /**
      * @brief Retrieves symbol debug information (platform independent API).
@@ -36,10 +36,10 @@ protected:
     OsExceptionHandler() : m_exceptionListener(nullptr), m_prevTerminateHandler(nullptr) {}
 
     /** @brief Initializes the symbol engine. */
-    virtual DbgUtilErr initializeEx() { return DBGUTIL_ERR_OK; }
+    virtual LibDbgErr initializeEx() { return LIBDBG_ERR_OK; }
 
     /** @brief Destroys the symbol engine. */
-    virtual DbgUtilErr terminateEx() { return DBGUTIL_ERR_OK; }
+    virtual LibDbgErr terminateEx() { return LIBDBG_ERR_OK; }
 
     /** @brief Dispatches an exception to the exception listener. */
     void dispatchExceptionInfo(const OsExceptionInfo& exceptionInfo);

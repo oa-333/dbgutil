@@ -21,7 +21,7 @@ public:
     static void destroyInstance();
 
     /** @brief Refreshes the module list. */
-    DbgUtilErr refreshModuleList() final;
+    LibDbgErr refreshModuleList() final;
 
 protected:
     /**
@@ -30,7 +30,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
+    LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
 
 private:
     LinuxModuleManager();
@@ -39,16 +39,16 @@ private:
     static LinuxModuleManager* sInstance;
 
     /** @brief Refreshes the module list. */
-    DbgUtilErr refreshOsModuleList(void* address = nullptr, OsModuleInfo* moduleInfo = nullptr);
+    LibDbgErr refreshOsModuleList(void* address = nullptr, OsModuleInfo* moduleInfo = nullptr);
 
-    DbgUtilErr getCurrentProcessImagePath(std::string& path);
+    LibDbgErr getCurrentProcessImagePath(std::string& path);
 
-    DbgUtilErr parseProcLine(std::string& line, std::string& imagePath, uint64_t& addrLo,
-                             uint64_t& addrHi);
+    LibDbgErr parseProcLine(std::string& line, std::string& imagePath, uint64_t& addrLo,
+                            uint64_t& addrHi);
 };
 
-extern DbgUtilErr initLinuxModuleManager();
-extern DbgUtilErr termLinuxModuleManager();
+extern LibDbgErr initLinuxModuleManager();
+extern LibDbgErr termLinuxModuleManager();
 
 }  // namespace libdbg
 

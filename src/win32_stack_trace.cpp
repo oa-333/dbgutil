@@ -38,7 +38,7 @@ void Win32StackTraceProvider::destroyInstance() {
     sInstance = nullptr;
 }
 
-DbgUtilErr Win32StackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
+LibDbgErr Win32StackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
     CONTEXT osContext;
     if (context == nullptr) {
         ZeroMemory(&osContext, sizeof(CONTEXT));
@@ -48,8 +48,8 @@ DbgUtilErr Win32StackTraceProvider::walkStack(StackFrameListener* listener, void
     return Win32SymbolEngine::getInstance()->walkStack(listener, context);
 }
 
-DbgUtilErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
-                                                        RawStackTrace& stackTrace) {
+LibDbgErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
+                                                       RawStackTrace& stackTrace) {
     // check for current thread id (because we cannot suspend current thread)
     if (threadId == GetCurrentThreadId()) {
         return getStackTrace(nullptr, stackTrace);
@@ -59,14 +59,14 @@ DbgUtilErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     HANDLE hThread = ::OpenThread(THREAD_ALL_ACCESS, FALSE, threadId);
     if (hThread == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to open thread with id %" PRItid, threadId);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     // suspend thread
     if (SuspendThread(hThread) == (DWORD)-1) {
         LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to suspend thread %" PRItid, threadId);
         CloseHandle(hThread);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     // get thread context
@@ -77,12 +77,12 @@ DbgUtilErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
                         threadId);
         ResumeThread(hThread);
         CloseHandle(hThread);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     // now get stack trace by context
-    DbgUtilErr rc = getStackTrace(&context, stackTrace);
-    if (rc != DBGUTIL_ERR_OK) {
+    LibDbgErr rc = getStackTrace(&context, stackTrace);
+    if (rc != LIBDBG_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to get stack trace of thread %" PRItid, threadId);
         ResumeThread(hThread);
         CloseHandle(hThread);
@@ -92,33 +92,33 @@ DbgUtilErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     if (ResumeThread(hThread) == (DWORD)-1) {
         LOG_WIN32_ERROR(sLogger, ResumeThread, "Failed to resume of thread %" PRItid, threadId);
         CloseHandle(hThread);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     if (!CloseHandle(hThread)) {
         LOG_WIN32_ERROR(sLogger, CloseHandle, "Failed to close thread %" PRItid " handle",
                         threadId);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr initWin32StackTrace() {
+LibDbgErr initWin32StackTrace() {
     registerLogger(sLogger, "win32_stack_trace");
     Win32StackTraceProvider::createInstance();
 #ifdef DBGUTIL_MSVC
     setStackTraceProvider(Win32StackTraceProvider::getInstance());
 #endif
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
-DbgUtilErr termWin32StackTrace() {
+LibDbgErr termWin32StackTrace() {
 #ifdef DBGUTIL_MSVC
     setStackTraceProvider(nullptr);
 #endif
     Win32StackTraceProvider::destroyInstance();
     unregisterLogger(sLogger);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 
 }  // namespace libdbg

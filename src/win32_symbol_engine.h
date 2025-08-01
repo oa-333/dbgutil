@@ -22,17 +22,17 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initialize();
+    LibDbgErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminate();
+    LibDbgErr terminate();
 
     /**
      * @brief Retrieves symbol debug information (platform independent API).
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
+    LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
 
     /**
      * @brief Dumps core file.
@@ -48,7 +48,7 @@ public:
      * @param context Call context (opaque).
      * @return The operation result.
      */
-    DbgUtilErr walkStack(StackFrameListener* listener, void* context);
+    LibDbgErr walkStack(StackFrameListener* listener, void* context);
 
 private:
     Win32SymbolEngine();
@@ -64,12 +64,12 @@ private:
     std::string m_processDir;
     std::string m_processName;
 
-    DbgUtilErr getSymbolModule(void* symAddress, SymbolInfo& symbolInfo);
+    LibDbgErr getSymbolModule(void* symAddress, SymbolInfo& symbolInfo);
     void walkThreadStack(HANDLE hThread, CONTEXT& context, StackFrameListener* listener);
 };
 
-extern DbgUtilErr initWin32SymbolEngine();
-extern DbgUtilErr termWin32SymbolEngine();
+extern LibDbgErr initWin32SymbolEngine();
+extern LibDbgErr termWin32SymbolEngine();
 
 }  // namespace libdbg
 

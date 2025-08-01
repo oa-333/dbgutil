@@ -19,7 +19,7 @@ void DirScanner::initLogger() { registerLogger(sLogger, "dir_scanner"); }
 void DirScanner::termLogger() { unregisterLogger(sLogger); }
 
 #ifdef DBGUTIL_MSVC
-static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visitor) {
+static LibDbgErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visitor) {
     // prepare search pattern
     std::string searchPattern = dirPath;
     searchPattern += "\\*";
@@ -32,7 +32,7 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
     if (hFind == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, FindFirstFile, "Failed to search for files in directory: %s",
                         dirPath);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     // collect all entries
@@ -61,33 +61,33 @@ static DbgUtilErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visi
     if (errCode != ERROR_NO_MORE_FILES) {
         LOG_WIN32_ERROR_NUM(sLogger, FindNextFile, errCode,
                             "Failed to search for next file in directory: %s", dirPath);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
 #ifdef DBGUTIL_MINGW
-inline DbgUtilErr isRegularFile(const char* path, bool& res) {
+inline LibDbgErr isRegularFile(const char* path, bool& res) {
     struct stat pathStat;
     if (stat(path, &pathStat) == -1) {
         LOG_SYS_ERROR(sLogger, stat, "Failed to check file %s status", path);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     res = S_ISREG(pathStat.st_mode);
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
 #ifdef DBGUTIL_GCC
-static DbgUtilErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visitor) {
+static LibDbgErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visitor) {
     DIR* dirp = opendir(dirPath);
     if (dirp == nullptr) {
         int errCode = errno;
         LOG_SYS_ERROR(sLogger, opendir, "Failed to open directory %s for reading: %d", dirPath,
                       errCode);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
 
     struct dirent* dir = nullptr;
@@ -95,8 +95,8 @@ static DbgUtilErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visit
     std::string basePath = dirPath;
     while ((dir = readdir(dirp)) != nullptr) {
         bool isRegular = false;
-        DbgUtilErr rc = isRegularFile((basePath + "/" + dir->d_name).c_str(), isRegular);
-        if (rc != DBGUTIL_ERR_OK) {
+        LibDbgErr rc = isRegularFile((basePath + "/" + dir->d_name).c_str(), isRegular);
+        if (rc != LIBDBG_ERR_OK) {
             closedir(dirp);
             return rc;
         }
@@ -132,18 +132,18 @@ static DbgUtilErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visit
         LOG_SYS_ERROR(sLogger, readdir, "Failed to list files in directory %s: %d", dirPath,
                       errCode);
         closedir(dirp);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
     if (closedir(dirp) < 0) {
         LOG_SYS_ERROR(sLogger, closedir, "Failed to terminate listing files in directory %s: %d",
                       dirPath, errCode);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
+        return LIBDBG_ERR_SYSTEM_FAILURE;
     }
-    return DBGUTIL_ERR_OK;
+    return LIBDBG_ERR_OK;
 }
 #endif
 
-DbgUtilErr DirScanner::visitDirEntries(const char* dirPath, DirEntryVisitor* visitor) {
+LibDbgErr DirScanner::visitDirEntries(const char* dirPath, DirEntryVisitor* visitor) {
 #ifdef DBGUTIL_MSVC
     return visitDirEntriesMsvc(dirPath, visitor);
 #else
@@ -151,7 +151,7 @@ DbgUtilErr DirScanner::visitDirEntries(const char* dirPath, DirEntryVisitor* vis
 #endif
 }
 
-DbgUtilErr DirScanner::scanDirEntries(const char* dirPath, std::vector<DirEntryInfo>& dirEntries) {
+LibDbgErr DirScanner::scanDirEntries(const char* dirPath, std::vector<DirEntryInfo>& dirEntries) {
     class DirEntryCollector : public DirEntryVisitor {
     public:
         DirEntryCollector(std::vector<DirEntryInfo>& dirEntries) : m_dirEntries(dirEntries) {}
@@ -169,7 +169,7 @@ DbgUtilErr DirScanner::scanDirEntries(const char* dirPath, std::vector<DirEntryI
     return visitDirEntries(dirPath, &dirEntryCollector);
 }
 
-DbgUtilErr DirScanner::scanDirFiles(const char* dirPath, std::vector<std::string>& fileNames) {
+LibDbgErr DirScanner::scanDirFiles(const char* dirPath, std::vector<std::string>& fileNames) {
     class FileCollector : public DirEntryVisitor {
     public:
         FileCollector(std::vector<std::string>& fileNames) : m_fileNames(fileNames) {}
@@ -191,7 +191,7 @@ DbgUtilErr DirScanner::scanDirFiles(const char* dirPath, std::vector<std::string
     return visitDirEntries(dirPath, &fileCollector);
 }
 
-DbgUtilErr DirScanner::scanDirDirs(const char* dirPath, std::vector<std::string>& dirNames) {
+LibDbgErr DirScanner::scanDirDirs(const char* dirPath, std::vector<std::string>& dirNames) {
     class DirCollector : public DirEntryVisitor {
     public:
         DirCollector(std::vector<std::string>& dirNames) : m_dirNames(dirNames) {}

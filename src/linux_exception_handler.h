@@ -25,10 +25,10 @@ public:
 
 protected:
     /** @brief Initializes the symbol engine. */
-    DbgUtilErr initializeEx() final;
+    LibDbgErr initializeEx() final;
 
     /** @brief Destroys the symbol engine. */
-    DbgUtilErr terminateEx() final;
+    LibDbgErr terminateEx() final;
 
 private:
     LinuxExceptionHandler() {}
@@ -56,21 +56,21 @@ private:
 
     const char* getSignalName(int sigNum);
 
-    DbgUtilErr registerExceptionHandlers();
-    DbgUtilErr unregisterExceptionHandlers();
-    DbgUtilErr registerSignalHandler(int sigNum);
-    DbgUtilErr unregisterSignalHandler(int sigNum);
+    LibDbgErr registerExceptionHandlers();
+    LibDbgErr unregisterExceptionHandlers();
+    LibDbgErr registerSignalHandler(int sigNum);
+    LibDbgErr unregisterSignalHandler(int sigNum);
 
-    DbgUtilErr registerSignalHandler(int sigNum, SignalHandlerFunc handler,
-                                     SignalHandler* prevHandler);
-    DbgUtilErr restoreSignalHandler(int sigNum, SignalHandler& handler);
+    LibDbgErr registerSignalHandler(int sigNum, SignalHandlerFunc handler,
+                                    SignalHandler* prevHandler);
+    LibDbgErr restoreSignalHandler(int sigNum, SignalHandler& handler);
 
     void finalizeSignalHandling(OsExceptionInfo& exInfo, void* context);
 };
 
-extern DbgUtilErr initLinuxExceptionHandler();
+extern LibDbgErr initLinuxExceptionHandler();
 
-extern DbgUtilErr termLinuxExceptionHandler();
+extern LibDbgErr termLinuxExceptionHandler();
 
 }  // namespace libdbg
 
