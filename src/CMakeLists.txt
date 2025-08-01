@@ -28,7 +28,6 @@ target_sources(dbgutil PRIVATE
     path_parser.cpp
     win32_dll_event.cpp
     win32_exception_handler.cpp
-    win32_fdata_sync.cpp
     win32_module_manager.cpp
     win32_pe_reader.cpp
     win32_stack_trace.cpp
