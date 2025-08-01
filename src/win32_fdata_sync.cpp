@@ -3,35 +3,35 @@
 
 // we must be careful here, because we need ot have Windows Driver Kit headers included as well
 // so to avoid conflict, we must avoid including windows headers
-#define DBGUTIL_NO_WINDOWS_HEADER
+#define LIBDBG_NO_WINDOWS_HEADER
 #include "libdbg_def.h"
 
 // no we can include headers in the correct order
 // first include WDK headers (enclosed in ifdef to avoid code formatting doing reordering)
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 // #define _AMD64_
 #include <sdkddkver.h>
 #endif
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define _AMD64_
 #include <ntddk.h>
 //  #include <wdf.h>
 #endif
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 // #include <ntifs.h>
 #endif
 
 // now include windows headers
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 // #include <windows.h>
 #endif
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #include <errno.h>
 #include <io.h>
 // #include <winternl.h>

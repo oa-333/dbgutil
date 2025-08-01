@@ -10,12 +10,12 @@
 #include "libdbg_err.h"
 
 // header required for spin locks
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 #include <pthread.h>
 #endif
 
 // define file IO stuff
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
 // open flags
 #define O_CREAT _O_CREAT
 #define O_EXCL _O_EXCL
@@ -53,7 +53,7 @@
 #endif
 
 // resolve once and for all the O_BINARY flag due to MinGW
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
@@ -61,7 +61,7 @@
 
 namespace libdbg {
 
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
 typedef CRITICAL_SECTION csi_spinlock_t;
 #else
 typedef pthread_spinlock_t csi_spinlock_t;

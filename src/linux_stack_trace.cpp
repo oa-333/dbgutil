@@ -1,6 +1,6 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -11,7 +11,7 @@
 #include "linux_thread_manager.h"
 #include "os_util.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #include "win32_stack_trace.h"
 #endif
 
@@ -68,7 +68,7 @@ LibDbgErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     }
 
     // otherwise, execute thread request
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     return Win32StackTraceProvider::getInstance()->getThreadStackTrace(threadId, stackTrace);
 #else
     class GetStackTraceExecutor : public ThreadExecutor {
@@ -109,4 +109,4 @@ LibDbgErr termLinuxStackTrace() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_GCC
+#endif  // LIBDBG_GCC

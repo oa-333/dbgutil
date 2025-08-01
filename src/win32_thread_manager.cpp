@@ -1,14 +1,14 @@
 // avoid including windows header, otherwise MinGW compilation fails
-#define DBGUTIL_NO_WINDOWS_HEADER
+#define LIBDBG_NO_WINDOWS_HEADER
 #include "libdbg_def.h"
 
 // this is good only for Microsoft Visual C++ compiler
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file
 // so most symbol engine functions fail, but this is still useful for stack walking, without symbol
 // extraction, which takes place in bfd symbol engine.
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -92,14 +92,14 @@ LibDbgErr initWin32ThreadManager() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setThreadManager(Win32ThreadManager::getInstance());
 #endif
     return LIBDBG_ERR_OK;
 }
 
 LibDbgErr termWin32ThreadManager() {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setThreadManager(nullptr);
 #endif
     LibDbgErr rc = Win32ThreadManager::getInstance()->terminate();
@@ -113,4 +113,4 @@ LibDbgErr termWin32ThreadManager() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

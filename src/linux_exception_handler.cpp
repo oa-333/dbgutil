@@ -1,10 +1,10 @@
-#define DBGUTIL_NO_WINDOWS_HEADER
+#define LIBDBG_NO_WINDOWS_HEADER
 #include "libdbg_def.h"
 
 // it turns out that when running from within MinGW/UCRT console, then signal handlers can be
 // registered, but when running from Windows console Windows exception handler is in effect.
 // this can be distinguished by the existence of the MSYSTEM environment variable
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #include <signal.h>
 #include <string.h>
@@ -30,7 +30,7 @@ static int sExceptBufLen = 0;
 
 LinuxExceptionHandler* LinuxExceptionHandler::sInstance = nullptr;
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 static const char* getSigIllInfo(int code) {
     switch (code) {
         case ILL_ILLOPC:
@@ -144,7 +144,7 @@ static void printExtendedInfo(int sigNum, int code) {
 }
 #endif
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 static const char* mingwGetSignalName(int sigNum) {
     switch (sigNum) {
         case SIGSEGV:
@@ -240,7 +240,7 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
 }
 
 const char* LinuxExceptionHandler::getSignalName(int sigNum) {
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     return mingwGetSignalName(sigNum);
 #else
     return strsignal(sigNum);
@@ -249,7 +249,7 @@ const char* LinuxExceptionHandler::getSignalName(int sigNum) {
 
 LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandlerFunc handler,
                                                        SignalHandler* prevHandler) {
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     SignalHandler prevHandlerLocal = signal(sigNum, handler);
     if (prevHandlerLocal == SIG_ERR) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to register signal handler for signal %d (%s)",
@@ -284,7 +284,7 @@ LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandler
 }
 
 LibDbgErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler& handler) {
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     SignalHandler prevHandlerLocal = signal(sigNum, handler);
     if (prevHandlerLocal == SIG_ERR) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to register signal handler for signal %d (%s)",
@@ -305,7 +305,7 @@ LibDbgErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler&
 
 LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
     // register handler
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     SignalHandler prevHandler = nullptr;
 #else
     SignalHandler prevHandler = {};
@@ -363,7 +363,7 @@ LibDbgErr LinuxExceptionHandler::registerExceptionHandlers() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     rc = registerSignalHandler(SIGBUS);
     if (rc != LIBDBG_ERR_OK) {
         return rc;
@@ -389,7 +389,7 @@ LibDbgErr LinuxExceptionHandler::unregisterExceptionHandlers() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     rc = unregisterSignalHandler(SIGBUS);
     if (rc != LIBDBG_ERR_OK) {
         return rc;
@@ -423,7 +423,7 @@ LibDbgErr LinuxExceptionHandler::initializeEx() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     if (getenv("MSYSTEM") != nullptr) {
         if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
             LOG_DEBUG(sLogger, "Registering signal handler for MinGW under MSYSTEM runtime");
@@ -442,7 +442,7 @@ LibDbgErr LinuxExceptionHandler::initializeEx() {
 }
 
 LibDbgErr LinuxExceptionHandler::terminateEx() {
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     if (getenv("MSYSTEM") != nullptr) {
         LOG_DEBUG(sLogger, "Unregistering signal handler for MinGW under MSYSTEM runtime");
         unregisterExceptionHandlers();
@@ -463,14 +463,14 @@ LibDbgErr initLinuxExceptionHandler() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
     setExceptionHandler(LinuxExceptionHandler::getInstance());
 #endif
     return LIBDBG_ERR_OK;
 }
 
 LibDbgErr termLinuxExceptionHandler() {
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
     setExceptionHandler(nullptr);
 #endif
     LibDbgErr rc = LinuxExceptionHandler::getInstance()->terminate();
@@ -484,4 +484,4 @@ LibDbgErr termLinuxExceptionHandler() {
 
 }  // namespace libdbg
 
-#endif  // not defined DBGUTIL_GCC
+#endif  // not defined LIBDBG_GCC

@@ -1,6 +1,6 @@
 #include "win32_module_manager.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 // #include <dbghelp.h>
 #include <psapi.h>
@@ -187,4 +187,4 @@ END_TEARDOWN_JOB(OsModuleManager)*/
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

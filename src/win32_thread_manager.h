@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include "dbgutil_common.h"
 #include "os_thread_manager.h"
@@ -49,6 +49,6 @@ extern LibDbgErr termWin32ThreadManager();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_THREAD_MANAGER_H__

@@ -1,6 +1,6 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #include "dwarf_util.h"
 #include "linux_symbol_engine.h"
@@ -8,7 +8,7 @@
 #include "os_module_manager.h"
 #include "os_symbol_engine.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 // required for module info
 #include "win32_symbol_engine.h"
 #else
@@ -31,7 +31,7 @@ namespace libdbg {
 // NOTE: since gcc/g++ uses the PE32 image differently than the MSFT linker, we cannot use
 // directly Win32SymbolHandler. instead a more careful approach needs to take place (i.e. try to
 // read PE32 image and see if there is a symbol table and GNU debug sections). This is unrelated to
-// whether the application is running under MSYSTEM runtime environment or not. #ifdef DBGUTIL_MINGW
+// whether the application is running under MSYSTEM runtime environment or not. #ifdef LIBDBG_MINGW
 
 static Logger sLogger;
 
@@ -99,7 +99,7 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
     // distinguish whether this is a Windows native DLL or a MinGW DLL built by gcc/g++), we just
     // give it a shot anyway if some detail is missing (logically, this will cover more edge cases)
     bool fromWin32SymHandler = false;
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     if (rc != LIBDBG_ERR_OK && rc == LIBDBG_ERR_NOT_FOUND) {
         rc = Win32SymbolEngine::getInstance()->getSymbolInfo(symAddress, symbolInfo);
         if (rc == LIBDBG_ERR_OK) {
@@ -108,7 +108,7 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
     }
 #endif
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     if (symbolInfo.m_symbolName.empty() || symbolInfo.m_moduleName.empty() ||
         symbolInfo.m_moduleBaseAddress == nullptr) {
         Dl_info dlinfo;

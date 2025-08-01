@@ -1,6 +1,6 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -335,7 +335,7 @@ void finishLog() { finishLogData(getLogData()); }
 const char* sysErrorToStr(int sysErrorCode) {
     const int BUF_LEN = 256;
     static thread_local char buf[BUF_LEN];
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     (void)strerror_s(buf, BUF_LEN, sysErrorCode);
     return buf;
 #else
@@ -348,7 +348,7 @@ const char* sysErrorToStr(int sysErrorCode) {
 #endif
 }
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 char* win32SysErrorToStr(unsigned long sysErrorCode) {
     LPSTR messageBuffer = nullptr;
     FormatMessageA(

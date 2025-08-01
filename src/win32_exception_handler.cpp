@@ -1,9 +1,9 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 // MinGW requires including windows main header, and this should be the topmost include directive
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -316,14 +316,14 @@ LibDbgErr initWin32ExceptionHandler() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setExceptionHandler(Win32ExceptionHandler::getInstance());
 #endif
     return LIBDBG_ERR_OK;
 }
 
 LibDbgErr termWin32ExceptionHandler() {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setExceptionHandler(nullptr);
 #endif
     LibDbgErr rc = Win32ExceptionHandler::getInstance()->terminate();
@@ -337,4 +337,4 @@ LibDbgErr termWin32ExceptionHandler() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

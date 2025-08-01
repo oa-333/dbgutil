@@ -4,7 +4,7 @@
 #include "input_stream.h"
 #include "output_stream.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #include "winsock2.h"
 #else
 #include <endian.h>

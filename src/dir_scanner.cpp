@@ -1,6 +1,6 @@
 #include "dir_scanner.h"
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -18,7 +18,7 @@ static Logger sLogger;
 void DirScanner::initLogger() { registerLogger(sLogger, "dir_scanner"); }
 void DirScanner::termLogger() { unregisterLogger(sLogger); }
 
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
 static LibDbgErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visitor) {
     // prepare search pattern
     std::string searchPattern = dirPath;
@@ -68,7 +68,7 @@ static LibDbgErr visitDirEntriesMsvc(const char* dirPath, DirEntryVisitor* visit
 }
 #endif
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 inline LibDbgErr isRegularFile(const char* path, bool& res) {
     struct stat pathStat;
     if (stat(path, &pathStat) == -1) {
@@ -80,7 +80,7 @@ inline LibDbgErr isRegularFile(const char* path, bool& res) {
 }
 #endif
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 static LibDbgErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visitor) {
     DIR* dirp = opendir(dirPath);
     if (dirp == nullptr) {
@@ -91,7 +91,7 @@ static LibDbgErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visito
     }
 
     struct dirent* dir = nullptr;
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     std::string basePath = dirPath;
     while ((dir = readdir(dirp)) != nullptr) {
         bool isRegular = false;
@@ -144,7 +144,7 @@ static LibDbgErr visitDirEntriesGcc(const char* dirPath, DirEntryVisitor* visito
 #endif
 
 LibDbgErr DirScanner::visitDirEntries(const char* dirPath, DirEntryVisitor* visitor) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     return visitDirEntriesMsvc(dirPath, visitor);
 #else
     return visitDirEntriesGcc(dirPath, visitor);

@@ -1,6 +1,6 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -16,7 +16,7 @@
 #include "os_util.h"
 
 // headers required for dir/file API
-#ifndef DBGUTIL_WINDOWS
+#ifndef LIBDBG_WINDOWS
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -29,7 +29,7 @@
 #endif
 
 // headers required for fsync/fdatasync
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #include <io.h>
 #include <share.h>
 #include <winternl.h>
@@ -58,7 +58,7 @@ void OsUtil::initLogger() { registerLogger(sLogger, "os_util"); }
 void OsUtil::termLogger() { unregisterLogger(sLogger); }
 
 os_thread_id_t OsUtil::getCurrentThreadId() {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     return GetCurrentThreadId();
 #else
     return gettid();
@@ -66,7 +66,7 @@ os_thread_id_t OsUtil::getCurrentThreadId() {
 }
 
 LibDbgErr OsUtil::deleteFile(const char* filePath) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     if (!DeleteFileA(filePath)) {
         LOG_WIN32_ERROR(sLogger, DeleteFile, "Failed to delete file %s", filePath);
         return LIBDBG_ERR_SYSTEM_FAILURE;
@@ -82,7 +82,7 @@ LibDbgErr OsUtil::deleteFile(const char* filePath) {
 }
 
 LibDbgErr OsUtil::fileExists(const char* filePath) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     DWORD dwAttrib = GetFileAttributesA(filePath);
     if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
         DWORD rc = GetLastError();
@@ -115,7 +115,7 @@ LibDbgErr OsUtil::fileExists(const char* filePath) {
 }
 
 LibDbgErr OsUtil::dirExists(const char* dirPath) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     DWORD dwAttrib = GetFileAttributesA(dirPath);
     if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
         DWORD rc = GetLastError();
@@ -148,7 +148,7 @@ LibDbgErr OsUtil::dirExists(const char* dirPath) {
 }
 
 LibDbgErr OsUtil::getCurrentDir(std::string& currentDir) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     DWORD len = GetCurrentDirectoryA(0, nullptr);
     if (len == 0) {
         LOG_WIN32_ERROR(sLogger, GetCurrentDirectoryA,
@@ -183,7 +183,7 @@ LibDbgErr OsUtil::getCurrentDir(std::string& currentDir) {
 }
 
 LibDbgErr OsUtil::createDir(const char* path) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     if (!CreateDirectoryA(path, nullptr)) {
         DWORD rc = GetLastError();
         if (rc == ERROR_ALREADY_EXISTS) {
@@ -208,7 +208,7 @@ LibDbgErr OsUtil::createDir(const char* path) {
 
 // TODO: add utility to map system error code to internal error code or default to E_SYSTEM_FAILURE.
 LibDbgErr OsUtil::deleteDir(const char* path) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     if (!RemoveDirectoryA(path)) {
         DWORD rc = GetLastError();
         if (rc == ERROR_NOT_FOUND) {
@@ -232,7 +232,7 @@ LibDbgErr OsUtil::deleteDir(const char* path) {
 }
 
 LibDbgErr OsUtil::openFile(const char* path, int flags, int mode, int& fd) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     errno_t errc = _sopen_s(&fd, path, flags, _SH_DENYNO, mode);
     if (errc != 0) {
         LOG_SYS_ERROR(sLogger, _sopen_s, "Failed to open file: %s", path);
@@ -249,7 +249,7 @@ LibDbgErr OsUtil::openFile(const char* path, int flags, int mode, int& fd) {
 }
 
 LibDbgErr OsUtil::closeFile(int fd) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     int res = _close(fd);
 #else
     int res = close(fd);
@@ -263,7 +263,7 @@ LibDbgErr OsUtil::closeFile(int fd) {
 
 LibDbgErr OsUtil::seekFile(int fd, int64_t offset, int origin,
                            uint64_t* resultOffset /* = nullptr */, int* sysErr /* = nullptr */) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     long long res = _lseeki64(fd, offset, origin);
 #else
     off64_t res = lseek64(fd, offset, origin);
@@ -310,7 +310,7 @@ LibDbgErr OsUtil::getFileSize(int fd, uint64_t& fileSizeBytes, int* sysErr /* = 
 
 LibDbgErr OsUtil::writeFile(int fd, const char* buf, size_t len, size_t& bytesWritten,
                             int* sysErr /* = nullptr */) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     // on Windows, _write() receives unsigned int as buffer length, while on Unix/Linux it is
     // size_t. Since the len parameter is size_t (due to Unix/Linux), we must test that the value
     // does not exceed unsigned integer maximum value.
@@ -336,7 +336,7 @@ LibDbgErr OsUtil::writeFile(int fd, const char* buf, size_t len, size_t& bytesWr
 
 LibDbgErr OsUtil::readFile(int fd, char* buf, size_t len, size_t& bytesRead,
                            int* sysErr /* = nullptr */) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     // on Windows, _read() receives unsigned int as buffer length, while on Unix/Linux it is
     // size_t. Since the len parameter is size_t (due to Unix/Linux), we must test that the value
     // does not exceed unsigned integer maximum value.
@@ -361,7 +361,7 @@ LibDbgErr OsUtil::readFile(int fd, char* buf, size_t len, size_t& bytesRead,
 }
 
 LibDbgErr OsUtil::fsyncFile(int fd, int* sysErr /* = nullptr */) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     LibDbgErr rc = LIBDBG_ERR_OK;
     HANDLE handle = (HANDLE)_get_osfhandle(fd);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -409,7 +409,7 @@ LibDbgErr OsUtil::fsyncFile(int fd, int* sysErr /* = nullptr */) {
 }
 
 LibDbgErr OsUtil::fdatasyncFile(int fd, int* sysErr /* = nullptr */) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     // TODO: implement this
 #ifdef SIM_FDATASYNC
     return fsyncFile(fd, sysErr);
@@ -513,7 +513,7 @@ LibDbgErr OsUtil::readEntireFileToLines(const char* path, std::vector<std::strin
 }
 
 LibDbgErr OsUtil::execCmd(const char* cmdLine, std::vector<char>& buf) {
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     FILE* output = _popen(cmdLine, "r");
 #else
     FILE* output = popen(cmdLine, "r");
@@ -549,7 +549,7 @@ LibDbgErr OsUtil::execCmd(const char* cmdLine, std::vector<char>& buf) {
     }
 
     int isEof = feof(output);
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     int res = _pclose(output);
 #else
     int res = pclose(output);
@@ -566,7 +566,7 @@ LibDbgErr OsUtil::execCmd(const char* cmdLine, std::vector<char>& buf) {
 }
 
 LibDbgErr OsUtil::initializeSpinLock(csi_spinlock_t& spinLock) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     InitializeCriticalSection(&spinLock);
 #else
     int res = pthread_spin_init(&spinLock, 0);
@@ -578,7 +578,7 @@ LibDbgErr OsUtil::initializeSpinLock(csi_spinlock_t& spinLock) {
 }
 
 LibDbgErr OsUtil::destroySpinLock(csi_spinlock_t& spinLock) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     DeleteCriticalSection(&spinLock);
 #else
     int res = pthread_spin_destroy(&spinLock);
@@ -590,7 +590,7 @@ LibDbgErr OsUtil::destroySpinLock(csi_spinlock_t& spinLock) {
 }
 
 LibDbgErr OsUtil::lockSpinLock(csi_spinlock_t& spinLock) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     EnterCriticalSection(&spinLock);
 #else
     int res = pthread_spin_lock(&spinLock);
@@ -602,7 +602,7 @@ LibDbgErr OsUtil::lockSpinLock(csi_spinlock_t& spinLock) {
 }
 
 LibDbgErr OsUtil::tryLockSpinLock(csi_spinlock_t& spinLock) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     if (!TryEnterCriticalSection(&spinLock)) {
         return LIBDBG_ERR_RESOURCE_BUSY;
     }
@@ -622,7 +622,7 @@ LibDbgErr OsUtil::tryLockSpinLock(csi_spinlock_t& spinLock) {
 }
 
 LibDbgErr OsUtil::unlockSpinLock(csi_spinlock_t& spinLock) {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     LeaveCriticalSection(&spinLock);
 #else
     int res = pthread_spin_unlock(&spinLock);

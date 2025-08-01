@@ -4,7 +4,7 @@
 #include "dbgutil_common.h"
 #include "os_image_reader.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include <unordered_map>
 #include <vector>
@@ -56,6 +56,6 @@ extern LibDbgErr termWin32PEReader();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_PE_READER_H__

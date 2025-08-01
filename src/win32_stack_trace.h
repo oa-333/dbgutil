@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include "os_stack_trace.h"
 
@@ -50,6 +50,6 @@ extern LibDbgErr termWin32StackTrace();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_STACK_TRACE_H__

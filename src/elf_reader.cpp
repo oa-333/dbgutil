@@ -1,6 +1,6 @@
 #include "elf_reader.h"
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 
 #include <algorithm>
 #include <cassert>
@@ -567,4 +567,4 @@ LibDbgErr termElfReader() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_LINUX
+#endif  // LIBDBG_LINUX

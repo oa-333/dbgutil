@@ -28,7 +28,7 @@ endif()
 if (MSVC)
     # /Zi - generate full debug information
     # /EHsc - catch(..) catches only C++ exceptions, extern "C" functions never throw C++ exception
-    target_compile_definitions(dbgutil PRIVATE DBGUTIL_DLL)
+    target_compile_definitions(dbgutil PRIVATE LIBDBG_DLL)
     target_compile_options(dbgutil PRIVATE /Zi /EHsc)
     target_compile_options(dbgutil PRIVATE /Wall)
     target_compile_options(dbgutil PRIVATE /wd4251)

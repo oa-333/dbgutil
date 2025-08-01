@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #include <condition_variable>
 #include <mutex>
@@ -98,6 +98,6 @@ extern LibDbgErr termLinuxSymbolEngine();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_GCC
+#endif  // LIBDBG_GCC
 
 #endif  // __LINUX_SYMBOL_ENGINE_H__

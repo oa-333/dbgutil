@@ -1,15 +1,15 @@
 // avoid including windows header, otherwise MinGW compilation fails
-#define DBGUTIL_NO_WINDOWS_HEADER
+#define LIBDBG_NO_WINDOWS_HEADER
 #include "libdbg_def.h"
 
 // this is good only for Microsoft Visual C++ compiler
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file
 // so most symbol engine functions fail, but this is still useful for stack walking, without symbol
 // extraction, which takes place in bfd symbol engine.
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 // we put this in ifdef so that vscode auto-format will not move it around...
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -261,14 +261,14 @@ LibDbgErr initWin32SymbolEngine() {
     if (rc != LIBDBG_ERR_OK) {
         return rc;
     }
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setSymbolEngine(Win32SymbolEngine::getInstance());
 #endif
     return LIBDBG_ERR_OK;
 }
 
 LibDbgErr termWin32SymbolEngine() {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setSymbolEngine(nullptr);
 #endif
     LibDbgErr rc = Win32SymbolEngine::getInstance()->terminate();
@@ -282,4 +282,4 @@ LibDbgErr termWin32SymbolEngine() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

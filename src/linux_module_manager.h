@@ -3,7 +3,7 @@
 
 #include "dbgutil_common.h"
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 #include "dbgutil_log_imp.h"
 #include "os_module_manager.h"
 
@@ -52,6 +52,6 @@ extern LibDbgErr termLinuxModuleManager();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_LINUX
+#endif  // LIBDBG_LINUX
 
 #endif  // __LINUX_MODULE_MANAGER_H__

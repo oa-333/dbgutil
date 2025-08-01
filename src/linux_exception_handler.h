@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 
 #include <csignal>
 #include <unordered_map>
@@ -36,7 +36,7 @@ private:
 
     static LinuxExceptionHandler* sInstance;
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     typedef __p_sig_fn_t SignalHandlerFunc;
     typedef __p_sig_fn_t SignalHandler;
 #else
@@ -46,7 +46,7 @@ private:
     typedef std::unordered_map<int, SignalHandler> SigHandlerMap;
     SigHandlerMap m_prevHandlerMap;
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     static void signalHandlerStatic(int sigNum);
     void signalHandler(int sigNum);
 #else
@@ -74,6 +74,6 @@ extern LibDbgErr termLinuxExceptionHandler();
 
 }  // namespace libdbg
 
-#endif  // not defined DBGUTIL_MSVC
+#endif  // not defined LIBDBG_MSVC
 
 #endif  // __LINUX_EXCEPTION_HANDLER_H__

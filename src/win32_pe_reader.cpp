@@ -1,6 +1,6 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -500,4 +500,4 @@ extern LibDbgErr termWin32PEReader() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

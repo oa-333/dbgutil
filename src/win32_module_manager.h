@@ -3,11 +3,11 @@
 
 #include "dbgutil_common.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #include "dbgutil_log_imp.h"
 #include "os_module_manager.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -60,6 +60,6 @@ extern LibDbgErr termWin32ModuleManager();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_MODULE_MANAGER_H__

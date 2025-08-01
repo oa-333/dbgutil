@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include <cstdint>
 
@@ -56,6 +56,6 @@ extern void purgeDllCallback(DllPurgeFilter* filter);
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __DBGUTIL_WIN32_DLL_EVENT_H__

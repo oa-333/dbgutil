@@ -7,7 +7,7 @@
 #include "dbgutil_log_imp.h"
 #include "os_util.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define DBGUTIL_PATH_SEP '\\'
 #define DBGUTIL_PATH_SEP_CHARS "\\/"
 #else
@@ -124,7 +124,7 @@ bool PathParser::isPathAbsolute(const char* path) {
     if (path == nullptr) {
         return false;
     }
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     if (strchr(DBGUTIL_PATH_SEP_CHARS, path[0]) != nullptr) {
         return true;
     }
@@ -236,7 +236,7 @@ void PathParser::composePath(const std::vector<std::string>& components, std::st
     // NOTE: compose path (iterator variant) is naive and gives expected result only on Unix (it
     // yields an absolute path starting with slash), so we have to be careful on Windows/MinGW,
     // since a path can start with drive letter
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     if (components.front().length() > 1 && components.front()[1] == ':') {
         std::string tmpPath;
         composePath(components.begin() + 1, components.end(), tmpPath);

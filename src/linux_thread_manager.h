@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #include <pthread.h>
 
@@ -81,6 +81,6 @@ extern LibDbgErr termLinuxThreadManager();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_GCC
+#endif  // LIBDBG_GCC
 
 #endif  // __LINUX_THREAD_MANAGER_H__

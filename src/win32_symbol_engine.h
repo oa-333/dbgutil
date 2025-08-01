@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include "os_stack_trace.h"
 #include "os_symbol_engine.h"
@@ -73,6 +73,6 @@ extern LibDbgErr termWin32SymbolEngine();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_SYM_HANDLER_H__

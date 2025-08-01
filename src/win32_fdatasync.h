@@ -9,6 +9,6 @@ extern int win32FDataSync(int fd);
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_FDATASYNC_H__

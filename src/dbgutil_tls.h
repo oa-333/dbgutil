@@ -3,14 +3,14 @@
 
 #include "libdbg_def.h"
 
-#ifndef DBGUTIL_WINDOWS
+#ifndef LIBDBG_WINDOWS
 #include <pthread.h>
 #endif
 
 namespace libdbg {
 
 /** @typedef Thread local storage key type. */
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 typedef unsigned long TlsKey;
 #else
 typedef pthread_key_t TlsKey;

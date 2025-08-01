@@ -1,6 +1,6 @@
 #include "linux_module_manager.h"
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 #include <dlfcn.h>
 
 #include <cassert>
@@ -255,4 +255,4 @@ LibDbgErr termLinuxModuleManager() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_LINUX
+#endif  // LIBDBG_LINUX

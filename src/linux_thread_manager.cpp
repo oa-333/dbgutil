@@ -1,8 +1,8 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -26,12 +26,12 @@
 #include "linux_thread_manager.h"
 #include "os_util.h"
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #include "win32_thread_manager.h"
 #endif
 
 // headers required for dir/file API
-#ifndef DBGUTIL_MINGW
+#ifndef LIBDBG_MINGW
 #include <sys/syscall.h>
 #ifdef SYS_rt_tgsigqueueinfo
 #define rt_tgsigqueueinfo(tgid, tid, sig, info) syscall(SYS_rt_tgsigqueueinfo, tgid, tid, sig, info)
@@ -43,7 +43,7 @@
 // currently polling tightly
 #define DBGUTIL_REQUEST_POLL_FREQ_MILLIS 0
 
-#ifndef DBGUTIL_MINGW
+#ifndef LIBDBG_MINGW
 #define SIG_EXEC_REQUEST (SIGRTMIN + 1)
 #endif
 
@@ -109,7 +109,7 @@ private:
     }
 }*/
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 static void apcRoutine(ULONG_PTR data) {
     LOG_DEBUG(sLogger, "Received APC");
     SignalRequest* request = (SignalRequest*)(void*)data;
@@ -117,7 +117,7 @@ static void apcRoutine(ULONG_PTR data) {
 }
 #endif
 
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 static LibDbgErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
     HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, osThreadId);
     if (hThread == INVALID_HANDLE_VALUE) {
@@ -153,7 +153,7 @@ static LibDbgErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalReques
 
 LinuxThreadManager* LinuxThreadManager::sInstance = nullptr;
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
     // isHandlingSignal = true;
     LOG_DEBUG(sLogger, "Received signal: %s (%d)", strsignal(sigNum), sigNum);
@@ -163,7 +163,7 @@ static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
 }
 #endif
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 static LibDbgErr registerSignalHandler(int sigNum) {
     struct sigaction sa = {};
     memset(&sa, 0, sizeof(struct sigaction));
@@ -211,7 +211,7 @@ void LinuxThreadManager::destroyInstance() {
 }
 
 LibDbgErr LinuxThreadManager::initialize() {
-#ifndef DBGUTIL_MINGW
+#ifndef LIBDBG_MINGW
     return registerSignalHandler(SIG_EXEC_REQUEST);
 #else
     // MinGW does not implement signals well, so we need a workaround using QueueUserAPC2
@@ -220,7 +220,7 @@ LibDbgErr LinuxThreadManager::initialize() {
 }
 
 LibDbgErr LinuxThreadManager::terminate() {
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     return unregisterSignalHandler(SIG_EXEC_REQUEST);
 #else
     return LIBDBG_ERR_OK;
@@ -266,7 +266,7 @@ private:
 };
 
 LibDbgErr LinuxThreadManager::visitThreadIds(ThreadVisitor* visitor) {
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
     // divert to Win32
     return Win32ThreadManager::getInstance()->visitThreadIds(visitor);
 #else
@@ -363,4 +363,4 @@ LibDbgErr termLinuxThreadManager() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_GCC
+#endif  // LIBDBG_GCC

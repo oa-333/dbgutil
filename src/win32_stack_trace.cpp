@@ -1,8 +1,8 @@
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -106,14 +106,14 @@ LibDbgErr Win32StackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
 LibDbgErr initWin32StackTrace() {
     registerLogger(sLogger, "win32_stack_trace");
     Win32StackTraceProvider::createInstance();
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setStackTraceProvider(Win32StackTraceProvider::getInstance());
 #endif
     return LIBDBG_ERR_OK;
 }
 
 LibDbgErr termWin32StackTrace() {
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
     setStackTraceProvider(nullptr);
 #endif
     Win32StackTraceProvider::destroyInstance();
@@ -123,4 +123,4 @@ LibDbgErr termWin32StackTrace() {
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

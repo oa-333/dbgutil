@@ -46,7 +46,7 @@ extern void finishLog();
 
 extern const char* sysErrorToStr(int sysErrorCode);
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 extern char* win32SysErrorToStr(unsigned long sysErrorCode);
 extern void win32FreeErrorStr(char* errStr);
 #endif
@@ -91,7 +91,7 @@ extern void win32FreeErrorStr(char* errStr);
     LOG_SYS_ERROR_NUM(logger, syscall, errno, fmt, ##__VA_ARGS__)
 
 // Windows system error logging macros
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 #define LOG_WIN32_ERROR_NUM(logger, syscall, sysErr, fmt, ...)                                    \
     {                                                                                             \
         char* errStr = win32SysErrorToStr(sysErr);                                                \
@@ -103,6 +103,6 @@ extern void win32FreeErrorStr(char* errStr);
 #define LOG_WIN32_ERROR(logger, syscall, fmt, ...) \
     LOG_WIN32_ERROR_NUM(logger, syscall, ::GetLastError(), fmt, ##__VA_ARGS__)
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __DBGUTIL_LOG_IMP_H__

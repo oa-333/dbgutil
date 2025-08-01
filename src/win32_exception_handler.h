@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 #include "os_exception_handler.h"
 
@@ -50,6 +50,6 @@ extern LibDbgErr termWin32ExceptionHandler();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS
 
 #endif  // __WIN32_EXCEPTION_HANDLER_H__

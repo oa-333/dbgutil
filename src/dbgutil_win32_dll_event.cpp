@@ -1,9 +1,9 @@
 #include "dbgutil_win32_dll_event.h"
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 
 // on MinGW we need to include windows header
-#ifdef DBGUTIL_MINGW
+#ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -126,4 +126,4 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
-#endif  // DBGUTIL_WINDOWS
+#endif  // LIBDBG_WINDOWS

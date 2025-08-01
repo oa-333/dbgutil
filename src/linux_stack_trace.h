@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_GCC
+#ifdef LIBDBG_GCC
 
 #include "os_stack_trace.h"
 
@@ -47,6 +47,6 @@ extern LibDbgErr termLinuxStackTrace();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_GCC
+#endif  // LIBDBG_GCC
 
 #endif  // __LINUX_STACK_TRACE_H__

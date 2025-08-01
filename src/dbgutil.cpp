@@ -1,12 +1,12 @@
 #include "libdbg.h"
 
-#ifdef DBGUTIL_MSVC
+#ifdef LIBDBG_MSVC
 #include "win32_exception_handler.h"
 #include "win32_module_manager.h"
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
 #include "win32_thread_manager.h"
-#elif defined(DBGUTIL_MINGW)
+#elif defined(LIBDBG_MINGW)
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"
 #include "linux_symbol_engine.h"
@@ -39,12 +39,12 @@
 
 namespace libdbg {
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 static LibDbgErr initWin32DbgUtil();
 static LibDbgErr termWin32DbgUtil();
 #endif
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 static LibDbgErr initLinuxDbgUtil();
 static LibDbgErr termLinuxDbgUtil();
 #endif
@@ -67,11 +67,11 @@ LibDbgErr initLibDbg(OsExceptionListener* exceptionListener /* = nullptr */,
     EXEC_CHECK_OP(finishInitLog);
     setGlobalFlags(flags);
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     EXEC_CHECK_OP(initWin32DbgUtil);
 #endif
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
     EXEC_CHECK_OP(initLinuxDbgUtil);
 #endif
     if (exceptionListener != nullptr) {
@@ -98,11 +98,11 @@ LibDbgErr termLibDbg() {
     OsImageReader::termLogger();
     OsUtil::termLogger();
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
     EXEC_CHECK_OP(termLinuxDbgUtil);
 #endif
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
     EXEC_CHECK_OP(termWin32DbgUtil);
 #endif
 
@@ -112,7 +112,7 @@ LibDbgErr termLibDbg() {
     return LIBDBG_ERR_OK;
 }
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 LibDbgErr initWin32DbgUtil() {
     EXEC_CHECK_OP(initWin32ModuleManager);
     EXEC_CHECK_OP(initWin32SymbolEngine);
@@ -124,23 +124,23 @@ LibDbgErr initWin32DbgUtil() {
 }
 #endif
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 LibDbgErr initLinuxDbgUtil() {
     EXEC_CHECK_OP(initLinuxExceptionHandler);
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     EXEC_CHECK_OP(initLinuxModuleManager);
 #endif
     EXEC_CHECK_OP(initLinuxSymbolEngine);
     EXEC_CHECK_OP(initLinuxThreadManager);
     EXEC_CHECK_OP(initLinuxStackTrace);
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     EXEC_CHECK_OP(initElfReader);
 #endif
     return LIBDBG_ERR_OK;
 }
 #endif
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 LibDbgErr termWin32DbgUtil() {
     EXEC_CHECK_OP(termWin32PEReader);
     EXEC_CHECK_OP(termWin32StackTrace);
@@ -152,15 +152,15 @@ LibDbgErr termWin32DbgUtil() {
 }
 #endif
 
-#ifndef DBGUTIL_MSVC
+#ifndef LIBDBG_MSVC
 LibDbgErr termLinuxDbgUtil() {
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     EXEC_CHECK_OP(termElfReader);
 #endif
     EXEC_CHECK_OP(termLinuxStackTrace);
     EXEC_CHECK_OP(termLinuxThreadManager);
     EXEC_CHECK_OP(termLinuxSymbolEngine);
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
     EXEC_CHECK_OP(termLinuxModuleManager);
 #endif
     EXEC_CHECK_OP(termLinuxExceptionHandler);

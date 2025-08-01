@@ -3,7 +3,7 @@
 
 #include "libdbg_def.h"
 
-#ifdef DBGUTIL_LINUX
+#ifdef LIBDBG_LINUX
 
 #include <elf.h>
 
@@ -72,6 +72,6 @@ extern LibDbgErr termElfReader();
 
 }  // namespace libdbg
 
-#endif  // DBGUTIL_LINUX
+#endif  // LIBDBG_LINUX
 
 #endif  // __ELF_UTIL_H__

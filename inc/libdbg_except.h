@@ -7,7 +7,7 @@
 
 namespace libdbg {
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef LIBDBG_WINDOWS
 /**
  * @typedef Exception code type as defined by the ExceptionCode member of EXCEPTION_RECORD.
  * @note This is actually DWORD, but we don't want to force entire windows header inclusion here
