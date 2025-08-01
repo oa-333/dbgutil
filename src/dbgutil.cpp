@@ -26,12 +26,12 @@
 #endif
 
 #include "buffered_file_reader.h"
-#include "dbgutil_log_imp.h"
 #include "dbgutil_tls.h"
 #include "dir_scanner.h"
 #include "dwarf_line_util.h"
 #include "dwarf_util.h"
 #include "elf_reader.h"
+#include "libdbg_log_imp.h"
 #include "os_image_reader.h"
 #include "os_util.h"
 #include "path_parser.h"

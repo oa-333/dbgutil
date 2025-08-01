@@ -3,9 +3,9 @@
 #include <cassert>
 
 #include "dbg_stack_trace.h"
-#include "dbgutil_log_imp.h"
 #include "libdbg_common.h"
 #include "libdbg_flags.h"
+#include "libdbg_log_imp.h"
 
 namespace libdbg {
 

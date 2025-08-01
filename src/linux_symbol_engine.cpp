@@ -23,8 +23,8 @@
 #include <cassert>
 #include <vector>
 
-#include "dbgutil_log_imp.h"
 #include "libdbg_common.h"
+#include "libdbg_log_imp.h"
 
 namespace libdbg {
 

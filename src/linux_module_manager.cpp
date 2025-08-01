@@ -9,7 +9,7 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 #include "os_util.h"
 
 // general note regarding implementation

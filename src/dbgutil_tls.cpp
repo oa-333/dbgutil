@@ -1,7 +1,7 @@
 #include "dbgutil_tls.h"
 
-#include "dbgutil_log_imp.h"
 #include "libdbg_err.h"
+#include "libdbg_log_imp.h"
 
 #ifdef LIBDBG_MINGW
 #define WIN32_LEAN_AND_MEAN

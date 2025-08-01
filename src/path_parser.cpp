@@ -4,7 +4,7 @@
 #include <cstring>
 #include <list>
 
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 #include "os_util.h"
 
 #ifdef LIBDBG_WINDOWS

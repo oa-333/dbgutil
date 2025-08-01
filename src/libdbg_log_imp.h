@@ -1,5 +1,5 @@
-#ifndef __DBGUTIL_LOG_IMP_H__
-#define __DBGUTIL_LOG_IMP_H__
+#ifndef __LIBDBG_LOG_IMP_H__
+#define __LIBDBG_LOG_IMP_H__
 
 #include <cinttypes>
 #include <string>
@@ -10,7 +10,7 @@
 
 namespace libdbg {
 
-#define DBGUTIL_INVALID_LOGGER_ID ((size_t)-1)
+#define LIBDBG_INVALID_LOGGER_ID ((size_t)-1)
 
 struct Logger {
     std::string m_loggerName;
@@ -105,4 +105,4 @@ extern void win32FreeErrorStr(char* errStr);
 
 #endif  // LIBDBG_WINDOWS
 
-#endif  // __DBGUTIL_LOG_IMP_H__
+#endif  // __LIBDBG_LOG_IMP_H__

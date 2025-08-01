@@ -12,7 +12,7 @@
 #include <cstring>
 
 #include "dbg_stack_trace.h"
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 #include "os_util.h"
 
 // headers required for dir/file API

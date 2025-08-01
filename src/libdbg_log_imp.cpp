@@ -11,9 +11,9 @@
 #include <cstring>
 #include <vector>
 
-#include "dbgutil_log_imp.h"
 #include "dbgutil_tls.h"
 #include "libdbg_common.h"
+#include "libdbg_log_imp.h"
 #include "log_buffer.h"
 
 #define MAX_LOGGERS ((size_t)1024)
@@ -186,7 +186,7 @@ void setLoggerSeverity(size_t loggerId, LogSeverity severity) {
     }
 }
 
-LIBDBG_API const char* logSeverityToString(LogSeverity severity) {
+const char* logSeverityToString(LogSeverity severity) {
     if (severity < sLogSeverityCount) {
         return sLogSeverityStr[severity];
     }
@@ -224,7 +224,7 @@ static void finishLogData(LogData* logData) {
 void registerLogger(Logger& logger, const char* loggerName) {
     if (sLoggers.size() > MAX_LOGGERS) {
         fprintf(stderr, "Cannot register logger %s, reached limit %zu\n", loggerName, MAX_LOGGERS);
-        logger.m_loggerId = DBGUTIL_INVALID_LOGGER_ID;
+        logger.m_loggerId = LIBDBG_INVALID_LOGGER_ID;
         return;
     }
     logger.m_loggerId = sLoggers.size();
@@ -237,7 +237,7 @@ void registerLogger(Logger& logger, const char* loggerName) {
 }
 
 void unregisterLogger(Logger& logger) {
-    if (logger.m_loggerId == DBGUTIL_INVALID_LOGGER_ID) {
+    if (logger.m_loggerId == LIBDBG_INVALID_LOGGER_ID) {
         // silently ignore
         return;
     }

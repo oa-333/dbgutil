@@ -19,8 +19,8 @@
 #include <cassert>
 #include <cinttypes>
 
-#include "dbgutil_log_imp.h"
 #include "libdbg_common.h"
+#include "libdbg_log_imp.h"
 #include "win32_thread_manager.h"
 
 namespace libdbg {

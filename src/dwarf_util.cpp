@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <cinttypes>
 
-#include "dbgutil_log_imp.h"
 #include "dwarf_def.h"
 #include "dwarf_line_util.h"
 #include "fixed_input_stream.h"
+#include "libdbg_log_imp.h"
 
 namespace libdbg {
 

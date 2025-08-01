@@ -11,9 +11,9 @@
 #include <cassert>
 #include <cinttypes>
 
-#include "dbgutil_log_imp.h"
 #include "libdbg_common.h"
 #include "libdbg_flags.h"
+#include "libdbg_log_imp.h"
 #include "win32_exception_handler.h"
 #include "win32_symbol_engine.h"
 

@@ -21,8 +21,8 @@
 #include <cinttypes>
 
 #include "dbg_stack_trace.h"
-#include "dbgutil_log_imp.h"
 #include "libdbg_common.h"
+#include "libdbg_log_imp.h"
 #include "path_parser.h"
 #include "win32_module_manager.h"
 #include "win32_symbol_engine.h"

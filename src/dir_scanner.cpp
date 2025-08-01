@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 
 namespace libdbg {
 

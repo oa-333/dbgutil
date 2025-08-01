@@ -4,7 +4,7 @@
 #include "libdbg_common.h"
 
 #ifdef LIBDBG_WINDOWS
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 #include "os_module_manager.h"
 
 #ifdef LIBDBG_MINGW

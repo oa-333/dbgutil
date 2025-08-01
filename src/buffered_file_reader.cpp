@@ -5,7 +5,7 @@
 #include <cinttypes>
 #include <cstring>
 
-#include "dbgutil_log_imp.h"
+#include "libdbg_log_imp.h"
 #include "os_util.h"
 
 namespace libdbg {
