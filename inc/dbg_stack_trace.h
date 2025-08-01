@@ -13,7 +13,7 @@
 namespace libdbg {
 
 /** @brief A fully resolved single stack entry. */
-struct DBGUTIL_API StackEntry {
+struct LIBDBG_API StackEntry {
     /** @brief The stack frame index (required if stack trace is partial or reordered). */
     uint32_t m_frameIndex;  // zero means innermost
 
@@ -34,7 +34,7 @@ struct DBGUTIL_API StackEntry {
 typedef std::vector<StackEntry> StackTrace;
 
 /** @brief Stack entry formatter interface. */
-class DBGUTIL_API StackEntryFormatter {
+class LIBDBG_API StackEntryFormatter {
 public:
     virtual ~StackEntryFormatter() {}
 
@@ -53,7 +53,7 @@ protected:
 };
 
 /** @brief Default formatter implementation. */
-class DBGUTIL_API DefaultStackEntryFormatter : public StackEntryFormatter {
+class LIBDBG_API DefaultStackEntryFormatter : public StackEntryFormatter {
 public:
     DefaultStackEntryFormatter() {}
     DefaultStackEntryFormatter(const DefaultStackEntryFormatter&) = delete;
@@ -65,7 +65,7 @@ public:
 };
 
 /** @brief Stack entry printer interface. */
-class DBGUTIL_API StackEntryPrinter {
+class LIBDBG_API StackEntryPrinter {
 public:
     virtual ~StackEntryPrinter() {}
 
@@ -81,7 +81,7 @@ protected:
 };
 
 /** @brief Stack entry printer that does nothing. */
-class DBGUTIL_API NullEntryPrinter : public StackEntryPrinter {
+class LIBDBG_API NullEntryPrinter : public StackEntryPrinter {
 public:
     NullEntryPrinter() {}
     NullEntryPrinter(const NullEntryPrinter&) = delete;
@@ -95,7 +95,7 @@ public:
 };
 
 /** @brief stack entry printer to a file. */
-class DBGUTIL_API FileStackEntryPrinter : public StackEntryPrinter {
+class LIBDBG_API FileStackEntryPrinter : public StackEntryPrinter {
 public:
     FileStackEntryPrinter(FILE* fileHandle) : m_fileHandle(fileHandle) {}
     FileStackEntryPrinter(const FileStackEntryPrinter&) = delete;
@@ -114,7 +114,7 @@ private:
 };
 
 /** @brief stack entry printer to standard error stream. */
-class DBGUTIL_API StderrStackEntryPrinter : public FileStackEntryPrinter {
+class LIBDBG_API StderrStackEntryPrinter : public FileStackEntryPrinter {
 public:
     StderrStackEntryPrinter() : FileStackEntryPrinter(stderr) {};
     StderrStackEntryPrinter(const StderrStackEntryPrinter&) = delete;
@@ -124,7 +124,7 @@ public:
 };
 
 /** @brief stack entry printer to standard output stream. */
-class DBGUTIL_API StdoutStackEntryPrinter : public FileStackEntryPrinter {
+class LIBDBG_API StdoutStackEntryPrinter : public FileStackEntryPrinter {
 public:
     StdoutStackEntryPrinter() : FileStackEntryPrinter(stdout) {};
     StdoutStackEntryPrinter(const StdoutStackEntryPrinter&) = delete;
@@ -136,7 +136,7 @@ public:
 #if 0
 // TODO: move this to elog after migration is done
 /** @brief Stack entry printer to log. */
-class DBGUTIL_API LogStackEntryPrinter : public StackEntryPrinter {
+class LIBDBG_API LogStackEntryPrinter : public StackEntryPrinter {
 public:
     LogStackEntryPrinter(ELogLevel logLevel, const char* title)
         : m_logLevel(logLevel), m_title(title) {}
@@ -153,7 +153,7 @@ private:
 #endif
 
 /** @brief Stack entry printer to string. */
-class DBGUTIL_API StringStackEntryPrinter : public StackEntryPrinter {
+class LIBDBG_API StringStackEntryPrinter : public StackEntryPrinter {
 public:
     StringStackEntryPrinter() {}
     StringStackEntryPrinter(const StringStackEntryPrinter&) = delete;
@@ -173,7 +173,7 @@ private:
 };
 
 /** @brief Stack entry printer to multiple printers. */
-class DBGUTIL_API MultiStackEntryPrinter : public StackEntryPrinter {
+class LIBDBG_API MultiStackEntryPrinter : public StackEntryPrinter {
 public:
     MultiStackEntryPrinter(StackEntryPrinter* printer1, StackEntryPrinter* printer2) {
         m_printers.push_back(printer1);
@@ -225,8 +225,8 @@ inline LibDbgErr getRawStackTrace(RawStackTrace& stackTrace, void* context = nul
  * @param[out] stackTrace The resulting resolved stack trace.
  * @return LibDbgErr The operation result.
  */
-extern DBGUTIL_API LibDbgErr resolveRawStackTrace(RawStackTrace& rawStackTrace,
-                                                  StackTrace& stackTrace);
+extern LIBDBG_API LibDbgErr resolveRawStackTrace(RawStackTrace& rawStackTrace,
+                                                 StackTrace& stackTrace);
 
 /**
  * @brief Retrieves a fully resolved stack trace of a thread by an optional context. Context is
@@ -252,9 +252,9 @@ inline LibDbgErr getStackTrace(StackTrace& stackTrace, void* context = nullptr) 
  * @param threadId[opt] Optional thread id.
  * @return std::string The resulting resolved stack trace string.
  */
-extern DBGUTIL_API std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip = 0,
-                                                     StackEntryFormatter* formatter = nullptr,
-                                                     os_thread_id_t threadId = 0);
+extern LIBDBG_API std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip = 0,
+                                                    StackEntryFormatter* formatter = nullptr,
+                                                    os_thread_id_t threadId = 0);
 
 /**
  * @brief Converts resolved stack frames to string form.
@@ -265,9 +265,9 @@ extern DBGUTIL_API std::string rawStackTraceToString(const RawStackTrace& stackT
  * thread id will be used.
  * @return std::string The resulting resolved stack trace string.
  */
-extern DBGUTIL_API std::string stackTraceToString(const StackTrace& stackTrace, int skip = 0,
-                                                  StackEntryFormatter* formatter = nullptr,
-                                                  os_thread_id_t threadId = 0);
+extern LIBDBG_API std::string stackTraceToString(const StackTrace& stackTrace, int skip = 0,
+                                                 StackEntryFormatter* formatter = nullptr,
+                                                 os_thread_id_t threadId = 0);
 
 /**
  * @brief Prints stack trace by a given context. Context is either captured by calling thread, or is
@@ -277,9 +277,9 @@ extern DBGUTIL_API std::string stackTraceToString(const StackTrace& stackTrace, 
  * @param printer[opt] Stack entry printer. Pass null to print to standard error stream.
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  */
-extern DBGUTIL_API void printStackTraceContext(void* context = nullptr, int skip = 0,
-                                               StackEntryPrinter* printer = nullptr,
-                                               StackEntryFormatter* formatter = nullptr);
+extern LIBDBG_API void printStackTraceContext(void* context = nullptr, int skip = 0,
+                                              StackEntryPrinter* printer = nullptr,
+                                              StackEntryFormatter* formatter = nullptr);
 
 /**
  * @brief Prints current stack trace. If no argument is passed, then the stack trace is printed to
@@ -378,7 +378,7 @@ typedef std::vector<std::pair<os_thread_id_t, RawStackTrace>> AppRawStackTrace;
  * @brief Retrieves raw stack trace of all currently running threads in the application.
  * @param[out] appStackTrace The resulting stack traces for all threads.
  */
-extern DBGUTIL_API LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace);
+extern LIBDBG_API LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace);
 
 /**
  * @brief Converts application raw stack frames to resolved stack frames in string form.
@@ -387,9 +387,9 @@ extern DBGUTIL_API LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  * @return std::string The resulting resolved stack trace string.
  */
-extern DBGUTIL_API std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace,
-                                                        int skip = 0,
-                                                        StackEntryFormatter* formatter = nullptr);
+extern LIBDBG_API std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace,
+                                                       int skip = 0,
+                                                       StackEntryFormatter* formatter = nullptr);
 
 /**
  * @brief Prints stack trace of all running threads. If no argument is passed, then the stack trace
@@ -398,8 +398,8 @@ extern DBGUTIL_API std::string appRawStackTraceToString(const AppRawStackTrace& 
  * @param printer[opt] Stack entry printer. Pass null to print to standard error stream.
  * @param formatter[opt] Stack entry formatter. Pass null to use default formatting.
  */
-extern DBGUTIL_API void printAppStackTrace(int skip = 0, StackEntryPrinter* printer = nullptr,
-                                           StackEntryFormatter* formatter = nullptr);
+extern LIBDBG_API void printAppStackTrace(int skip = 0, StackEntryPrinter* printer = nullptr,
+                                          StackEntryFormatter* formatter = nullptr);
 
 /**
  * @brief Dumps stack trace of all running threads to error stream.

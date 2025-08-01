@@ -10,7 +10,7 @@
 namespace libdbg {
 
 /** @brief Symbol infomation. */
-struct DBGUTIL_API SymbolInfo {
+struct LIBDBG_API SymbolInfo {
     /** @brief The containing module's base address in memory. */
     void* m_moduleBaseAddress;
 
@@ -79,7 +79,7 @@ struct DBGUTIL_API SymbolInfo {
 };
 
 /** @brief Parent interface for symbol engines. */
-class DBGUTIL_API OsSymbolEngine {
+class LIBDBG_API OsSymbolEngine {
 public:
     OsSymbolEngine(const OsSymbolEngine&) = delete;
     OsSymbolEngine(OsSymbolEngine&&) = delete;
@@ -98,10 +98,10 @@ protected:
 };
 
 /** @brief Installs a symbol engine implementation. */
-extern DBGUTIL_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
+extern LIBDBG_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
 
 /** @brief Retrieves the installed symbol engine implementation. */
-extern DBGUTIL_API OsSymbolEngine* getSymbolEngine();
+extern LIBDBG_API OsSymbolEngine* getSymbolEngine();
 
 }  // namespace libdbg
 

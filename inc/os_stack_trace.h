@@ -12,7 +12,7 @@ namespace libdbg {
 typedef std::vector<void*> RawStackTrace;
 
 /** @brief A stack frame listener used in conjunction with @ref walkStack. */
-class DBGUTIL_API StackFrameListener {
+class LIBDBG_API StackFrameListener {
 public:
     virtual ~StackFrameListener() {}
 
@@ -26,7 +26,7 @@ protected:
     StackFrameListener& operator=(StackFrameListener&) = delete;
 };
 
-class DBGUTIL_API OsStackTraceProvider {
+class LIBDBG_API OsStackTraceProvider {
 public:
     OsStackTraceProvider(const OsStackTraceProvider&) = delete;
     OsStackTraceProvider(OsStackTraceProvider&&) = delete;
@@ -64,10 +64,10 @@ protected:
 };
 
 /** @brief Installs a stack trace provider. */
-extern DBGUTIL_API void setStackTraceProvider(OsStackTraceProvider* provider);
+extern LIBDBG_API void setStackTraceProvider(OsStackTraceProvider* provider);
 
 /** @brief Retrieves the installed stack trace provider. */
-extern DBGUTIL_API OsStackTraceProvider* getStackTraceProvider();
+extern LIBDBG_API OsStackTraceProvider* getStackTraceProvider();
 
 }  // namespace libdbg
 

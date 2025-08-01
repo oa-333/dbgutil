@@ -10,7 +10,7 @@
 namespace libdbg {
 
 /** @brief Parent interface for exception handler. */
-class DBGUTIL_API OsExceptionHandler {
+class LIBDBG_API OsExceptionHandler {
 public:
     OsExceptionHandler(const OsExceptionHandler&) = delete;
     OsExceptionHandler(OsExceptionHandler&&) = delete;
@@ -59,10 +59,10 @@ private:
 };
 
 /** @brief Installs a exception handler implementation. */
-extern DBGUTIL_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
+extern LIBDBG_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
 
 /** @brief Retrieves the installed exception handler implementation. */
-extern DBGUTIL_API OsExceptionHandler* getExceptionHandler();
+extern LIBDBG_API OsExceptionHandler* getExceptionHandler();
 
 }  // namespace libdbg
 

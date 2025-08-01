@@ -20,7 +20,7 @@ typedef int exception_code_t;
 #endif
 
 /** @brief Exception information. */
-struct DBGUTIL_API OsExceptionInfo {
+struct LIBDBG_API OsExceptionInfo {
     /** @brief The exception code (e.g. SIGSEGV, STATUS_ACCESS_VIOLATION). */
     exception_code_t m_exceptionCode;
 
@@ -41,7 +41,7 @@ struct DBGUTIL_API OsExceptionInfo {
 };
 
 /** @brief Exception listener. */
-class DBGUTIL_API OsExceptionListener {
+class LIBDBG_API OsExceptionListener {
 public:
     virtual ~OsExceptionListener() {}
 

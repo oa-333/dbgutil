@@ -9,7 +9,7 @@
 namespace libdbg {
 
 /** @brief A thread visitor used to traverse all threads. */
-class DBGUTIL_API ThreadVisitor {
+class LIBDBG_API ThreadVisitor {
 public:
     virtual ~ThreadVisitor() {}
 
@@ -28,7 +28,7 @@ protected:
     ThreadVisitor& operator=(const ThreadVisitor&) = delete;
 };
 
-class DBGUTIL_API OsThreadManager {
+class LIBDBG_API OsThreadManager {
 public:
     OsThreadManager(const OsThreadManager&) = delete;
     OsThreadManager(OsThreadManager&&) = delete;
@@ -47,10 +47,10 @@ protected:
 };
 
 /** @brief Installs a thread manager. */
-extern DBGUTIL_API void setThreadManager(OsThreadManager* provider);
+extern LIBDBG_API void setThreadManager(OsThreadManager* provider);
 
 /** @brief Retrieves the installed thread manager. */
-extern DBGUTIL_API OsThreadManager* getThreadManager();
+extern LIBDBG_API OsThreadManager* getThreadManager();
 
 /** @brief Utility API for lambda syntax. */
 template <typename F>

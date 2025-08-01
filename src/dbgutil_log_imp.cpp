@@ -186,7 +186,7 @@ void setLoggerSeverity(size_t loggerId, LogSeverity severity) {
     }
 }
 
-DBGUTIL_API const char* logSeverityToString(LogSeverity severity) {
+LIBDBG_API const char* logSeverityToString(LogSeverity severity) {
     if (severity < sLogSeverityCount) {
         return sLogSeverityStr[severity];
     }

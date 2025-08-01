@@ -21,12 +21,12 @@ namespace libdbg {
  * flags, please refer to the @ref libdbg_flags.h header.
  * @return LIBDBG_ERR_OK If succeeded, otherwise an error code.
  */
-extern DBGUTIL_API LibDbgErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,
-                                        LogHandler* logHandler = nullptr,
-                                        LogSeverity severity = LS_FATAL, uint32_t flags = 0);
+extern LIBDBG_API LibDbgErr initLibDbg(OsExceptionListener* exceptionListener = nullptr,
+                                       LogHandler* logHandler = nullptr,
+                                       LogSeverity severity = LS_FATAL, uint32_t flags = 0);
 
 /** @brief Terminates the debug utility library. */
-extern DBGUTIL_API LibDbgErr termLibDbg();
+extern LIBDBG_API LibDbgErr termLibDbg();
 
 }  // namespace libdbg
 

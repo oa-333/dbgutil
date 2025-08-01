@@ -36,7 +36,7 @@ enum LogSeverity : uint32_t {
 };
 
 /** @class Log handler for handling log messages coming from the Debug Utilities library. */
-class DBGUTIL_API LogHandler {
+class LIBDBG_API LogHandler {
 public:
     /** @brief Virtual destructor. */
     virtual ~LogHandler() {}
@@ -75,13 +75,13 @@ protected:
 };
 
 /** @brief Configures global log severity */
-extern DBGUTIL_API void setLogSeverity(LogSeverity severity);
+extern LIBDBG_API void setLogSeverity(LogSeverity severity);
 
 /** @brief Configures log severity of a specific logger. */
-extern DBGUTIL_API void setLoggerSeverity(size_t loggerId, LogSeverity severity);
+extern LIBDBG_API void setLoggerSeverity(size_t loggerId, LogSeverity severity);
 
 /** @brief Converts log severity to string. */
-extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
+extern LIBDBG_API const char* logSeverityToString(LogSeverity severity);
 
 /** @def A special constant denoting default log handler (prints to standard error stream). */
 #define DBGUTIL_DEFAULT_LOG_HANDLER ((LogHandler*)-1)

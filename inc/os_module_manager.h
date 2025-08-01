@@ -23,7 +23,7 @@ namespace libdbg {
 // for this a lock is needed.
 
 /** @brief Loaded module information. */
-struct DBGUTIL_API OsModuleInfo {
+struct LIBDBG_API OsModuleInfo {
     OsModuleInfo(const char* modulePath = "", void* loadAddress = nullptr, uint64_t size = 0,
                  void* osData = nullptr)
         : m_modulePath(modulePath), m_loadAddress(loadAddress), m_size(size), m_osData(osData) {}
@@ -76,7 +76,7 @@ struct DBGUTIL_API OsModuleInfo {
 };
 
 /** @brief Manages the list of modules loaded by the process, mostly for debugging purposes. */
-class DBGUTIL_API OsModuleManager {
+class LIBDBG_API OsModuleManager {
 public:
     OsModuleManager(const OsModuleManager&) = delete;
     OsModuleManager(OsModuleManager&&) = delete;
@@ -170,10 +170,10 @@ private:
 };
 
 /** @brief Installs a module manager implementation. */
-extern DBGUTIL_API void setModuleManager(OsModuleManager* moduleManager);
+extern LIBDBG_API void setModuleManager(OsModuleManager* moduleManager);
 
 /** @brief Retrieves the installed module manager implementation. */
-extern DBGUTIL_API OsModuleManager* getModuleManager();
+extern LIBDBG_API OsModuleManager* getModuleManager();
 
 }  // namespace libdbg
 

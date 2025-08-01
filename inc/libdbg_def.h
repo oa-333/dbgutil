@@ -16,9 +16,9 @@
 #define DLL_EXPORT __declspec(dllexport)
 #define DLL_IMPORT __declspec(dllimport)
 #ifdef DBGUTIL_DLL
-#define DBGUTIL_API DLL_EXPORT
+#define LIBDBG_API DLL_EXPORT
 #else
-#define DBGUTIL_API DLL_IMPORT
+#define LIBDBG_API DLL_IMPORT
 #endif
 
 // Windows/MinGW stuff
@@ -26,13 +26,13 @@
 #define DBGUTIL_WINDOWS
 #define DBGUTIL_MINGW
 #define DBGUTIL_GCC
-#define DBGUTIL_API
+#define LIBDBG_API
 
 // Linux stuff
 #elif defined(__linux__)
 #define DBGUTIL_LINUX
 #define DBGUTIL_GCC
-#define DBGUTIL_API
+#define LIBDBG_API
 
 // unsupported platform
 #else
@@ -61,7 +61,7 @@ typedef long os_thread_id_t;
 typedef unsigned long long app_time_t;
 
 /** @brief Retrieves current thread identifier. */
-extern DBGUTIL_API os_thread_id_t getCurrentThreadId();
+extern LIBDBG_API os_thread_id_t getCurrentThreadId();
 
 }  // namespace libdbg
 
