@@ -83,10 +83,12 @@ Here is a sample output of the exception handler (Linux):
     Aborted
 
 
-### Dependencies
+### Dependencies & Limitations
 
-The dbgutil package has no external dependencies, except for libunwind on Linux/MinGW.  
-Besides that, dbgutil relies solely on reading binary images and DWARF data.
+The dbgutil package depends on libunwind on Linux/MinGW, and dbghelp.dll on Windows.  
+The supported debug format on Linux/MinGW systems is DWARF 5,  
+Any toolchain that produces ELF or PE32 binary image with DWARF 5 (or pdb) debug information is a possible candidate for usage with dbgutil. On platforms/toolchains without explicit support, a few compile time preprocessor definitions may be added in order to enable such support.
+
 
 ### Installing
 
@@ -109,7 +111,7 @@ For CMake builds it is possible to use FetchContent as follows:
 
     FetchContent_Declare(dbgutil
         GIT_REPOSITORY https://github.com/oa-333/dbgutil.git
-        GIT_TAG v0.1.0
+        GIT_TAG v0.1.1
     )
     FetchContent_MakeAvailable(dbgutil)
     target_include_directories(
