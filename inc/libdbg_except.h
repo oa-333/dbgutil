@@ -1,5 +1,5 @@
-#ifndef __DBG_UTIL_EXCEPT_H__
-#define __DBG_UTIL_EXCEPT_H__
+#ifndef __LIBDBG_EXCEPT_H__
+#define __LIBDBG_EXCEPT_H__
 
 #include <cinttypes>
 
@@ -60,4 +60,4 @@ protected:
 
 }  // namespace libdbg
 
-#endif  // __DBG_UTIL_EXCEPT_H__
+#endif  // __LIBDBG_EXCEPT_H__

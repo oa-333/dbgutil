@@ -5,7 +5,7 @@
 
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
-#include "dbg_util_except.h"
+#include "libdbg_except.h"
 
 namespace libdbg {
 

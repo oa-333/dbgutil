@@ -3,7 +3,7 @@
 
 #include "dbg_util_def.h"
 #include "dbg_util_err.h"
-#include "dbg_util_except.h"
+#include "libdbg_except.h"
 #include "libdbg_flags.h"
 #include "libdbg_log.h"
 
