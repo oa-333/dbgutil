@@ -1,9 +1,9 @@
 #ifndef __LINUX_SYMBOL_ENGINE_H__
 #define __LINUX_SYMBOL_ENGINE_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #include <condition_variable>
 #include <mutex>
@@ -14,7 +14,7 @@
 #include "os_module_manager.h"
 #include "os_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 // cached module data for symbol search
 struct SymbolModuleData {
@@ -74,7 +74,7 @@ public:
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
+    DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
 
 private:
     LinuxSymbolEngine();
@@ -86,18 +86,18 @@ private:
     SymbolModuleSet m_symbolModuleSet;
     std::shared_mutex m_lock;
 
-    LibDbgErr collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
-                                SymbolInfo& symbolInfo);
+    DbgUtilErr collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
+                                 SymbolInfo& symbolInfo);
 
     SymbolModuleData* findSymbolModule(void* address);
     void prepareModuleData(SymbolModuleData* symModData);
 };
 
-extern LibDbgErr initLinuxSymbolEngine();
-extern LibDbgErr termLinuxSymbolEngine();
+extern DbgUtilErr initLinuxSymbolEngine();
+extern DbgUtilErr termLinuxSymbolEngine();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_GCC
+#endif  // DBGUTIL_GCC
 
 #endif  // __LINUX_SYMBOL_ENGINE_H__

@@ -1,15 +1,15 @@
 #ifndef __WIN32_PE_READER_H__
 #define __WIN32_PE_READER_H__
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 #include "os_image_reader.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 #include <unordered_map>
 #include <vector>
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32PEReader : public OsImageReader {
 public:
@@ -17,7 +17,7 @@ public:
     ~Win32PEReader() {}
 
 protected:
-    LibDbgErr readImage() final;
+    DbgUtilErr readImage() final;
     void resetData() final;
 
 private:
@@ -41,21 +41,21 @@ private:
     typedef std::unordered_map<uint64_t, uint64_t> FuncSizeMap;
     std::vector<FuncSizeMap> m_miniSections;
 
-    LibDbgErr scanHdrs32();
-    LibDbgErr scanHdrs64();
-    LibDbgErr readSectionHeaders();
-    LibDbgErr buildSymTab();
+    DbgUtilErr scanHdrs32();
+    DbgUtilErr scanHdrs64();
+    DbgUtilErr readSectionHeaders();
+    DbgUtilErr buildSymTab();
 
-    LibDbgErr getSectionName(unsigned char* nameRef, std::string& name);
-    LibDbgErr getSymbolName(unsigned char* shortName, unsigned long* longName, std::string& name);
-    LibDbgErr getFileName(unsigned char* rawName, std::string& name);
+    DbgUtilErr getSectionName(unsigned char* nameRef, std::string& name);
+    DbgUtilErr getSymbolName(unsigned char* shortName, unsigned long* longName, std::string& name);
+    DbgUtilErr getFileName(unsigned char* rawName, std::string& name);
 };
 
-extern LibDbgErr initWin32PEReader();
-extern LibDbgErr termWin32PEReader();
+extern DbgUtilErr initWin32PEReader();
+extern DbgUtilErr termWin32PEReader();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_PE_READER_H__

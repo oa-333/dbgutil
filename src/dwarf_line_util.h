@@ -3,12 +3,12 @@
 
 #include <vector>
 
+#include "dbgutil_common.h"
 #include "dwarf_common.h"
 #include "fixed_input_stream.h"
-#include "libdbg_common.h"
 #include "os_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 struct DwarfLineStateMachine {
     uint64_t m_address;
@@ -68,8 +68,8 @@ public:
     static void initLogger();
     static void termLogger();
 
-    LibDbgErr getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
-                          FixedInputStream& is, SymbolInfo& symbolInfo);
+    DbgUtilErr getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
+                           FixedInputStream& is, SymbolInfo& symbolInfo);
 
 private:
     struct FileInfo {
@@ -124,28 +124,28 @@ private:
         uint64_t m_form;
     };
 
-    LibDbgErr buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is);
+    DbgUtilErr buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is);
 
-    LibDbgErr searchLineMatrix(const DwarfSearchData& searchData, SymbolInfo& symbolInfo);
+    DbgUtilErr searchLineMatrix(const DwarfSearchData& searchData, SymbolInfo& symbolInfo);
 
-    LibDbgErr readHeader(FixedInputStream& is, DwarfData& dwarfData);
+    DbgUtilErr readHeader(FixedInputStream& is, DwarfData& dwarfData);
 
-    LibDbgErr readFormatList(FixedInputStream& is, std::vector<DirEntryFmtDesc>& entryFmt);
+    DbgUtilErr readFormatList(FixedInputStream& is, std::vector<DirEntryFmtDesc>& entryFmt);
 
-    LibDbgErr readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
+    DbgUtilErr readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
 
-    LibDbgErr readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
+    DbgUtilErr readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit);
 
-    LibDbgErr execLineProgram(FixedInputStream& is);
+    DbgUtilErr execLineProgram(FixedInputStream& is);
 
-    LibDbgErr execStandardOpCode(uint8_t opCode, FixedInputStream& is);
+    DbgUtilErr execStandardOpCode(uint8_t opCode, FixedInputStream& is);
     void execSpecialOpCode(uint8_t opCode);
     void advancePC(uint8_t opCode, bool advanceLine = true);
     void advanceAddress(uint64_t opAdvance);
-    LibDbgErr execExtendedOpCode(uint64_t opCode, FixedInputStream& is);
+    DbgUtilErr execExtendedOpCode(uint64_t opCode, FixedInputStream& is);
     void appendLineMatrix();
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __DWARF_LINE_UTIL_H__

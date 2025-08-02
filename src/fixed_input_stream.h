@@ -5,7 +5,7 @@
 
 #include "input_stream.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief Input stream over a given fixed buffer. */
 class FixedInputStream : public InputStream {
@@ -39,9 +39,9 @@ public:
      * @param buffer Received the bytes peek from the stream.
      * @param length The amount of bytes to peek.
      * @param[out] bytesRead The number of bytes actually peeked.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr peekBytes(char* buffer, size_t length, size_t& bytesRead) override;
+    DbgUtilErr peekBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Reads bytes from the stream.
@@ -50,9 +50,9 @@ public:
      * @param buffer Received the bytes read from the stream.
      * @param length The amount of bytes to read.
      * @param[out] bytesRead The number of bytes actually read.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr readBytes(char* buffer, size_t length, size_t& bytesRead) override;
+    DbgUtilErr readBytes(char* buffer, size_t length, size_t& bytesRead) override;
 
     /**
      * @brief Skips the number of specified bytes in the stream.
@@ -60,9 +60,9 @@ public:
      * possible bytes are skipped and E_OK is returned.
      * @param length The amount of bytes to skip.
      * @param[out] bytesRead The number of bytes actually skipped.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr skipBytes(size_t length, size_t& bytesRead) override;
+    DbgUtilErr skipBytes(size_t length, size_t& bytesRead) override;
 
 private:
     std::vector<char> m_buf;
@@ -71,6 +71,6 @@ private:
     size_t m_offset;
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __FIXED_INPUT_STREAM_H__

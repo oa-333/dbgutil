@@ -1,12 +1,12 @@
-#ifndef __LIBDBG_LOG_H__
-#define __LIBDBG_LOG_H__
+#ifndef __DBG_UTIL_LOG_H__
+#define __DBG_UTIL_LOG_H__
 
 #include <cinttypes>
 #include <cstddef>
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @enum Log severity constants */
 enum LogSeverity : uint32_t {
@@ -36,7 +36,7 @@ enum LogSeverity : uint32_t {
 };
 
 /** @class Log handler for handling log messages coming from the Debug Utilities library. */
-class LIBDBG_API LogHandler {
+class DBGUTIL_API LogHandler {
 public:
     /** @brief Virtual destructor. */
     virtual ~LogHandler() {}
@@ -75,17 +75,17 @@ protected:
 };
 
 /** @brief Configures global log severity */
-extern LIBDBG_API void setLogSeverity(LogSeverity severity);
+extern DBGUTIL_API void setLogSeverity(LogSeverity severity);
 
 /** @brief Configures log severity of a specific logger. */
-extern LIBDBG_API void setLoggerSeverity(size_t loggerId, LogSeverity severity);
+extern DBGUTIL_API void setLoggerSeverity(size_t loggerId, LogSeverity severity);
 
 /** @brief Converts log severity to string. */
-extern LIBDBG_API const char* logSeverityToString(LogSeverity severity);
+extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
 
 /** @def A special constant denoting default log handler (prints to standard error stream). */
 #define DBGUTIL_DEFAULT_LOG_HANDLER ((LogHandler*)-1)
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // __LIBDBG_LOG_H__
+#endif  // __DBG_UTIL_LOG_H__

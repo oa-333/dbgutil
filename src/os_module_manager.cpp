@@ -2,18 +2,18 @@
 
 #include <cassert>
 
-namespace libdbg {
+namespace dbgutil {
 
 static OsModuleManager* sModuleManager = nullptr;
 
-LibDbgErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
+DbgUtilErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
     // allow many readers to query for the module together
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         OsModuleSet::const_iterator itr = m_moduleSet.lower_bound(address);
         if (itr != m_moduleSet.end() && itr->contains(address)) {
             moduleInfo = *itr;
-            return LIBDBG_ERR_OK;
+            return DBGUTIL_ERR_OK;
         }
     }
 
@@ -21,8 +21,8 @@ LibDbgErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& modul
     // this may cause duplicates, but this is a small sacrifice for allowing higher concurrency
     // NOTE: on Unix/Linux systems this may require a full refresh of the list (when querying for
     // symbol in the address space of the main executable image)
-    LibDbgErr rc = getOsModuleByAddress(address, moduleInfo);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = getOsModuleByAddress(address, moduleInfo);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -33,22 +33,22 @@ LibDbgErr OsModuleManager::getModuleByAddress(void* address, OsModuleInfo& modul
         // race condition, take the details from the first one who succeeded
         moduleInfo = *itrRes.first;
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& moduleInfo,
-                                           bool shouldRefreshModuleList /* = false */) {
-    LibDbgErr rc = searchModule(name, moduleInfo);
-    if (rc == LIBDBG_ERR_OK) {
+DbgUtilErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& moduleInfo,
+                                            bool shouldRefreshModuleList /* = false */) {
+    DbgUtilErr rc = searchModule(name, moduleInfo);
+    if (rc == DBGUTIL_ERR_OK) {
         return rc;
     }
 
     if (!shouldRefreshModuleList) {
-        return LIBDBG_ERR_NOT_FOUND;
+        return DBGUTIL_ERR_NOT_FOUND;
     }
 
     rc = refreshModuleList();
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -56,25 +56,25 @@ LibDbgErr OsModuleManager::getModuleByName(const char* name, OsModuleInfo& modul
     return searchModule(name, moduleInfo);
 }
 
-LibDbgErr OsModuleManager::getMainModule(OsModuleInfo& moduleInfo) {
+DbgUtilErr OsModuleManager::getMainModule(OsModuleInfo& moduleInfo) {
     // use read lock for query
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         if (m_mainModuleValid) {
             moduleInfo = m_mainModule;
-            return LIBDBG_ERR_OK;
+            return DBGUTIL_ERR_OK;
         }
     }
 
     // get module info outside of lock scope, we don't care about race condition
-    LibDbgErr rc = getOsModuleByAddress(nullptr, moduleInfo);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = getOsModuleByAddress(nullptr, moduleInfo);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     // cache result and return
     setMainModule(moduleInfo);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void OsModuleManager::clearModuleSet() {
@@ -99,18 +99,18 @@ void OsModuleManager::setMainModule(const OsModuleInfo& moduleInfo) {
     }
 }
 
-LibDbgErr OsModuleManager::searchModule(const char* name, OsModuleInfo& moduleInfo) {
+DbgUtilErr OsModuleManager::searchModule(const char* name, OsModuleInfo& moduleInfo) {
     // thread-safe search
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         for (const OsModuleInfo& modInfo : m_moduleSet) {
             if (modInfo.m_modulePath.find(name) != std::string::npos) {
                 moduleInfo = modInfo;
-                return LIBDBG_ERR_OK;
+                return DBGUTIL_ERR_OK;
             }
         }
     }
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
 void setModuleManager(OsModuleManager* moduleManager) {
@@ -124,4 +124,4 @@ OsModuleManager* getModuleManager() {
     return sModuleManager;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

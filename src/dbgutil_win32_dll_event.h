@@ -1,18 +1,18 @@
-#ifndef __WIN32_DLL_EVENT_H__
-#define __WIN32_DLL_EVENT_H__
+#ifndef __DBGUTIL_WIN32_DLL_EVENT_H__
+#define __DBGUTIL_WIN32_DLL_EVENT_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 #include <cstdint>
 
-namespace libdbg {
+namespace dbgutil {
 
-#define LIBDBG_DLL_PROCESS_ATTACH 1
-#define LIBDBG_DLL_PROCESS_DETACH 2
-#define LIBDBG_DLL_THREAD_ATTACH 3
-#define LIBDBG_DLL_THREAD_DETACH 4
+#define DBGUTIL_DLL_PROCESS_ATTACH 1
+#define DBGUTIL_DLL_PROCESS_DETACH 2
+#define DBGUTIL_DLL_THREAD_ATTACH 3
+#define DBGUTIL_DLL_THREAD_DETACH 4
 
 typedef void (*ThreadDllEventCB)(int, void*);
 
@@ -54,8 +54,8 @@ extern void deregisterDllCallback(ThreadDllEventCB callback);
 extern void* getDllCallbackUserData(ThreadDllEventCB callback);
 extern void purgeDllCallback(DllPurgeFilter* filter);
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
-#endif  // __WIN32_DLL_EVENT_H__
+#endif  // __DBGUTIL_WIN32_DLL_EVENT_H__

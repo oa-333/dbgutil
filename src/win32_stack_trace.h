@@ -1,13 +1,13 @@
 #ifndef __WIN32_STACK_TRACE_H__
 #define __WIN32_STACK_TRACE_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 #include "os_stack_trace.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32StackTraceProvider : public OsStackTraceProvider {
 public:
@@ -25,15 +25,15 @@ public:
      * @param listener The stack frame listener.
      * @param context The call context. Pass null to capture current thread call stack.
      */
-    LibDbgErr walkStack(StackFrameListener* listener, void* context) final;
+    DbgUtilErr walkStack(StackFrameListener* listener, void* context) final;
 
     /**
      * @brief Retrieves stack trace for a specific thread.
      * @param threadId The thread id.
      * @param[out] stackTrace The resulting stack trace.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
+    DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
 
 private:
     Win32StackTraceProvider() {}
@@ -45,11 +45,11 @@ private:
     static Win32StackTraceProvider* sInstance;
 };
 
-extern LibDbgErr initWin32StackTrace();
-extern LibDbgErr termWin32StackTrace();
+extern DbgUtilErr initWin32StackTrace();
+extern DbgUtilErr termWin32StackTrace();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_STACK_TRACE_H__

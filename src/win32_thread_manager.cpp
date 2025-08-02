@@ -1,14 +1,14 @@
 // avoid including windows header, otherwise MinGW compilation fails
-#define LIBDBG_NO_WINDOWS_HEADER
-#include "libdbg_def.h"
+#define DBGUTIL_NO_WINDOWS_HEADER
+#include "dbg_util_def.h"
 
 // this is good only for Microsoft Visual C++ compiler
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file
 // so most symbol engine functions fail, but this is still useful for stack walking, without symbol
 // extraction, which takes place in bfd symbol engine.
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -19,11 +19,11 @@
 #include <cassert>
 #include <cinttypes>
 
-#include "libdbg_common.h"
-#include "libdbg_log_imp.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 #include "win32_thread_manager.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -46,17 +46,17 @@ void Win32ThreadManager::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr Win32ThreadManager::initialize() { return LIBDBG_ERR_OK; }
+DbgUtilErr Win32ThreadManager::initialize() { return DBGUTIL_ERR_OK; }
 
-LibDbgErr Win32ThreadManager::terminate() { return LIBDBG_ERR_OK; }
+DbgUtilErr Win32ThreadManager::terminate() { return DBGUTIL_ERR_OK; }
 
 // this implementation is available also for MinGW, as it might interact with non-gcc modules
-LibDbgErr Win32ThreadManager::visitThreadIds(ThreadVisitor* visitor) {
+DbgUtilErr Win32ThreadManager::visitThreadIds(ThreadVisitor* visitor) {
     // take a snapshot of all running threads
     HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (hThreadSnap == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, CreateToolhelp32Snapshot, "Failed to get thread snapshot");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     // fill in the size of the structure before using it.
@@ -67,7 +67,7 @@ LibDbgErr Win32ThreadManager::visitThreadIds(ThreadVisitor* visitor) {
     if (!Thread32First(hThreadSnap, &te32)) {
         LOG_WIN32_ERROR(sLogger, Thread32First, "Failed to get first thread in snapshot");
         CloseHandle(hThreadSnap);
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     // Now walk the thread list of the system,
@@ -82,35 +82,35 @@ LibDbgErr Win32ThreadManager::visitThreadIds(ThreadVisitor* visitor) {
     } while (Thread32Next(hThreadSnap, &te32));
 
     CloseHandle(hThreadSnap);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr initWin32ThreadManager() {
+DbgUtilErr initWin32ThreadManager() {
     registerLogger(sLogger, "win32_thread_manager");
     Win32ThreadManager::createInstance();
-    LibDbgErr rc = Win32ThreadManager::getInstance()->initialize();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ThreadManager::getInstance()->initialize();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifdef LIBDBG_MSVC
+#ifdef DBGUTIL_MSVC
     setThreadManager(Win32ThreadManager::getInstance());
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termWin32ThreadManager() {
-#ifdef LIBDBG_MSVC
+DbgUtilErr termWin32ThreadManager() {
+#ifdef DBGUTIL_MSVC
     setThreadManager(nullptr);
 #endif
-    LibDbgErr rc = Win32ThreadManager::getInstance()->terminate();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ThreadManager::getInstance()->terminate();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     Win32ThreadManager::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS

@@ -1,14 +1,14 @@
 #ifndef __WIN32_THREAD_MANAGER_H__
 #define __WIN32_THREAD_MANAGER_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 #include "os_thread_manager.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32ThreadManager : public OsThreadManager {
 public:
@@ -22,17 +22,17 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initialize();
+    DbgUtilErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminate();
+    DbgUtilErr terminate();
 
     /**
      * @brief Traverses all running threads.
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    LibDbgErr visitThreadIds(ThreadVisitor* visitor) final;
+    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
 
 private:
     Win32ThreadManager() {}
@@ -44,11 +44,11 @@ private:
     static Win32ThreadManager* sInstance;
 };
 
-extern LibDbgErr initWin32ThreadManager();
-extern LibDbgErr termWin32ThreadManager();
+extern DbgUtilErr initWin32ThreadManager();
+extern DbgUtilErr termWin32ThreadManager();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_THREAD_MANAGER_H__

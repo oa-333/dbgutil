@@ -1,38 +1,38 @@
-#ifndef __LIBDBG_DEF_H__
-#define __LIBDBG_DEF_H__
+#ifndef __DBG_UTIL_DEF_H__
+#define __DBG_UTIL_DEF_H__
 
 // Windows/MSVC
 #ifdef _MSC_VER
 // include windows header unless instructed not to do so
-#ifndef LIBDBG_NO_WINDOWS_HEADER
+#ifndef DBGUTIL_NO_WINDOWS_HEADER
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
 #endif
 
-#define LIBDBG_WINDOWS
-#define LIBDBG_MSVC
+#define DBGUTIL_WINDOWS
+#define DBGUTIL_MSVC
 
 #define DLL_EXPORT __declspec(dllexport)
 #define DLL_IMPORT __declspec(dllimport)
-#ifdef LIBDBG_DLL
-#define LIBDBG_API DLL_EXPORT
+#ifdef DBGUTIL_DLL
+#define DBGUTIL_API DLL_EXPORT
 #else
-#define LIBDBG_API DLL_IMPORT
+#define DBGUTIL_API DLL_IMPORT
 #endif
 
 // Windows/MinGW stuff
 #elif defined(__MINGW32__) || defined(__MINGW64__)
-#define LIBDBG_WINDOWS
-#define LIBDBG_MINGW
-#define LIBDBG_GCC
-#define LIBDBG_API
+#define DBGUTIL_WINDOWS
+#define DBGUTIL_MINGW
+#define DBGUTIL_GCC
+#define DBGUTIL_API
 
 // Linux stuff
 #elif defined(__linux__)
-#define LIBDBG_LINUX
-#define LIBDBG_GCC
-#define LIBDBG_API
+#define DBGUTIL_LINUX
+#define DBGUTIL_GCC
+#define DBGUTIL_API
 
 // unsupported platform
 #else
@@ -40,15 +40,15 @@
 #endif
 
 // define strcasecmp for MSVC
-#ifdef LIBDBG_MSVC
+#ifdef DBGUTIL_MSVC
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #endif
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @typedef Platform-independent thread id type. */
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 typedef unsigned long os_thread_id_t;
 #define PRItid "lu"
 #else
@@ -61,8 +61,8 @@ typedef long os_thread_id_t;
 typedef unsigned long long app_time_t;
 
 /** @brief Retrieves current thread identifier. */
-extern LIBDBG_API os_thread_id_t getCurrentThreadId();
+extern DBGUTIL_API os_thread_id_t getCurrentThreadId();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // __LIBDBG_DEF_H__
+#endif  // __DBG_UTIL_DEF_H__

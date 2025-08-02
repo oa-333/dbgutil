@@ -3,11 +3,11 @@
 #include <cassert>
 
 #include "dbg_stack_trace.h"
-#include "libdbg_common.h"
-#include "libdbg_flags.h"
-#include "libdbg_log_imp.h"
+#include "dbg_util_flags.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -45,25 +45,25 @@ public:
     }
 };
 
-LibDbgErr OsExceptionHandler::initialize() {
+DbgUtilErr OsExceptionHandler::initialize() {
     registerLogger(sLogger, "os_exception_handler");
     setTerminateHandler();
-    LibDbgErr res = initializeEx();
-    if (res != LIBDBG_ERR_OK) {
+    DbgUtilErr res = initializeEx();
+    if (res != DBGUTIL_ERR_OK) {
         restoreTerminateHandler();
         unregisterLogger(sLogger);
     }
     return res;
 }
 
-LibDbgErr OsExceptionHandler::terminate() {
-    LibDbgErr res = terminateEx();
-    if (res != LIBDBG_ERR_OK) {
+DbgUtilErr OsExceptionHandler::terminate() {
+    DbgUtilErr res = terminateEx();
+    if (res != DBGUTIL_ERR_OK) {
         return res;
     }
     restoreTerminateHandler();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void OsExceptionHandler::dispatchExceptionInfo(const OsExceptionInfo& exceptionInfo) {
@@ -80,14 +80,14 @@ const char* OsExceptionHandler::prepareCallStack(void* context) {
 }
 
 void OsExceptionHandler::setTerminateHandler() {
-    if (getGlobalFlags() & LIBDBG_SET_TERMINATE_HANDLER) {
+    if (getGlobalFlags() & DBGUTIL_SET_TERMINATE_HANDLER) {
         m_prevTerminateHandler = std::get_terminate();
         std::set_terminate(&OsExceptionHandler::terminateHandler);
     }
 }
 
 void OsExceptionHandler::restoreTerminateHandler() {
-    if (getGlobalFlags() & LIBDBG_SET_TERMINATE_HANDLER) {
+    if (getGlobalFlags() & DBGUTIL_SET_TERMINATE_HANDLER) {
         std::set_terminate(m_prevTerminateHandler);
     }
 }
@@ -109,7 +109,7 @@ void OsExceptionHandler::handleTerminate() {
     }
 
     // send to log
-    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, "std::terminate() called, call stack information:\n\n%s\n",
                   sCallStackBuf);
     }
@@ -135,4 +135,4 @@ OsExceptionHandler* getExceptionHandler() {
     return sExceptionHandler;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

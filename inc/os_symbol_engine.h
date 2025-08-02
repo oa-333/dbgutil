@@ -4,13 +4,13 @@
 #include <cinttypes>
 #include <string>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief Symbol infomation. */
-struct LIBDBG_API SymbolInfo {
+struct DBGUTIL_API SymbolInfo {
     /** @brief The containing module's base address in memory. */
     void* m_moduleBaseAddress;
 
@@ -79,7 +79,7 @@ struct LIBDBG_API SymbolInfo {
 };
 
 /** @brief Parent interface for symbol engines. */
-class LIBDBG_API OsSymbolEngine {
+class DBGUTIL_API OsSymbolEngine {
 public:
     OsSymbolEngine(const OsSymbolEngine&) = delete;
     OsSymbolEngine(OsSymbolEngine&&) = delete;
@@ -91,18 +91,18 @@ public:
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    virtual LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) = 0;
+    virtual DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) = 0;
 
 protected:
     OsSymbolEngine() {}
 };
 
 /** @brief Installs a symbol engine implementation. */
-extern LIBDBG_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
+extern DBGUTIL_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
 
 /** @brief Retrieves the installed symbol engine implementation. */
-extern LIBDBG_API OsSymbolEngine* getSymbolEngine();
+extern DBGUTIL_API OsSymbolEngine* getSymbolEngine();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __OS_SYMBOL_ENGINE_H__

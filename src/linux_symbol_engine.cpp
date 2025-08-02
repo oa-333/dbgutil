@@ -1,6 +1,6 @@
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #include "dwarf_util.h"
 #include "linux_symbol_engine.h"
@@ -8,7 +8,7 @@
 #include "os_module_manager.h"
 #include "os_symbol_engine.h"
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 // required for module info
 #include "win32_symbol_engine.h"
 #else
@@ -23,15 +23,15 @@
 #include <cassert>
 #include <vector>
 
-#include "libdbg_common.h"
-#include "libdbg_log_imp.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 // NOTE: since gcc/g++ uses the PE32 image differently than the MSFT linker, we cannot use
 // directly Win32SymbolHandler. instead a more careful approach needs to take place (i.e. try to
 // read PE32 image and see if there is a symbol table and GNU debug sections). This is unrelated to
-// whether the application is running under MSYSTEM runtime environment or not. #ifdef LIBDBG_MINGW
+// whether the application is running under MSYSTEM runtime environment or not. #ifdef DBGUTIL_MINGW
 
 static Logger sLogger;
 
@@ -54,8 +54,8 @@ void LinuxSymbolEngine::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
-                                               SymbolInfo& symbolInfo) {
+DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, void* symAddress,
+                                                SymbolInfo& symbolInfo) {
     // get module details
     symbolInfo.m_moduleBaseAddress = symModData->m_moduleInfo.m_loadAddress;
     symbolInfo.m_moduleName = symModData->m_moduleInfo.m_modulePath;
@@ -64,9 +64,9 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
 
     // first search in binary image
     // this way we can also get start address of symbol and compute byte offset
-    LibDbgErr rc = symModData->m_imageReader->searchSymbol(
+    DbgUtilErr rc = symModData->m_imageReader->searchSymbol(
         symAddress, symbolInfo.m_symbolName, symbolInfo.m_fileName, &symbolInfo.m_startAddress);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to find symbol %p in binary image: %s", symAddress,
                   errorCodeToStr(rc));
     } else {
@@ -86,7 +86,7 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
               (void*)symModData->m_imageReader->getRelocationBase());
     rc = symModData->m_dwarfUtil.searchSymbol(
         symAddress, symbolInfoDwarf, (void*)symModData->m_imageReader->getRelocationBase());
-    if (rc == LIBDBG_ERR_OK) {
+    if (rc == DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Dwarf info: sym name %s, file %s, line %u",
                   symbolInfoDwarf.m_symbolName.c_str(), symbolInfoDwarf.m_fileName.c_str(),
                   symbolInfoDwarf.m_lineNumber);
@@ -99,16 +99,16 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
     // distinguish whether this is a Windows native DLL or a MinGW DLL built by gcc/g++), we just
     // give it a shot anyway if some detail is missing (logically, this will cover more edge cases)
     bool fromWin32SymHandler = false;
-#ifdef LIBDBG_MINGW
-    if (rc != LIBDBG_ERR_OK && rc == LIBDBG_ERR_NOT_FOUND) {
+#ifdef DBGUTIL_MINGW
+    if (rc != DBGUTIL_ERR_OK && rc == DBGUTIL_ERR_NOT_FOUND) {
         rc = Win32SymbolEngine::getInstance()->getSymbolInfo(symAddress, symbolInfo);
-        if (rc == LIBDBG_ERR_OK) {
+        if (rc == DBGUTIL_ERR_OK) {
             fromWin32SymHandler = true;
         }
     }
 #endif
 
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
     if (symbolInfo.m_symbolName.empty() || symbolInfo.m_moduleName.empty() ||
         symbolInfo.m_moduleBaseAddress == nullptr) {
         Dl_info dlinfo;
@@ -143,7 +143,7 @@ LibDbgErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, voi
         }
     }
 
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to get symbol %p info: %s", symAddress, errorCodeToStr(rc));
     }
     return rc;
@@ -164,9 +164,9 @@ SymbolModuleData* LinuxSymbolEngine::findSymbolModule(void* address) {
 void LinuxSymbolEngine::prepareModuleData(
     SymbolModuleData* symModData) {  // start with image reader
     symModData->m_imageReader = createImageReader();
-    LibDbgErr rc = symModData->m_imageReader->open(symModData->m_moduleInfo.m_modulePath.c_str(),
-                                                   symModData->m_moduleInfo.m_loadAddress);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = symModData->m_imageReader->open(symModData->m_moduleInfo.m_modulePath.c_str(),
+                                                    symModData->m_moduleInfo.m_loadAddress);
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to open module image file %s for reading: %s",
                   symModData->m_moduleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
         // image reader is kept open, we might still be able to use it
@@ -192,7 +192,7 @@ void LinuxSymbolEngine::prepareModuleData(
         rc = symModData->m_dwarfUtil.open(
             symModData->m_dwarfData, symModData->m_moduleInfo.m_loadAddress,
             symModData->m_imageReader->getIs64Bit(), symModData->m_imageReader->getIsExe());
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             LOG_DEBUG(sLogger, "Failed to open dwarf data: %s", errorCodeToStr(rc));
         } else {
             symModData->m_dwarfUtilValid = true;
@@ -200,7 +200,7 @@ void LinuxSymbolEngine::prepareModuleData(
     }
 }
 
-LibDbgErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
+DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
     // search module with read-lock
     SymbolModuleData* symModData = nullptr;
     {
@@ -223,8 +223,8 @@ LibDbgErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolI
     // first search in all system modules if address is relevant
     LOG_DEBUG(sLogger, "Searching for symbol %p", symAddress);
     OsModuleInfo moduleInfo;
-    LibDbgErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
-    if (rc != LIBDBG_ERR_OK || moduleInfo.m_loadAddress == nullptr) {
+    DbgUtilErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
+    if (rc != DBGUTIL_ERR_OK || moduleInfo.m_loadAddress == nullptr) {
         LOG_DEBUG(sLogger, "Failed to find module for symbol %p: %s", symAddress,
                   errorCodeToStr(rc));
         return rc;
@@ -265,20 +265,20 @@ LibDbgErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolI
 
 LinuxSymbolEngine::LinuxSymbolEngine() {}
 
-LibDbgErr initLinuxSymbolEngine() {
+DbgUtilErr initLinuxSymbolEngine() {
     registerLogger(sLogger, "linux_symbol_engine");
     LinuxSymbolEngine::createInstance();
     setSymbolEngine(LinuxSymbolEngine::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termLinuxSymbolEngine() {
+DbgUtilErr termLinuxSymbolEngine() {
     setSymbolEngine(nullptr);
     LinuxSymbolEngine::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif

@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <cstring>
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @def The fixed buffer size used for logging. */
 #define DBGUTIL_LOG_BUFFER_SIZE ((size_t)1024)
@@ -136,6 +136,6 @@ private:
     bool m_bufferFull;
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __LOG_BUFFER_H__

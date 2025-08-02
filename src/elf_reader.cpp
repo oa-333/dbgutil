@@ -1,16 +1,16 @@
 #include "elf_reader.h"
 
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
 
 #include <algorithm>
 #include <cassert>
 #include <cinttypes>
 #include <cstring>
 
-#include "libdbg_log_imp.h"
+#include "dbgutil_log_imp.h"
 #include "os_util.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -21,10 +21,10 @@ void ElfReader::resetData() {
     m_symEntrySize = 0;
 }
 
-LibDbgErr ElfReader::readImage() {
+DbgUtilErr ElfReader::readImage() {
     // verify header
-    LibDbgErr rc = verifyHeader();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = verifyHeader();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     LOG_DEBUG(sLogger, "ELF header verified");
@@ -35,23 +35,23 @@ LibDbgErr ElfReader::readImage() {
 
     // get special section pointers
     rc = getSectionHeaderStrTab();
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     // build section map
     rc = buildSectionMap();
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     rc = getStrTab();
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     rc = getSymTab();
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -60,116 +60,116 @@ LibDbgErr ElfReader::readImage() {
     return rc;
 }
 
-LibDbgErr ElfReader::verifyHeader() {
+DbgUtilErr ElfReader::verifyHeader() {
     unsigned char e_ident[EI_NIDENT] = {};
-    LibDbgErr rc = m_fileReader.readFull((char*)e_ident, EI_NIDENT);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.readFull((char*)e_ident, EI_NIDENT);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     if (strncmp((const char*)e_ident, (const char*)ELFMAG, SELFMAG) != 0) {
         // invalid magic number
         LOG_ERROR(sLogger, "Binary ELF image magic mismatch");
-        return LIBDBG_ERR_INVALID_ARGUMENT;
+        return DBGUTIL_ERR_INVALID_ARGUMENT;
     }
 
     // check class
     if (e_ident[EI_CLASS] != ELFCLASS32 && e_ident[EI_CLASS] != ELFCLASS64) {
         LOG_ERROR(sLogger, "Unsupported ELF class");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
     m_is64Bit = (e_ident[EI_CLASS] == ELFCLASS64);
 
     // check ABI (what is it for MinGW??)
     if (e_ident[EI_OSABI] != ELFOSABI_NONE && e_ident[EI_OSABI] != ELFOSABI_LINUX) {
         LOG_ERROR(sLogger, "Unsupported ELF ABI");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
 
     // check for symbol table
     return checkHeader();
 }
 
-LibDbgErr ElfReader::checkHeader() {
-    LibDbgErr rc = m_fileReader.seek(0);
-    if (rc != LIBDBG_ERR_OK) {
+DbgUtilErr ElfReader::checkHeader() {
+    DbgUtilErr rc = m_fileReader.seek(0);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     if (m_is64Bit) {
         rc = m_fileReader.read(m_hdr.m_hdr64);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         return checkHeader64(&m_hdr.m_hdr64);
     } else {
         rc = m_fileReader.read(m_hdr.m_hdr32);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         return checkHeader32(&m_hdr.m_hdr32);
     }
 }
 
-LibDbgErr ElfReader::checkHeader32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::checkHeader32(Elf32_Ehdr* hdr) {
     // check executable image
     if (hdr->e_type != ET_EXEC && hdr->e_type != ET_DYN) {
         LOG_ERROR(sLogger, "Unsupported image type (nor executable, neither shared object)");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
     m_isExe = hdr->e_type == ET_EXEC;
 
     // check arch is x86
     if (hdr->e_machine != EM_386 && hdr->e_machine != EM_X86_64) {
         LOG_ERROR(sLogger, "Unsupported target machine");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
 
     // check version
     if (hdr->e_version != EV_CURRENT) {
         LOG_ERROR(sLogger, "ELF header version mismatch");
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr ElfReader::checkHeader64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::checkHeader64(Elf64_Ehdr* hdr) {
     // check executable image
     if (hdr->e_type != ET_EXEC && hdr->e_type != ET_DYN) {
         LOG_ERROR(sLogger, "Unsupported image type (nor executable, neither shared object)");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
     m_isExe = hdr->e_type == ET_EXEC;
 
     // check arch is x86
     if (hdr->e_machine != EM_386 && hdr->e_machine != EM_X86_64) {
         LOG_ERROR(sLogger, "Unsupported target machine");
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
 
     // check version
     if (hdr->e_version != EV_CURRENT) {
         LOG_ERROR(sLogger, "ELF header version mismatch");
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr ElfReader::buildSectionMap() {
+DbgUtilErr ElfReader::buildSectionMap() {
     return m_is64Bit ? buildSectionMap64(&m_hdr.m_hdr64) : buildSectionMap32(&m_hdr.m_hdr32);
 }
 
-LibDbgErr ElfReader::buildSectionMap32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::buildSectionMap32(Elf32_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf32_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         char* secName = &m_shStrTab[secHdr.sh_name];
@@ -181,23 +181,23 @@ LibDbgErr ElfReader::buildSectionMap32(Elf32_Ehdr* hdr) {
                            secName, {secName, secOffset, secHdr.sh_size, nullptr}))
                        .second;
         if (!res) {
-            return LIBDBG_ERR_DATA_CORRUPT;
+            return DBGUTIL_ERR_DATA_CORRUPT;
         }
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr ElfReader::buildSectionMap64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::buildSectionMap64(Elf64_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf64_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         char* secName = &m_shStrTab[secHdr.sh_name];
@@ -209,144 +209,144 @@ LibDbgErr ElfReader::buildSectionMap64(Elf64_Ehdr* hdr) {
                            secName, {secName, secOffset, secHdr.sh_size, nullptr}))
                        .second;
         if (!res) {
-            return LIBDBG_ERR_DATA_CORRUPT;
+            return DBGUTIL_ERR_DATA_CORRUPT;
         }
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr ElfReader::getSectionHeaderStrTab() {
+DbgUtilErr ElfReader::getSectionHeaderStrTab() {
     return m_is64Bit ? getSectionHeaderStrTab64(&m_hdr.m_hdr64)
                      : getSectionHeaderStrTab32(&m_hdr.m_hdr32);
 }
 
-LibDbgErr ElfReader::getSectionHeaderStrTab32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::getSectionHeaderStrTab32(Elf32_Ehdr* hdr) {
     // skip to start of section header of string table for section headers
     // NOTE: section index is 1-based
     uint32_t offset = hdr->e_shoff + hdr->e_shstrndx * hdr->e_shentsize;
-    LibDbgErr rc = m_fileReader.seek(offset);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(offset);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     Elf32_Shdr secHdr = {};
     rc = m_fileReader.read(secHdr);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     if (secHdr.sh_type != SHT_STRTAB) {
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
     // seek to offset and read entire section
     rc = m_fileReader.seek(secHdr.sh_offset);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     m_shStrTab.resize(secHdr.sh_size);
     return m_fileReader.readFull(&m_shStrTab[0], secHdr.sh_size);
 }
 
-LibDbgErr ElfReader::getSectionHeaderStrTab64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::getSectionHeaderStrTab64(Elf64_Ehdr* hdr) {
     // skip to start of section header of string table for section headers
     // NOTE: section index is 1-based
     uint32_t offset = hdr->e_shoff + hdr->e_shstrndx * hdr->e_shentsize;
-    LibDbgErr rc = m_fileReader.seek(offset);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(offset);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     Elf64_Shdr secHdr = {};
     rc = m_fileReader.read(secHdr);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     if (secHdr.sh_type != SHT_STRTAB) {
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
     // seek to offset and read entire section
     rc = m_fileReader.seek(secHdr.sh_offset);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     m_shStrTab.resize(secHdr.sh_size);
     return m_fileReader.readFull(&m_shStrTab[0], secHdr.sh_size);
 }
 
-LibDbgErr ElfReader::getStrTab() {
+DbgUtilErr ElfReader::getStrTab() {
     return m_is64Bit ? getStrTab64(&m_hdr.m_hdr64) : getStrTab32(&m_hdr.m_hdr32);
 }
 
-LibDbgErr ElfReader::getStrTab32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::getStrTab32(Elf32_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf32_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
 
         // check especially for correct section name
         if (secHdr.sh_type == SHT_STRTAB && strcmp(&m_shStrTab[secHdr.sh_name], ".strtab") == 0) {
             rc = m_fileReader.seek(secHdr.sh_offset);
-            if (rc != LIBDBG_ERR_OK) {
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
             m_strTab.resize(secHdr.sh_size);
             return m_fileReader.readFull(&m_strTab[0], secHdr.sh_size);
         }
     }
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
-LibDbgErr ElfReader::getStrTab64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::getStrTab64(Elf64_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf64_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
 
         // check especially for correct section name
         if (secHdr.sh_type == SHT_STRTAB && strcmp(&m_shStrTab[secHdr.sh_name], ".strtab") == 0) {
             rc = m_fileReader.seek(secHdr.sh_offset);
-            if (rc != LIBDBG_ERR_OK) {
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
             m_strTab.resize(secHdr.sh_size);
             return m_fileReader.readFull(&m_strTab[0], secHdr.sh_size);
         }
     }
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
-LibDbgErr ElfReader::getSymTab() {
+DbgUtilErr ElfReader::getSymTab() {
     return m_is64Bit ? getSymTab64(&m_hdr.m_hdr64) : getSymTab32(&m_hdr.m_hdr32);
 }
 
-LibDbgErr ElfReader::getSymTab32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::getSymTab32(Elf32_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf32_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
 
@@ -356,27 +356,27 @@ LibDbgErr ElfReader::getSymTab32(Elf32_Ehdr* hdr) {
 
             // seek to symbol table offset and read entire table into buffer
             rc = m_fileReader.seek(secHdr.sh_offset);
-            if (rc != LIBDBG_ERR_OK) {
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
             m_symTab.resize(secHdr.sh_size);
             return m_fileReader.readFull(&m_symTab[0], secHdr.sh_size);
         }
     }
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
-LibDbgErr ElfReader::getSymTab64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::getSymTab64(Elf64_Ehdr* hdr) {
     // run through sections (skip first section, which is void)
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf64_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
 
@@ -386,21 +386,21 @@ LibDbgErr ElfReader::getSymTab64(Elf64_Ehdr* hdr) {
 
             // seek to symbol table offset and read entire table into buffer
             rc = m_fileReader.seek(secHdr.sh_offset);
-            if (rc != LIBDBG_ERR_OK) {
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
             m_symTab.resize(secHdr.sh_size);
             return m_fileReader.readFull(&m_symTab[0], secHdr.sh_size);
         }
     }
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
-LibDbgErr ElfReader::buildSymInfoSet() {
+DbgUtilErr ElfReader::buildSymInfoSet() {
     return m_is64Bit ? buildSymInfoSet64(&m_hdr.m_hdr64) : buildSymInfoSet32(&m_hdr.m_hdr32);
 }
 
-LibDbgErr ElfReader::buildSymInfoSet32(Elf32_Ehdr* hdr) {
+DbgUtilErr ElfReader::buildSymInfoSet32(Elf32_Ehdr* hdr) {
     char* symTabStart = &m_symTab[0];
     char* symSecEndPos = symTabStart + m_symTabSize;
     char* symPos = symTabStart;
@@ -432,10 +432,10 @@ LibDbgErr ElfReader::buildSymInfoSet32(Elf32_Ehdr* hdr) {
                   symName);
     }
     std::sort(m_symInfoSet.begin(), m_symInfoSet.end());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
+DbgUtilErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
     char* symTabStart = &m_symTab[0];
     char* symSecEndPos = symTabStart + m_symTabSize;
     char* symPos = symTabStart;
@@ -469,7 +469,7 @@ LibDbgErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
                   symName);
     }
     std::sort(m_symInfoSet.begin(), m_symInfoSet.end());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void ElfReader::dumpSectionHeaders() {
@@ -482,15 +482,15 @@ void ElfReader::dumpSectionHeaders() {
 
 void ElfReader::dumpSectionHeaders32() {
     Elf32_Ehdr* hdr = &m_hdr.m_hdr32;
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf32_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return;
         }
         LOG_DEBUG(sLogger, "%d name=%u, offset=%u, size=%u", i, secHdr.sh_name, secHdr.sh_offset,
@@ -500,15 +500,15 @@ void ElfReader::dumpSectionHeaders32() {
 
 void ElfReader::dumpSectionHeaders64() {
     Elf64_Ehdr* hdr = &m_hdr.m_hdr64;
-    LibDbgErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = m_fileReader.seek(hdr->e_shoff + hdr->e_shentsize);
+    if (rc != DBGUTIL_ERR_OK) {
         return;
     }
 
     for (int i = 1; i < (int)hdr->e_shnum; ++i) {
         Elf64_Shdr secHdr = {};
         rc = m_fileReader.read(secHdr);
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return;
         }
         LOG_DEBUG(sLogger, "%d name=%u, offset=%u, size=%u", i, secHdr.sh_name, secHdr.sh_offset,
@@ -552,19 +552,19 @@ private:
 
 ElfReaderFactory* ElfReaderFactory::sInstance = nullptr;
 
-LibDbgErr initElfReader() {
+DbgUtilErr initElfReader() {
     registerLogger(sLogger, "elf_reader");
     ElfReaderFactory::createInstance();
     setImageReaderFactory(ElfReaderFactory::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termElfReader() {
+DbgUtilErr termElfReader() {
     setImageReaderFactory(nullptr);
     ElfReaderFactory::destroyInstance();
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_LINUX
+#endif  // DBGUTIL_LINUX

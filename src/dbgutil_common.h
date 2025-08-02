@@ -1,14 +1,14 @@
-#ifndef __LIBDBG_COMMON_H__
-#define __LIBDBG_COMMON_H__
+#ifndef __DBGUTIL_COMMON_H__
+#define __DBGUTIL_COMMON_H__
 
 #include <cstdint>
 #include <string>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
-#include "libdbg_log.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
+#include "dbg_util_log.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /**
  * @brief Converts error code to string.
@@ -16,7 +16,7 @@ namespace libdbg {
  * @param errorCode The error code to convert.
  * @return const char* The resulting error string. This will never be null.
  */
-extern const char* errorCodeToStr(LibDbgErr rc);
+extern const char* errorCodeToStr(DbgUtilErr rc);
 
 /** @brief Sets the global flags settings for dbgutil. */
 extern void setGlobalFlags(uint32_t flags);
@@ -37,8 +37,8 @@ extern uint32_t getGlobalFlags();
  * @param srcLen The source length (optional, can run faster if provided).
  * @return The number of characters copied.
  */
-extern size_t libdbg_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
+extern size_t dbgutil_strncpy(char* dest, const char* src, size_t destLen, size_t srcLen = 0);
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // __LIBDBG_COMMON_H__
+#endif  // __DBGUTIL_COMMON_H__

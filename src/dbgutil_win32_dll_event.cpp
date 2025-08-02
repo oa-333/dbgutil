@@ -1,9 +1,9 @@
-#include "win32_dll_event.h"
+#include "dbgutil_win32_dll_event.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 // on MinGW we need to include windows header
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace libdbg {
+namespace dbgutil {
 
 typedef std::vector<DllListener*> ListenerList;
 static ListenerList sListeners;
@@ -70,7 +70,7 @@ static void notifyThreadAttach() {
         listener->onThreadDllAttach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(LIBDBG_DLL_THREAD_ATTACH, cbPair.second);
+        (*cbPair.first)(DBGUTIL_DLL_THREAD_ATTACH, cbPair.second);
     }
 }
 
@@ -79,7 +79,7 @@ static void notifyThreadDetach() {
         listener->onThreadDllDetach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(LIBDBG_DLL_THREAD_DETACH, cbPair.second);
+        (*cbPair.first)(DBGUTIL_DLL_THREAD_DETACH, cbPair.second);
     }
 }
 
@@ -88,11 +88,11 @@ static void notifyProcessDetach() {
         listener->onProcessDllDetach();
     }
     for (auto& cbPair : sCallbacks) {
-        (*cbPair.first)(LIBDBG_DLL_PROCESS_DETACH, cbPair.second);
+        (*cbPair.first)(DBGUTIL_DLL_PROCESS_DETACH, cbPair.second);
     }
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
                     DWORD fdwReason,           // reason for calling function
@@ -106,11 +106,11 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
             break;
 
         case DLL_THREAD_ATTACH:
-            libdbg::notifyThreadAttach();
+            dbgutil::notifyThreadAttach();
             break;
 
         case DLL_THREAD_DETACH:
-            libdbg::notifyThreadDetach();
+            dbgutil::notifyThreadDetach();
             break;
 
         case DLL_PROCESS_DETACH:
@@ -120,10 +120,10 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
             }
 
             // Perform any necessary cleanup.
-            libdbg::notifyProcessDetach();
+            dbgutil::notifyProcessDetach();
             break;
     }
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
-#endif  // LIBDBG_WINDOWS
+#endif

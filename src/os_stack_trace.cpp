@@ -2,11 +2,11 @@
 
 #include <cassert>
 
-namespace libdbg {
+namespace dbgutil {
 
 static OsStackTraceProvider* sProvider = nullptr;
 
-LibDbgErr OsStackTraceProvider::getStackTrace(void* context, RawStackTrace& stackTrace) {
+DbgUtilErr OsStackTraceProvider::getStackTrace(void* context, RawStackTrace& stackTrace) {
     struct StackFrameCollector : public StackFrameListener {
         StackFrameCollector(RawStackTrace& stackTrace) : m_stackTrace(stackTrace) {}
         StackFrameCollector(const StackFrameCollector&) = delete;
@@ -34,4 +34,4 @@ OsStackTraceProvider* getStackTraceProvider() {
     return sProvider;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

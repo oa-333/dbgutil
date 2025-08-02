@@ -1,19 +1,19 @@
 #ifndef __ELF_UTIL_H__
 #define __ELF_UTIL_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
 
 #include <elf.h>
 
 #include <unordered_map>
 #include <vector>
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 #include "os_image_reader.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class ElfReader : public OsImageReader {
 public:
@@ -21,7 +21,7 @@ public:
     ~ElfReader() final {}
 
 protected:
-    LibDbgErr readImage() final;
+    DbgUtilErr readImage() final;
     void resetData() final;
 
 private:
@@ -35,43 +35,43 @@ private:
     uint64_t m_symTabSize;
     uint64_t m_symEntrySize;
 
-    LibDbgErr verifyHeader();
-    LibDbgErr readElf();
+    DbgUtilErr verifyHeader();
+    DbgUtilErr readElf();
 
-    LibDbgErr checkHeader();
-    LibDbgErr checkHeader32(Elf32_Ehdr* hdr);
-    LibDbgErr checkHeader64(Elf64_Ehdr* hdr);
+    DbgUtilErr checkHeader();
+    DbgUtilErr checkHeader32(Elf32_Ehdr* hdr);
+    DbgUtilErr checkHeader64(Elf64_Ehdr* hdr);
 
-    LibDbgErr buildSectionMap();
-    LibDbgErr buildSectionMap32(Elf32_Ehdr* hdr);
-    LibDbgErr buildSectionMap64(Elf64_Ehdr* hdr);
+    DbgUtilErr buildSectionMap();
+    DbgUtilErr buildSectionMap32(Elf32_Ehdr* hdr);
+    DbgUtilErr buildSectionMap64(Elf64_Ehdr* hdr);
 
-    LibDbgErr getSectionHeaderStrTab();
-    LibDbgErr getSectionHeaderStrTab32(Elf32_Ehdr* hdr);
-    LibDbgErr getSectionHeaderStrTab64(Elf64_Ehdr* hdr);
+    DbgUtilErr getSectionHeaderStrTab();
+    DbgUtilErr getSectionHeaderStrTab32(Elf32_Ehdr* hdr);
+    DbgUtilErr getSectionHeaderStrTab64(Elf64_Ehdr* hdr);
 
-    LibDbgErr getStrTab();
-    LibDbgErr getStrTab32(Elf32_Ehdr* hdr);
-    LibDbgErr getStrTab64(Elf64_Ehdr* hdr);
+    DbgUtilErr getStrTab();
+    DbgUtilErr getStrTab32(Elf32_Ehdr* hdr);
+    DbgUtilErr getStrTab64(Elf64_Ehdr* hdr);
 
-    LibDbgErr getSymTab();
-    LibDbgErr getSymTab32(Elf32_Ehdr* hdr);
-    LibDbgErr getSymTab64(Elf64_Ehdr* hdr);
+    DbgUtilErr getSymTab();
+    DbgUtilErr getSymTab32(Elf32_Ehdr* hdr);
+    DbgUtilErr getSymTab64(Elf64_Ehdr* hdr);
 
-    LibDbgErr buildSymInfoSet();
-    LibDbgErr buildSymInfoSet32(Elf32_Ehdr* hdr);
-    LibDbgErr buildSymInfoSet64(Elf64_Ehdr* hdr);
+    DbgUtilErr buildSymInfoSet();
+    DbgUtilErr buildSymInfoSet32(Elf32_Ehdr* hdr);
+    DbgUtilErr buildSymInfoSet64(Elf64_Ehdr* hdr);
 
     void dumpSectionHeaders();
     void dumpSectionHeaders32();
     void dumpSectionHeaders64();
 };
 
-extern LibDbgErr initElfReader();
-extern LibDbgErr termElfReader();
+extern DbgUtilErr initElfReader();
+extern DbgUtilErr termElfReader();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_LINUX
+#endif  // DBGUTIL_LINUX
 
 #endif  // __ELF_UTIL_H__

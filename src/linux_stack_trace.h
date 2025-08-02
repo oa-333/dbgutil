@@ -1,13 +1,13 @@
 #ifndef __LINUX_STACK_TRACE_H__
 #define __LINUX_STACK_TRACE_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #include "os_stack_trace.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class LinuxStackTraceProvider : public OsStackTraceProvider {
 public:
@@ -25,15 +25,15 @@ public:
      * @param listener The stack frame listener.
      * @param context The call context. Pass null to capture current thread call stack.
      */
-    LibDbgErr walkStack(StackFrameListener* listener, void* context) final;
+    DbgUtilErr walkStack(StackFrameListener* listener, void* context) final;
 
     /**
      * @brief Retrieves stack trace for a specific thread.
      * @param threadId The thread id.
      * @param[out] stackTrace The resulting stack trace.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
+    DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) final;
 
 private:
     LinuxStackTraceProvider() {}
@@ -42,11 +42,11 @@ private:
     static LinuxStackTraceProvider* sInstance;
 };
 
-extern LibDbgErr initLinuxStackTrace();
-extern LibDbgErr termLinuxStackTrace();
+extern DbgUtilErr initLinuxStackTrace();
+extern DbgUtilErr termLinuxStackTrace();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_GCC
+#endif  // DBGUTIL_GCC
 
 #endif  // __LINUX_STACK_TRACE_H__

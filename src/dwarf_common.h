@@ -3,11 +3,11 @@
 
 #include <unordered_map>
 
+#include "dbgutil_common.h"
 #include "input_stream.h"
-#include "libdbg_common.h"
 #include "serializable.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 struct DwarfSection {
     char* m_start;
@@ -70,52 +70,52 @@ struct DwarfSearchData {
     uint64_t m_relocatedAddress;
 };
 
-extern LibDbgErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit);
-extern LibDbgErr dwarfReadOffset(InputStream& is, uint64_t& offset, bool is64Bit);
-extern LibDbgErr dwarfReadAddress(InputStream& is, uint64_t& offset, uint64_t addressSize);
-extern LibDbgErr dwarfReadULEB128(InputStream& is, uint64_t& result);
-extern LibDbgErr dwarfReadSLEB128(InputStream& is, int64_t& result);
-extern LibDbgErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, DwarfData& dwarfData,
-                                 std::string& result);
+extern DbgUtilErr dwarfReadInitialLength(InputStream& is, uint64_t& len, bool& is64Bit);
+extern DbgUtilErr dwarfReadOffset(InputStream& is, uint64_t& offset, bool is64Bit);
+extern DbgUtilErr dwarfReadAddress(InputStream& is, uint64_t& offset, uint64_t addressSize);
+extern DbgUtilErr dwarfReadULEB128(InputStream& is, uint64_t& result);
+extern DbgUtilErr dwarfReadSLEB128(InputStream& is, int64_t& result);
+extern DbgUtilErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit,
+                                  DwarfData& dwarfData, std::string& result);
 
-#define DWARF_READ_INIT_LEN(is, len, is64Bit)                         \
-    {                                                                 \
-        LibDbgErr rcLocal = dwarfReadInitialLength(is, len, is64Bit); \
-        if (rcLocal != LIBDBG_ERR_OK) {                               \
-            return rcLocal;                                           \
-        }                                                             \
-    }
-
-#define DWARF_READ_OFFSET(is, offset, is64Bit)                    \
-    {                                                             \
-        LibDbgErr rcLocal = dwarfReadOffset(is, offset, is64Bit); \
-        if (rcLocal != LIBDBG_ERR_OK) {                           \
-            return rcLocal;                                       \
-        }                                                         \
-    }
-
-#define DWARF_READ_ADDRESS(is, offset, addressSize)                    \
+#define DWARF_READ_INIT_LEN(is, len, is64Bit)                          \
     {                                                                  \
-        LibDbgErr rcLocal = dwarfReadAddress(is, offset, addressSize); \
-        if (rcLocal != LIBDBG_ERR_OK) {                                \
+        DbgUtilErr rcLocal = dwarfReadInitialLength(is, len, is64Bit); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                               \
             return rcLocal;                                            \
         }                                                              \
     }
 
-#define DWARF_READ_ULEB128(is, value)                    \
-    {                                                    \
-        LibDbgErr rcLocal = dwarfReadULEB128(is, value); \
-        if (rcLocal != LIBDBG_ERR_OK) {                  \
-            return rcLocal;                              \
-        }                                                \
+#define DWARF_READ_OFFSET(is, offset, is64Bit)                     \
+    {                                                              \
+        DbgUtilErr rcLocal = dwarfReadOffset(is, offset, is64Bit); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                           \
+            return rcLocal;                                        \
+        }                                                          \
     }
 
-#define DWARF_READ_SLEB128(is, value)                    \
-    {                                                    \
-        LibDbgErr rcLocal = dwarfReadSLEB128(is, value); \
-        if (rcLocal != LIBDBG_ERR_OK) {                  \
-            return rcLocal;                              \
-        }                                                \
+#define DWARF_READ_ADDRESS(is, offset, addressSize)                     \
+    {                                                                   \
+        DbgUtilErr rcLocal = dwarfReadAddress(is, offset, addressSize); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                                \
+            return rcLocal;                                             \
+        }                                                               \
+    }
+
+#define DWARF_READ_ULEB128(is, value)                     \
+    {                                                     \
+        DbgUtilErr rcLocal = dwarfReadULEB128(is, value); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                  \
+            return rcLocal;                               \
+        }                                                 \
+    }
+
+#define DWARF_READ_SLEB128(is, value)                     \
+    {                                                     \
+        DbgUtilErr rcLocal = dwarfReadSLEB128(is, value); \
+        if (rcLocal != DBGUTIL_ERR_OK) {                  \
+            return rcLocal;                               \
+        }                                                 \
     }
 
 #define DWARF_READ_CONST1(is, value)          \
@@ -146,21 +146,21 @@ extern LibDbgErr dwarfReadString(InputStream& is, uint64_t form, bool is64Bit, D
         value = value64;                        \
     }
 
-#define DWARF_READ_CONST(is, value, form)  \
-    if (form == DW_FORM_data1) {           \
-        DWARF_READ_CONST1(is, value);      \
-    } else if (form == DW_FORM_data2) {    \
-        DWARF_READ_CONST2(is, value);      \
-    } else if (form == DW_FORM_data4) {    \
-        DWARF_READ_CONST4(is, value);      \
-    } else if (form == DW_FORM_data8) {    \
-        DWARF_READ_CONST8(is, value);      \
-    } else if (form == DW_FORM_udata) {    \
-        DWARF_READ_ULEB128(is, value);     \
-    } else {                               \
-        return LIBDBG_ERR_NOT_IMPLEMENTED; \
+#define DWARF_READ_CONST(is, value, form)   \
+    if (form == DW_FORM_data1) {            \
+        DWARF_READ_CONST1(is, value);       \
+    } else if (form == DW_FORM_data2) {     \
+        DWARF_READ_CONST2(is, value);       \
+    } else if (form == DW_FORM_data4) {     \
+        DWARF_READ_CONST4(is, value);       \
+    } else if (form == DW_FORM_data8) {     \
+        DWARF_READ_CONST8(is, value);       \
+    } else if (form == DW_FORM_udata) {     \
+        DWARF_READ_ULEB128(is, value);      \
+    } else {                                \
+        return DBGUTIL_ERR_NOT_IMPLEMENTED; \
     }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __DWARF_COMMON_H__

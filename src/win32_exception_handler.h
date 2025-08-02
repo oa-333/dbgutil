@@ -1,13 +1,13 @@
 #ifndef __WIN32_EXCEPTION_HANDLER_H__
 #define __WIN32_EXCEPTION_HANDLER_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 #include "os_exception_handler.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32ExceptionHandler : public OsExceptionHandler {
 public:
@@ -22,10 +22,10 @@ public:
 
 protected:
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initializeEx() final;
+    DbgUtilErr initializeEx() final;
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminateEx() final;
+    DbgUtilErr terminateEx() final;
 
 private:
     Win32ExceptionHandler() {}
@@ -44,12 +44,12 @@ private:
     void unhandledExceptionFilter(_EXCEPTION_POINTERS* exceptionInfo);
 };
 
-extern LibDbgErr initWin32ExceptionHandler();
+extern DbgUtilErr initWin32ExceptionHandler();
 
-extern LibDbgErr termWin32ExceptionHandler();
+extern DbgUtilErr termWin32ExceptionHandler();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_EXCEPTION_HANDLER_H__

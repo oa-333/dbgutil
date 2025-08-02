@@ -15,7 +15,7 @@ REM -g|--reconfigure
 REM set default values
 SET PLATFORM=WINDOWS
 SET BUILD_TYPE=Debug
-SET INSTALL_DIR=C:\install\libdbg
+SET INSTALL_DIR=C:\install\dbgutil
 SET VERBOSE=0
 SET FULL=0
 SET CLEAN=0

@@ -1,16 +1,16 @@
-#ifndef __LIBDBG_LOG_IMP_H__
-#define __LIBDBG_LOG_IMP_H__
+#ifndef __DBGUTIL_LOG_IMP_H__
+#define __DBGUTIL_LOG_IMP_H__
 
 #include <cinttypes>
 #include <string>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
-#include "libdbg_log.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
+#include "dbg_util_log.h"
 
-namespace libdbg {
+namespace dbgutil {
 
-#define LIBDBG_INVALID_LOGGER_ID ((size_t)-1)
+#define DBGUTIL_INVALID_LOGGER_ID ((size_t)-1)
 
 struct Logger {
     std::string m_loggerName;
@@ -21,12 +21,12 @@ struct Logger {
 extern void initLog(LogHandler* logHandler, LogSeverity severity);
 
 // call this after TLS is initialized
-extern LibDbgErr finishInitLog();
+extern DbgUtilErr finishInitLog();
 
 // call this before TLS is terminated
-extern LibDbgErr beginTermLog();
+extern DbgUtilErr beginTermLog();
 
-extern LibDbgErr termLog();
+extern DbgUtilErr termLog();
 
 extern void registerLogger(Logger& logger, const char* loggerName);
 
@@ -46,12 +46,12 @@ extern void finishLog();
 
 extern const char* sysErrorToStr(int sysErrorCode);
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 extern char* win32SysErrorToStr(unsigned long sysErrorCode);
 extern void win32FreeErrorStr(char* errStr);
 #endif
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 // general logging macro
 #define LOG(logger, severity, fmt, ...)               \
@@ -91,7 +91,7 @@ extern void win32FreeErrorStr(char* errStr);
     LOG_SYS_ERROR_NUM(logger, syscall, errno, fmt, ##__VA_ARGS__)
 
 // Windows system error logging macros
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 #define LOG_WIN32_ERROR_NUM(logger, syscall, sysErr, fmt, ...)                                    \
     {                                                                                             \
         char* errStr = win32SysErrorToStr(sysErr);                                                \
@@ -103,6 +103,6 @@ extern void win32FreeErrorStr(char* errStr);
 #define LOG_WIN32_ERROR(logger, syscall, fmt, ...) \
     LOG_WIN32_ERROR_NUM(logger, syscall, ::GetLastError(), fmt, ##__VA_ARGS__)
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
-#endif  // __LIBDBG_LOG_IMP_H__
+#endif  // __DBGUTIL_LOG_IMP_H__

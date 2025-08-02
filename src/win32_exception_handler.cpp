@@ -1,9 +1,9 @@
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 // MinGW requires including windows main header, and this should be the topmost include directive
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -11,13 +11,13 @@
 #include <cassert>
 #include <cinttypes>
 
-#include "libdbg_common.h"
-#include "libdbg_flags.h"
-#include "libdbg_log_imp.h"
+#include "dbg_util_flags.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 #include "win32_exception_handler.h"
 #include "win32_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -218,13 +218,13 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
     dispatchExceptionInfo(exInfo);
 
     // nevertheless, we also send to log
-    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, exInfo.m_fullExceptionInfo);
         LOG_FATAL(sLogger, exInfo.m_callStack);
     }
 
     // finally, attempt to dump core
-    if (getGlobalFlags() && LIBDBG_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
         LOG_WARN(sLogger, "Dumping core");
         Win32SymbolEngine::getInstance()->dumpCore(exceptionInfo);
         LOG_WARN(sLogger, "Finished dumping core");
@@ -274,7 +274,7 @@ void Win32ExceptionHandler::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr Win32ExceptionHandler::initializeEx() {
+DbgUtilErr Win32ExceptionHandler::initializeEx() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
@@ -286,55 +286,55 @@ LibDbgErr Win32ExceptionHandler::initializeEx() {
         LOG_DEBUG(sLogger,
                   "Exception handler for MinGW not registered, running under MSYSTEM runtime");
     } else {
-        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
             registerExceptionHandler();
         }
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr Win32ExceptionHandler::terminateEx() {
+DbgUtilErr Win32ExceptionHandler::terminateEx() {
     const size_t BUF_SIZE = 64;
     char buf[BUF_SIZE];
     size_t retSize = 0;
     (void)getenv_s(&retSize, buf, BUF_SIZE, "MSYSTEM");
     if (retSize != 0) {
-        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
             unregisterExceptionHandler();
         }
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr initWin32ExceptionHandler() {
+DbgUtilErr initWin32ExceptionHandler() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
     registerLogger(sLogger, "win32_exception_handler");
     Win32ExceptionHandler::createInstance();
-    LibDbgErr rc = Win32ExceptionHandler::getInstance()->initialize();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ExceptionHandler::getInstance()->initialize();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifdef LIBDBG_MSVC
+#ifdef DBGUTIL_MSVC
     setExceptionHandler(Win32ExceptionHandler::getInstance());
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termWin32ExceptionHandler() {
-#ifdef LIBDBG_MSVC
+DbgUtilErr termWin32ExceptionHandler() {
+#ifdef DBGUTIL_MSVC
     setExceptionHandler(nullptr);
 #endif
-    LibDbgErr rc = Win32ExceptionHandler::getInstance()->terminate();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ExceptionHandler::getInstance()->terminate();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     Win32ExceptionHandler::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS

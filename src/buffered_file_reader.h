@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief A buffered file reader. */
 class BufferedFileReader {
@@ -23,21 +23,21 @@ public:
      * @brief Opens the reader over a file.
      * @param filePath The path of the file to read.
      * @param bufferSize The buffer size used in reading.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr open(const char* filePath, size_t bufferSize = DEFAULT_BUFFER_SIZE);
+    DbgUtilErr open(const char* filePath, size_t bufferSize = DEFAULT_BUFFER_SIZE);
 
     /** @brief Closed the buffered reader. */
-    LibDbgErr close();
+    DbgUtilErr close();
 
     /** @brief Queries whether the reader is open. */
     inline bool isOpen() const { return m_fd != 0; }
 
     /** @brief Retrieves the current offset (from begining of file) of the reader. */
-    LibDbgErr getOffset(size_t& offset) const;
+    DbgUtilErr getOffset(size_t& offset) const;
 
     /** @brief Sets file pointer to a specified position (offset from begining of file). */
-    LibDbgErr seek(size_t offset);
+    DbgUtilErr seek(size_t offset);
 
     /** @brief Queries whether the reader has reached the end of the file. */
     inline bool eof() const { return m_eof; }
@@ -46,10 +46,10 @@ public:
      * @brief Reads a typed value.
      * @tparam T The type of the value.
      * @param[out] value The resulting value.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
     template <typename T>
-    inline LibDbgErr read(T& value) {
+    inline DbgUtilErr read(T& value) {
         return readFull((char*)&value, sizeof(T));
     }
 
@@ -63,9 +63,9 @@ public:
      * @return E_EOF If not all bytes could be read due to end of file. If bytesReadRef was passed,
      * then it will contain the actual number of bytes read. (note this is different than @ref
      * read()).
-     * @return LibDbgErr Any other error.
+     * @return DbgUtilErr Any other error.
      */
-    LibDbgErr readFull(char* buffer, size_t len, size_t* bytesReadRef = nullptr);
+    DbgUtilErr readFull(char* buffer, size_t len, size_t* bytesReadRef = nullptr);
 
     /**
      * @brief Reads data from the buffered file reader.
@@ -77,18 +77,18 @@ public:
      * this case E_EOF is not returned.
      * @return E_EOF If end of file has already been reached prior to this call. This indicates no
      * bytes were read at all (bytesRead is returned with value 0).
-     * @return LibDbgErr Any other error code.
+     * @return DbgUtilErr Any other error code.
      */
-    LibDbgErr read(char* buffer, size_t len, size_t& bytesRead);
+    DbgUtilErr read(char* buffer, size_t len, size_t& bytesRead);
 
     /**
      * @brief Skips the number of specified bytes in the buffered file reader.
      * @note If the file is exhausted, then E_EOF is returned, otherwise the number of
      * possible bytes are skipped and E_OK is returned.
      * @param length The amount of bytes to skip.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    inline LibDbgErr skip(size_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
+    inline DbgUtilErr skip(size_t length) { return seek(m_fileOffset + m_bufferOffset + length); }
 
 private:
     int m_fd;
@@ -98,9 +98,9 @@ private:
     size_t m_bufferOffset;
     bool m_eof;
 
-    LibDbgErr refillBuffer();
+    DbgUtilErr refillBuffer();
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __BUFFERED_FILE_READER_H__

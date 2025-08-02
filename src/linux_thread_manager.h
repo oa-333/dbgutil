@@ -1,23 +1,23 @@
 #ifndef __LINUX_THREAD_MANAGER_H__
 #define __LINUX_THREAD_MANAGER_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #include <pthread.h>
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 #include "os_thread_manager.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief An active executor used for executing some operation on a target thread context. */
 class ThreadExecutor {
 public:
     virtual ~ThreadExecutor() {}
 
-    virtual LibDbgErr execRequest() = 0;
+    virtual DbgUtilErr execRequest() = 0;
 
 protected:
     ThreadExecutor() {}
@@ -35,25 +35,25 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initialize();
+    DbgUtilErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminate();
+    DbgUtilErr terminate();
 
     /**
      * @brief Traverses all running threads.
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    LibDbgErr visitThreadIds(ThreadVisitor* visitor) final;
+    DbgUtilErr visitThreadIds(ThreadVisitor* visitor) final;
 
     /**
      * @brief Retrieves thread handle by id.
      * @param threadId The thread id.
      * @param threadHandle The resulting thread handle.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
+    DbgUtilErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
 
     /**
      * @brief Requests to execute an operation on another thread (blocking call).
@@ -61,13 +61,13 @@ public:
      * @param executor The request executor.
      * @param[out] requestResult The request execution result (valid only if entire function
      * result is ok).
-     * @return LibDbgErr The operation result. This refers only to the ability to post the
+     * @return DbgUtilErr The operation result. This refers only to the ability to post the
      * operation to be executed on the target thread, and then collecting the result. The actual
      * result of the operation being executed on the target thread, is returned via the @ref
      * opResult out parameter.
      */
-    LibDbgErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
-                                LibDbgErr& requestResult);
+    DbgUtilErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
+                                 DbgUtilErr& requestResult);
 
 private:
     LinuxThreadManager() {}
@@ -76,11 +76,11 @@ private:
     static LinuxThreadManager* sInstance;
 };
 
-extern LibDbgErr initLinuxThreadManager();
-extern LibDbgErr termLinuxThreadManager();
+extern DbgUtilErr initLinuxThreadManager();
+extern DbgUtilErr termLinuxThreadManager();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_GCC
+#endif  // DBGUTIL_GCC
 
 #endif  // __LINUX_THREAD_MANAGER_H__

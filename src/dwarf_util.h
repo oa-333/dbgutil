@@ -6,12 +6,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include "dbgutil_common.h"
 #include "dwarf_common.h"
 #include "input_stream.h"
-#include "libdbg_common.h"
 #include "os_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class DwarfUtil {
 public:
@@ -24,10 +24,10 @@ public:
     static void initLogger();
     static void termLogger();
 
-    LibDbgErr open(const DwarfData& dwarfData, void* moduleBase, bool is664Bit, bool isExe);
+    DbgUtilErr open(const DwarfData& dwarfData, void* moduleBase, bool is664Bit, bool isExe);
 
-    LibDbgErr searchSymbol(void* symAddress, SymbolInfo& symbolInfo,
-                           void* relocationBase = nullptr);
+    DbgUtilErr searchSymbol(void* symAddress, SymbolInfo& symbolInfo,
+                            void* relocationBase = nullptr);
 
 private:
     DwarfData m_dwarfData;
@@ -79,13 +79,13 @@ private:
         }
     };
 
-    LibDbgErr readCUData(uint64_t offset, CUData& cuData);
-    LibDbgErr buildRangeCuMap();
+    DbgUtilErr readCUData(uint64_t offset, CUData& cuData);
+    DbgUtilErr buildRangeCuMap();
 
-    LibDbgErr searchLineProg(const DwarfSearchData& searchData, uint64_t lineProgOffset,
-                             SymbolInfo& symbolInfo);
-    LibDbgErr searchSymbolInCU(const DwarfSearchData& searchData, uint64_t cuOffset,
-                               SymbolInfo& symbolInfo);
+    DbgUtilErr searchLineProg(const DwarfSearchData& searchData, uint64_t lineProgOffset,
+                              SymbolInfo& symbolInfo);
+    DbgUtilErr searchSymbolInCU(const DwarfSearchData& searchData, uint64_t cuOffset,
+                                SymbolInfo& symbolInfo);
 
     struct Attr {
         uint64_t m_name;
@@ -94,17 +94,17 @@ private:
     };
     typedef std::vector<Attr> AttrList;
 
-    LibDbgErr readAddrRangeHeader(InputStream& is, uint64_t& len, bool& is64Bit, uint64_t& offset,
-                                  uint8_t& addressSize);
-    LibDbgErr readCUHeader(InputStream& is, uint64_t& len, uint64_t& abbrevOffset,
-                           uint8_t& addressSize, bool& is64Bit);
-    LibDbgErr readAbbrevDecl(uint64_t offset, uint64_t abbrevCode, uint64_t& tag, bool& hasChildren,
-                             AttrList& attrs) const;
-    LibDbgErr readRangeListBounds(uint64_t rngOffset, uint64_t cuBaseAddr, bool is64Bit,
-                                  uint8_t addressSize, uint64_t& rangeLow, uint64_t& rangeHigh);
-    LibDbgErr readAddr(uint64_t offset, uint64_t& address, uint8_t addressSize);
+    DbgUtilErr readAddrRangeHeader(InputStream& is, uint64_t& len, bool& is64Bit, uint64_t& offset,
+                                   uint8_t& addressSize);
+    DbgUtilErr readCUHeader(InputStream& is, uint64_t& len, uint64_t& abbrevOffset,
+                            uint8_t& addressSize, bool& is64Bit);
+    DbgUtilErr readAbbrevDecl(uint64_t offset, uint64_t abbrevCode, uint64_t& tag,
+                              bool& hasChildren, AttrList& attrs) const;
+    DbgUtilErr readRangeListBounds(uint64_t rngOffset, uint64_t cuBaseAddr, bool is64Bit,
+                                   uint8_t addressSize, uint64_t& rangeLow, uint64_t& rangeHigh);
+    DbgUtilErr readAddr(uint64_t offset, uint64_t& address, uint8_t addressSize);
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __DWARF_UTIL_H__

@@ -1,14 +1,14 @@
 #ifndef __WIN32_SYM_HANDLER_H__
 #define __WIN32_SYM_HANDLER_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 #include "os_stack_trace.h"
 #include "os_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32SymbolEngine : public OsSymbolEngine {
 public:
@@ -22,17 +22,17 @@ public:
     static void destroyInstance();
 
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initialize();
+    DbgUtilErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminate();
+    DbgUtilErr terminate();
 
     /**
      * @brief Retrieves symbol debug information (platform independent API).
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
      */
-    LibDbgErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
+    DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
 
     /**
      * @brief Dumps core file.
@@ -48,7 +48,7 @@ public:
      * @param context Call context (opaque).
      * @return The operation result.
      */
-    LibDbgErr walkStack(StackFrameListener* listener, void* context);
+    DbgUtilErr walkStack(StackFrameListener* listener, void* context);
 
 private:
     Win32SymbolEngine();
@@ -64,15 +64,15 @@ private:
     std::string m_processDir;
     std::string m_processName;
 
-    LibDbgErr getSymbolModule(void* symAddress, SymbolInfo& symbolInfo);
+    DbgUtilErr getSymbolModule(void* symAddress, SymbolInfo& symbolInfo);
     void walkThreadStack(HANDLE hThread, CONTEXT& context, StackFrameListener* listener);
 };
 
-extern LibDbgErr initWin32SymbolEngine();
-extern LibDbgErr termWin32SymbolEngine();
+extern DbgUtilErr initWin32SymbolEngine();
+extern DbgUtilErr termWin32SymbolEngine();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_SYM_HANDLER_H__

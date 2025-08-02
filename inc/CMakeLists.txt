@@ -1,16 +1,16 @@
 target_sources(
-    dbg
+    dbgutil
     PUBLIC
         FILE_SET publicheaders
         TYPE HEADERS
         FILES
             dbg_stack_trace.h
-            libdbg_def.h
-            libdbg_err.h
-            libdbg_except.h
-            libdbg_flags.h
-            libdbg_log.h
-            libdbg.h
+            dbg_util_def.h
+            dbg_util_err.h
+            dbg_util_except.h
+            dbg_util_flags.h
+            dbg_util_log.h
+            dbg_util.h
             os_exception_handler.h
             os_module_manager.h
             os_stack_trace.h

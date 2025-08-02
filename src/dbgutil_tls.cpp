@@ -1,25 +1,25 @@
-#include "libdbg_tls.h"
+#include "dbgutil_tls.h"
 
-#include "libdbg_err.h"
-#include "libdbg_log_imp.h"
+#include "dbg_util_err.h"
+#include "dbgutil_log_imp.h"
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 #include <cstdio>
 #include <new>
 
-#include "win32_dll_event.h"
+#include "dbgutil_win32_dll_event.h"
 #endif
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 struct TlsCleanupData {
     TlsCleanupData(tlsDestructorFunc dtor, TlsKey key) : m_dtor(dtor), m_key(key) {}
     tlsDestructorFunc m_dtor;
@@ -28,7 +28,7 @@ struct TlsCleanupData {
 
 static void tlsCleanup(int event, void* userData) {
     TlsCleanupData* cleanupData = (TlsCleanupData*)userData;
-    if (event == LIBDBG_DLL_THREAD_DETACH) {
+    if (event == DBGUTIL_DLL_THREAD_DETACH) {
         // fprintf(stderr, "Running TLS cleanup at %p\n", cleanupData);
         if (cleanupData == nullptr) {
             // no cleanup data, we give up
@@ -71,7 +71,7 @@ void initTls() { registerLogger(sLogger, "tls"); }
 void termTls() { unregisterLogger(sLogger); }
 
 bool createTls(TlsKey& key, tlsDestructorFunc dtor /* = nullptr */) {
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
     key = TlsAlloc();
     if (key == TLS_OUT_OF_INDEXES) {
         LOG_ERROR(sLogger, "Cannot allocate thread local storage slot, out of slots");
@@ -99,7 +99,7 @@ bool createTls(TlsKey& key, tlsDestructorFunc dtor /* = nullptr */) {
 }
 
 bool destroyTls(TlsKey key) {
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
     TlsKeyPurge purge(key);
     purgeDllCallback(&purge);
     if (!TlsFree(key)) {
@@ -118,7 +118,7 @@ bool destroyTls(TlsKey key) {
 }
 
 void* getTls(TlsKey key) {
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
     return TlsGetValue(key);
 #else
     return pthread_getspecific(key);
@@ -126,7 +126,7 @@ void* getTls(TlsKey key) {
 }
 
 bool setTls(TlsKey key, void* value) {
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
     if (!TlsSetValue(key, value)) {
         LOG_WIN32_ERROR(sLogger, TlsSetValue, "Failed to set thread local storage value");
         return false;
@@ -141,4 +141,4 @@ bool setTls(TlsKey key, void* value) {
     return true;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

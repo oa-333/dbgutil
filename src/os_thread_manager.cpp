@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace libdbg {
+namespace dbgutil {
 
 static OsThreadManager* sThreadManager = nullptr;
 
@@ -17,4 +17,4 @@ OsThreadManager* getThreadManager() {
     return sThreadManager;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

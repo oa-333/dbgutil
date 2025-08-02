@@ -1,16 +1,16 @@
 #ifndef __LINUX_EXCEPTION_HANDLER_H__
 #define __LINUX_EXCEPTION_HANDLER_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifndef LIBDBG_MSVC
+#ifndef DBGUTIL_MSVC
 
 #include <csignal>
 #include <unordered_map>
 
 #include "os_exception_handler.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class LinuxExceptionHandler : public OsExceptionHandler {
 public:
@@ -25,10 +25,10 @@ public:
 
 protected:
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initializeEx() final;
+    DbgUtilErr initializeEx() final;
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminateEx() final;
+    DbgUtilErr terminateEx() final;
 
 private:
     LinuxExceptionHandler() {}
@@ -36,7 +36,7 @@ private:
 
     static LinuxExceptionHandler* sInstance;
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     typedef __p_sig_fn_t SignalHandlerFunc;
     typedef __p_sig_fn_t SignalHandler;
 #else
@@ -46,7 +46,7 @@ private:
     typedef std::unordered_map<int, SignalHandler> SigHandlerMap;
     SigHandlerMap m_prevHandlerMap;
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     static void signalHandlerStatic(int sigNum);
     void signalHandler(int sigNum);
 #else
@@ -56,24 +56,24 @@ private:
 
     const char* getSignalName(int sigNum);
 
-    LibDbgErr registerExceptionHandlers();
-    LibDbgErr unregisterExceptionHandlers();
-    LibDbgErr registerSignalHandler(int sigNum);
-    LibDbgErr unregisterSignalHandler(int sigNum);
+    DbgUtilErr registerExceptionHandlers();
+    DbgUtilErr unregisterExceptionHandlers();
+    DbgUtilErr registerSignalHandler(int sigNum);
+    DbgUtilErr unregisterSignalHandler(int sigNum);
 
-    LibDbgErr registerSignalHandler(int sigNum, SignalHandlerFunc handler,
-                                    SignalHandler* prevHandler);
-    LibDbgErr restoreSignalHandler(int sigNum, SignalHandler& handler);
+    DbgUtilErr registerSignalHandler(int sigNum, SignalHandlerFunc handler,
+                                     SignalHandler* prevHandler);
+    DbgUtilErr restoreSignalHandler(int sigNum, SignalHandler& handler);
 
     void finalizeSignalHandling(OsExceptionInfo& exInfo, void* context);
 };
 
-extern LibDbgErr initLinuxExceptionHandler();
+extern DbgUtilErr initLinuxExceptionHandler();
 
-extern LibDbgErr termLinuxExceptionHandler();
+extern DbgUtilErr termLinuxExceptionHandler();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // not defined LIBDBG_MSVC
+#endif  // not defined DBGUTIL_MSVC
 
 #endif  // __LINUX_EXCEPTION_HANDLER_H__

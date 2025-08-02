@@ -6,11 +6,11 @@
 #include <iomanip>
 #include <sstream>
 
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 #include "dwarf_def.h"
-#include "libdbg_common.h"
-#include "libdbg_log_imp.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -26,12 +26,12 @@ std::string DwarfLineStateMachine::toString() const {
 
 DwarfLineUtil::DwarfLineUtil() {}
 
-LibDbgErr DwarfLineUtil::getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
-                                     FixedInputStream& is, SymbolInfo& symbolInfo) {
+DbgUtilErr DwarfLineUtil::getLineInfo(DwarfData& dwarfData, const DwarfSearchData& searchData,
+                                      FixedInputStream& is, SymbolInfo& symbolInfo) {
     // build line matrix on-demand
     if (m_lineMatrix.empty()) {
-        LibDbgErr rc = buildLineMatrix(dwarfData, is);
-        if (rc != LIBDBG_ERR_OK) {
+        DbgUtilErr rc = buildLineMatrix(dwarfData, is);
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
     }
@@ -40,9 +40,9 @@ LibDbgErr DwarfLineUtil::getLineInfo(DwarfData& dwarfData, const DwarfSearchData
     return searchLineMatrix(searchData, symbolInfo);
 }
 
-LibDbgErr DwarfLineUtil::buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is) {
-    LibDbgErr rc = readHeader(is, dwarfData);
-    if (rc != LIBDBG_ERR_OK) {
+DbgUtilErr DwarfLineUtil::buildLineMatrix(DwarfData& dwarfData, FixedInputStream& is) {
+    DbgUtilErr rc = readHeader(is, dwarfData);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -50,8 +50,8 @@ LibDbgErr DwarfLineUtil::buildLineMatrix(DwarfData& dwarfData, FixedInputStream&
     return execLineProgram(is);
 }
 
-LibDbgErr DwarfLineUtil::searchLineMatrix(const DwarfSearchData& searchData,
-                                          SymbolInfo& symbolInfo) {
+DbgUtilErr DwarfLineUtil::searchLineMatrix(const DwarfSearchData& searchData,
+                                           SymbolInfo& symbolInfo) {
     // search relocated address (translated to debug info base) line in matrix
     // NOTE: we search for the first entry whose address >= search address, special care required,
     // see below for more explanation
@@ -65,7 +65,7 @@ LibDbgErr DwarfLineUtil::searchLineMatrix(const DwarfSearchData& searchData,
     // NOTE: we get the first iterator for which the predicate is false, or end(),
     // so end() means all addresses are less than searched address.
     if (itr == m_lineMatrix.end()) {
-        return LIBDBG_ERR_NOT_FOUND;
+        return DBGUTIL_ERR_NOT_FOUND;
     }
 
     // NOTE: since we passed strict less operator "<", then if the last address equals the searched
@@ -108,13 +108,13 @@ LibDbgErr DwarfLineUtil::searchLineMatrix(const DwarfSearchData& searchData,
         LOG_DEBUG(sLogger, "Relocated address %p found at %p, file %s, line %u",
                   (void*)searchData.m_relocatedAddress, (void*)lineInfo.m_address,
                   symbolInfo.m_fileName.c_str(), symbolInfo.m_lineNumber);
-        return LIBDBG_ERR_OK;
+        return DBGUTIL_ERR_OK;
     }
 
-    return LIBDBG_ERR_NOT_FOUND;
+    return DBGUTIL_ERR_NOT_FOUND;
 }
 
-LibDbgErr DwarfLineUtil::readHeader(FixedInputStream& is, DwarfData& dwarfData) {
+DbgUtilErr DwarfLineUtil::readHeader(FixedInputStream& is, DwarfData& dwarfData) {
     uint64_t len = 0;
     bool is64Bit = false;
     DWARF_READ_INIT_LEN(is, len, is64Bit);
@@ -123,7 +123,7 @@ LibDbgErr DwarfLineUtil::readHeader(FixedInputStream& is, DwarfData& dwarfData) 
     uint16_t version = 0;
     DBGUTIL_DESERIALIZE_INT16(is, version);
     if (version != 5) {
-        return LIBDBG_ERR_NOT_IMPLEMENTED;
+        return DBGUTIL_ERR_NOT_IMPLEMENTED;
     }
 
     DBGUTIL_DESERIALIZE_INT8(is, m_addressSize);
@@ -151,20 +151,20 @@ LibDbgErr DwarfLineUtil::readHeader(FixedInputStream& is, DwarfData& dwarfData) 
     }
 
     // read dir array
-    LibDbgErr rc = readDirList(is, dwarfData, is64Bit);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = readDirList(is, dwarfData, is64Bit);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = readFileList(is, dwarfData, is64Bit);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr DwarfLineUtil::readFormatList(FixedInputStream& is,
-                                        std::vector<DirEntryFmtDesc>& entryFmt) {
+DbgUtilErr DwarfLineUtil::readFormatList(FixedInputStream& is,
+                                         std::vector<DirEntryFmtDesc>& entryFmt) {
     uint8_t fmtCount = 0;
     DBGUTIL_DESERIALIZE_INT8(is, fmtCount);
     for (uint8_t i = 0; i < fmtCount; ++i) {
@@ -174,15 +174,15 @@ LibDbgErr DwarfLineUtil::readFormatList(FixedInputStream& is,
         DWARF_READ_ULEB128(is, form);
         entryFmt.push_back({ctCode, form});
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr DwarfLineUtil::readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit) {
+DbgUtilErr DwarfLineUtil::readDirList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit) {
     // read dir/file entry format array
     // each dir/file entry below has all the format entries repeated in each dir/file entry
     std::vector<DirEntryFmtDesc> entryFmt;
-    LibDbgErr rc = readFormatList(is, entryFmt);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = readFormatList(is, entryFmt);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -196,26 +196,26 @@ LibDbgErr DwarfLineUtil::readDirList(FixedInputStream& is, DwarfData& dwarfData,
             if (ctCode == DW_LNCT_path) {
                 std::string name;
                 rc = dwarfReadString(is, form, is64Bit, dwarfData, name);
-                if (rc != LIBDBG_ERR_OK) {
+                if (rc != DBGUTIL_ERR_OK) {
                     return rc;
                 }
                 m_dirs.push_back(name);
                 LOG_DEBUG(sLogger, "Read line program dir: %s", name.c_str());
             } else {
-                return LIBDBG_ERR_NOT_IMPLEMENTED;
+                return DBGUTIL_ERR_NOT_IMPLEMENTED;
             }
         }
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit) {
+DbgUtilErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData, bool is64Bit) {
     // read dir/file entry format array
     // each dir/file entry below has all the format entries repeated in each dir/file entry
     std::vector<DirEntryFmtDesc> entryFmt;
-    LibDbgErr rc = readFormatList(is, entryFmt);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = readFormatList(is, entryFmt);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -229,7 +229,7 @@ LibDbgErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData
             if (ctCode == DW_LNCT_path) {
                 std::string name;
                 rc = dwarfReadString(is, form, is64Bit, dwarfData, name);
-                if (rc != LIBDBG_ERR_OK) {
+                if (rc != DBGUTIL_ERR_OK) {
                     return rc;
                 }
                 if (!m_files.empty()) {
@@ -242,31 +242,31 @@ LibDbgErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData
                 uint64_t index = 0;
                 DWARF_READ_CONST(is, index, form);
                 if (m_files.empty()) {
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 // directory index is never excepted to be very large
                 if (index >= UINT32_MAX) {
                     LOG_ERROR(sLogger, "Invalid directory index %" PRIu64 " in line program",
                               index);
                     // this means either internal error or data corrupt
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 m_files.back().m_dirIndex = (uint32_t)index;
             } else if (ctCode == DW_LNCT_timestamp) {
                 if (form == DW_FORM_block) {
-                    return LIBDBG_ERR_NOT_IMPLEMENTED;
+                    return DBGUTIL_ERR_NOT_IMPLEMENTED;
                 }
                 uint64_t timestamp = 0;
                 DWARF_READ_CONST(is, timestamp, form);
                 if (m_files.empty()) {
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 m_files.back().m_timestamp = timestamp;
             } else if (ctCode == DW_LNCT_size) {
                 uint64_t size = 0;
                 DWARF_READ_CONST(is, size, form);
                 if (m_files.empty()) {
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 m_files.back().m_size = size;
             } else if (ctCode == DW_LNCT_MD5) {
@@ -275,13 +275,13 @@ LibDbgErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData
                 DBGUTIL_DESERIALIZE_INT64(is, lo);
                 DBGUTIL_DESERIALIZE_INT64(is, hi);
                 if (m_files.empty()) {
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 m_files.back().m_md5.m_lo = lo;
                 m_files.back().m_md5.m_hi = hi;
             } else {
                 // MD5 not supported for now
-                return LIBDBG_ERR_NOT_IMPLEMENTED;
+                return DBGUTIL_ERR_NOT_IMPLEMENTED;
             }
         }
     }
@@ -291,24 +291,24 @@ LibDbgErr DwarfLineUtil::readFileList(FixedInputStream& is, DwarfData& dwarfData
                   m_dirs[m_files.back().m_dirIndex].c_str(), m_files.back().m_name.c_str());
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
+DbgUtilErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
     // skip bytes according to header length
     uint64_t offset = is.getOffset();
     if (offset > m_startProgramOffset) {
         // exceeded expected start of program line offset
-        return LIBDBG_ERR_INTERNAL_ERROR;
+        return DBGUTIL_ERR_INTERNAL_ERROR;
     }
     if (offset < m_startProgramOffset) {
         size_t bytesSkiped = 0;
-        LibDbgErr rc = is.skipBytes(m_startProgramOffset - offset, bytesSkiped);
-        if (rc != LIBDBG_ERR_OK) {
+        DbgUtilErr rc = is.skipBytes(m_startProgramOffset - offset, bytesSkiped);
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         if (bytesSkiped != (m_startProgramOffset - offset)) {
-            return LIBDBG_ERR_INTERNAL_ERROR;
+            return DBGUTIL_ERR_INTERNAL_ERROR;
         }
     }
 
@@ -322,14 +322,14 @@ LibDbgErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
             uint64_t instSizeBytes = 0;
             DWARF_READ_ULEB128(is, instSizeBytes);
             DBGUTIL_DESERIALIZE_INT8(is, opCode);
-            LibDbgErr rc = execExtendedOpCode(opCode, is);
-            if (rc != LIBDBG_ERR_OK) {
+            DbgUtilErr rc = execExtendedOpCode(opCode, is);
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
         } else if (opCode < m_opCodeBase) {
             // standard op-code
-            LibDbgErr rc = execStandardOpCode(opCode, is);
-            if (rc != LIBDBG_ERR_OK) {
+            DbgUtilErr rc = execStandardOpCode(opCode, is);
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
         } else {
@@ -357,7 +357,7 @@ LibDbgErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
         }
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void DwarfLineUtil::appendLineMatrix() {
@@ -365,7 +365,7 @@ void DwarfLineUtil::appendLineMatrix() {
                             m_stateMachine.m_lineNumber, m_stateMachine.m_columnIndex});
 }
 
-LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is) {
+DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is) {
     switch (opCode) {
         case DW_LNS_copy:
             // copy row to matrix
@@ -394,7 +394,7 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
                 LOG_ERROR(sLogger, "Invalid line advance value %" PRId64 " in line program",
                           advance);
                 // this means either internal error or corrupt data
-                return LIBDBG_ERR_DATA_CORRUPT;
+                return DBGUTIL_ERR_DATA_CORRUPT;
             }
             // carefully update the value, line number cannot go below 1
             if (advance >= 0) {
@@ -407,7 +407,7 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
                               " will cause line number %u to reach invalid value",
                               advance, m_stateMachine.m_lineNumber);
                     // this is either internal error or corrupt data
-                    return LIBDBG_ERR_DATA_CORRUPT;
+                    return DBGUTIL_ERR_DATA_CORRUPT;
                 }
                 m_stateMachine.m_lineNumber += (int32_t)advance;
             }
@@ -425,7 +425,7 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
             if (fileIndex >= UINT32_MAX) {
                 LOG_ERROR(sLogger, "Invalid file index %" PRIu64 " in line program", fileIndex);
                 // this is either internal error or corrupt data
-                return LIBDBG_ERR_DATA_CORRUPT;
+                return DBGUTIL_ERR_DATA_CORRUPT;
             }
             m_stateMachine.m_fileIndex = (uint32_t)fileIndex;
             break;
@@ -438,7 +438,7 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
             if (columnIndex >= UINT32_MAX) {
                 LOG_ERROR(sLogger, "Invalid column index %" PRIu64 " in line program", columnIndex);
                 // this is either internal error or corrupt data
-                return LIBDBG_ERR_DATA_CORRUPT;
+                return DBGUTIL_ERR_DATA_CORRUPT;
             }
             m_stateMachine.m_columnIndex = (uint32_t)columnIndex;
             LOG_DEBUG(sLogger, "Executed DW_LNS_set_column: %" PRIu64, columnIndex);
@@ -486,13 +486,13 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
             uint64_t value = 0;
             DWARF_READ_ULEB128(is, value);
             if (value > UINT_MAX) {
-                return LIBDBG_ERR_INTERNAL_ERROR;
+                return DBGUTIL_ERR_INTERNAL_ERROR;
             }
             // not sure what range of values is expected here, for now we restrict to uint32_t
             if (value >= UINT32_MAX) {
                 LOG_ERROR(sLogger, "Invalid isa value %" PRIu64 " in line program", value);
                 // this is either internal error or corrupt data
-                return LIBDBG_ERR_DATA_CORRUPT;
+                return DBGUTIL_ERR_DATA_CORRUPT;
             }
             m_stateMachine.m_isa = (uint32_t)value;
             LOG_DEBUG(sLogger, "Executed DW_LNS_set_isa: %" PRIu64, value);
@@ -500,10 +500,10 @@ LibDbgErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is
         }
 
         default:
-            return LIBDBG_ERR_INTERNAL_ERROR;
+            return DBGUTIL_ERR_INTERNAL_ERROR;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void DwarfLineUtil::execSpecialOpCode(uint8_t opCode) {
@@ -551,7 +551,7 @@ void DwarfLineUtil::advanceAddress(uint64_t opAdvance) {
     m_stateMachine.m_opIndex = (m_stateMachine.m_opIndex + opAdvance) % m_maxOpsPerInst;
 }
 
-LibDbgErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& is) {
+DbgUtilErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& is) {
     switch (opCode) {
         case DW_LNE_end_sequence:
             m_stateMachine.m_isEndSequence = true;
@@ -580,7 +580,7 @@ LibDbgErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& i
                 LOG_ERROR(sLogger, "Invalid discriminator value %" PRIu64 " in line program",
                           value);
                 // this is either internal error or corrupt data
-                return LIBDBG_ERR_DATA_CORRUPT;
+                return DBGUTIL_ERR_DATA_CORRUPT;
             }
             m_stateMachine.m_discriminator = (uint32_t)value;
             LOG_DEBUG(sLogger, "Executed DW_LNE_set_discriminator: %" PRIu64, value);
@@ -588,10 +588,10 @@ LibDbgErr DwarfLineUtil::execExtendedOpCode(uint64_t opCode, FixedInputStream& i
         }
 
         default:
-            return LIBDBG_ERR_INTERNAL_ERROR;
+            return DBGUTIL_ERR_INTERNAL_ERROR;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

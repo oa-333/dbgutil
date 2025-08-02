@@ -10,7 +10,7 @@
 #include "os_util.h"
 #include "path_parser.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 // TODO: consider prettier alignment by aggregating all frames and then deciding alignment for file
 // name, but this requires API change
@@ -55,7 +55,7 @@ std::string DefaultStackEntryFormatter::formatStackEntry(const StackEntry& stack
     } else {
         std::stringstream s2;
         std::string fileName;
-        if (PathParser::getFileName(symbolInfo.m_fileName.c_str(), fileName) == LIBDBG_ERR_OK) {
+        if (PathParser::getFileName(symbolInfo.m_fileName.c_str(), fileName) == DBGUTIL_ERR_OK) {
             s2 << " at " << fileName;
         } else {
             s2 << " at " << symbolInfo.m_fileName;
@@ -71,7 +71,7 @@ std::string DefaultStackEntryFormatter::formatStackEntry(const StackEntry& stack
     if (!symbolInfo.m_moduleName.empty()) {
         std::string moduleFileName;
         if (PathParser::getFileName(symbolInfo.m_moduleName.c_str(), moduleFileName) ==
-            LIBDBG_ERR_OK) {
+            DBGUTIL_ERR_OK) {
             s << " (" << moduleFileName << ")";
         }
     }
@@ -115,7 +115,7 @@ private:
     uint32_t m_frameIndex;
 };
 
-LibDbgErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackTrace) {
+DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackTrace) {
     uint32_t frameIndex = 0;
     for (void* frameAddress : rawStackTrace) {
         StackEntry stackEntry;
@@ -124,7 +124,7 @@ LibDbgErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackTr
         (void)getSymbolEngine()->getSymbolInfo(frameAddress, stackEntry.m_entryInfo);
         stackTrace.emplace_back(stackEntry);
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip /* = 0 */,
@@ -193,12 +193,12 @@ void printStackTraceContext(void* context, int skip, StackEntryPrinter* printer,
     printer->onEndStackTrace();
 }
 
-LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
+DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
     // get all thread ids, for each thread, get its stack trace, except for current thread
     class StackTraceCollector : public ThreadVisitor {
     public:
         StackTraceCollector(AppRawStackTrace& appStackTrace)
-            : m_appStackTrace(appStackTrace), m_result(LIBDBG_ERR_OK) {}
+            : m_appStackTrace(appStackTrace), m_result(DBGUTIL_ERR_OK) {}
         StackTraceCollector(const StackTraceCollector&) = delete;
         StackTraceCollector(StackTraceCollector&&) = delete;
         StackTraceCollector& operator=(const StackTraceCollector&) = delete;
@@ -206,24 +206,24 @@ LibDbgErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
 
         void onThreadId(os_thread_id_t threadId) final {
             RawStackTrace rawStackTrace;
-            LibDbgErr rc = getStackTraceProvider()->getThreadStackTrace(threadId, rawStackTrace);
-            if (rc == LIBDBG_ERR_OK) {
+            DbgUtilErr rc = getStackTraceProvider()->getThreadStackTrace(threadId, rawStackTrace);
+            if (rc == DBGUTIL_ERR_OK) {
                 m_appStackTrace.push_back(std::make_pair(threadId, rawStackTrace));
-            } else if (m_result == LIBDBG_ERR_OK) {
+            } else if (m_result == DBGUTIL_ERR_OK) {
                 // remember first error only, but continue
                 m_result = rc;
             }
         }
 
-        inline LibDbgErr getResult() const { return m_result; }
+        inline DbgUtilErr getResult() const { return m_result; }
 
     private:
         AppRawStackTrace& m_appStackTrace;
-        LibDbgErr m_result;
+        DbgUtilErr m_result;
     };
     StackTraceCollector collector(appStackTrace);
-    LibDbgErr rc = getThreadManager()->visitThreadIds(&collector);
-    if (rc == LIBDBG_ERR_OK) {
+    DbgUtilErr rc = getThreadManager()->visitThreadIds(&collector);
+    if (rc == DBGUTIL_ERR_OK) {
         rc = collector.getResult();
     }
     return rc;
@@ -242,7 +242,7 @@ std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace, int 
 void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = nullptr */,
                         StackEntryFormatter* formatter /* = nullptr */) {
     AppRawStackTrace appStackTrace;
-    if (getAppRawStackTrace(appStackTrace) == LIBDBG_ERR_OK) {
+    if (getAppRawStackTrace(appStackTrace) == DBGUTIL_ERR_OK) {
         // setup defaults if needed
         StderrStackEntryPrinter defaultPrinter;
         DefaultStackEntryFormatter defaultFormatter;
@@ -264,4 +264,4 @@ void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = null
     }
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil

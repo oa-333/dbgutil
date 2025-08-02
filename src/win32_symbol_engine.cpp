@@ -1,15 +1,15 @@
 // avoid including windows header, otherwise MinGW compilation fails
-#define LIBDBG_NO_WINDOWS_HEADER
-#include "libdbg_def.h"
+#define DBGUTIL_NO_WINDOWS_HEADER
+#include "dbg_util_def.h"
 
 // this is good only for Microsoft Visual C++ compiler
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file
 // so most symbol engine functions fail, but this is still useful for stack walking, without symbol
 // extraction, which takes place in bfd symbol engine.
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 // we put this in ifdef so that vscode auto-format will not move it around...
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -21,13 +21,13 @@
 #include <cinttypes>
 
 #include "dbg_stack_trace.h"
-#include "libdbg_common.h"
-#include "libdbg_log_imp.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 #include "path_parser.h"
 #include "win32_module_manager.h"
 #include "win32_symbol_engine.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -50,22 +50,22 @@ void Win32SymbolEngine::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr Win32SymbolEngine::initialize() {
+DbgUtilErr Win32SymbolEngine::initialize() {
     // get current process handle
     Win32ModuleManager* moduleManager = Win32ModuleManager::getInstance();
     m_processHandle = moduleManager->getProcessHandle();
 
     // get current process image path from main module
     OsModuleInfo mainModuleInfo;
-    LibDbgErr rc = moduleManager->getMainModule(mainModuleInfo);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = moduleManager->getMainModule(mainModuleInfo);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
     // get the containing directory
     LOG_TRACE(sLogger, "Main module file path is: %s", mainModuleInfo.m_modulePath.c_str());
     rc = PathParser::getParentPath(mainModuleInfo.m_modulePath.c_str(), m_processDir);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to extract parent path from module '%s': %s",
                   mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
         return rc;
@@ -74,7 +74,7 @@ LibDbgErr Win32SymbolEngine::initialize() {
 
     // get process name
     rc = PathParser::getFileName(mainModuleInfo.m_modulePath.c_str(), m_processName);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to extract file name from module '%s': %s",
                   mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
         return rc;
@@ -90,7 +90,7 @@ LibDbgErr Win32SymbolEngine::initialize() {
         LOG_SYS_ERROR(sLogger, SymInitialize,
                       "Cannot initialize symbol handler: failed to initialize debug symbol engine");
         m_processHandle = INVALID_HANDLE_VALUE;
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     LOG_TRACE(sLogger, "Symbol engine initialized");
 
@@ -104,19 +104,19 @@ LibDbgErr Win32SymbolEngine::initialize() {
     IMAGE_NT_HEADERS* headers = ImageNtHeader(mainModuleInfo.m_loadAddress);
     if (headers == nullptr) {
         LOG_SYS_ERROR(sLogger, ImageNtHeader, "Failed to get process image headers");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     m_imageType = headers->FileHeader.Machine;
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr Win32SymbolEngine::terminate() {
+DbgUtilErr Win32SymbolEngine::terminate() {
     if (!SymCleanup(m_processHandle)) {
         LOG_SYS_ERROR(sLogger, SymCleanup, "Failed to terminate debug symbol engine");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     m_processHandle = INVALID_HANDLE_VALUE;
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 #ifdef _M_X64
@@ -140,7 +140,7 @@ static void initStackFrame(const CONTEXT& context, STACKFRAME64& stackFrame) {
 #endif
 
 // this implementation is available also for MinGW, as it might interact with non-gcc modules
-LibDbgErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
+DbgUtilErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
     // prepare symbol info struct
     const int MAX_NAME_LEN = 1024;
     IMAGEHLP_SYMBOL64* sym = (IMAGEHLP_SYMBOL64*)malloc(sizeof(IMAGEHLP_SYMBOL64) + MAX_NAME_LEN);
@@ -155,7 +155,7 @@ LibDbgErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolI
         LOG_TRACE(sLogger, "Failed to get debug symbol for address 0x%" PRIx64 " (error code: %u)",
                   symAddress, rc);
         free(sym);
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     // un-decorate symbol name
@@ -204,33 +204,33 @@ void Win32SymbolEngine::walkThreadStack(HANDLE hThread, CONTEXT& context,
     } while (stackFrame.AddrReturn.Offset != 0);
 }
 
-LibDbgErr Win32SymbolEngine::walkStack(StackFrameListener* listener, void* context) {
+DbgUtilErr Win32SymbolEngine::walkStack(StackFrameListener* listener, void* context) {
     HANDLE thread = INVALID_HANDLE_VALUE;
     if (!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &thread, 0,
                          false, DUPLICATE_SAME_ACCESS)) {
         LOG_SYS_ERROR(sLogger, DuplicateHandle,
                       "Cannot print stack trace: failed to duplicate current thread handle");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     LOG_DEBUG(sLogger, "Dumping stack trace");
     walkThreadStack(thread, *(PCONTEXT)context, listener);
     LOG_DEBUG(sLogger, "Done dumping stack trace");
     CloseHandle(thread);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 Win32SymbolEngine::Win32SymbolEngine() : m_processHandle(INVALID_HANDLE_VALUE), m_imageType(0) {}
 
-LibDbgErr Win32SymbolEngine::getSymbolModule(void* symAddress, SymbolInfo& symbolInfo) {
+DbgUtilErr Win32SymbolEngine::getSymbolModule(void* symAddress, SymbolInfo& symbolInfo) {
     OsModuleInfo moduleInfo;
-    LibDbgErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     symbolInfo.m_moduleName = moduleInfo.m_modulePath;
     symbolInfo.m_moduleBaseAddress = moduleInfo.m_loadAddress;
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
@@ -254,32 +254,32 @@ void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     CloseHandle(hFile);
 }
 
-LibDbgErr initWin32SymbolEngine() {
+DbgUtilErr initWin32SymbolEngine() {
     registerLogger(sLogger, "win32_symbol_engine");
     Win32SymbolEngine::createInstance();
-    LibDbgErr rc = Win32SymbolEngine::getInstance()->initialize();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32SymbolEngine::getInstance()->initialize();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifdef LIBDBG_MSVC
+#ifdef DBGUTIL_MSVC
     setSymbolEngine(Win32SymbolEngine::getInstance());
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termWin32SymbolEngine() {
-#ifdef LIBDBG_MSVC
+DbgUtilErr termWin32SymbolEngine() {
+#ifdef DBGUTIL_MSVC
     setSymbolEngine(nullptr);
 #endif
-    LibDbgErr rc = Win32SymbolEngine::getInstance()->terminate();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32SymbolEngine::getInstance()->terminate();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     Win32SymbolEngine::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS

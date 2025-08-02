@@ -1,10 +1,10 @@
-#define LIBDBG_NO_WINDOWS_HEADER
-#include "libdbg_def.h"
+#define DBGUTIL_NO_WINDOWS_HEADER
+#include "dbg_util_def.h"
 
 // it turns out that when running from within MinGW/UCRT console, then signal handlers can be
 // registered, but when running from Windows console Windows exception handler is in effect.
 // this can be distinguished by the existence of the MSYSTEM environment variable
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #include <signal.h>
 #include <string.h>
@@ -13,13 +13,13 @@
 #include <cinttypes>
 
 #include "dbg_stack_trace.h"
-#include "libdbg_common.h"
-#include "libdbg_flags.h"
-#include "libdbg_log_imp.h"
+#include "dbg_util_flags.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -30,7 +30,7 @@ static int sExceptBufLen = 0;
 
 LinuxExceptionHandler* LinuxExceptionHandler::sInstance = nullptr;
 
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
 static const char* getSigIllInfo(int code) {
     switch (code) {
         case ILL_ILLOPC:
@@ -144,7 +144,7 @@ static void printExtendedInfo(int sigNum, int code) {
 }
 #endif
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 static const char* mingwGetSignalName(int sigNum) {
     switch (sigNum) {
         case SIGSEGV:
@@ -227,34 +227,34 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
     dispatchExceptionInfo(exInfo);
 
     // nevertheless, we also send to log
-    if (getGlobalFlags() & LIBDBG_LOG_EXCEPTIONS) {
+    if (getGlobalFlags() & DBGUTIL_LOG_EXCEPTIONS) {
         LOG_FATAL(sLogger, exInfo.m_fullExceptionInfo);
         LOG_FATAL(sLogger, exInfo.m_callStack);
     }
 
     // generate core
-    if (getGlobalFlags() && LIBDBG_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
         LOG_FATAL(sLogger, "Aborting after fatal exception, see details above.");
         abort();
     }
 }
 
 const char* LinuxExceptionHandler::getSignalName(int sigNum) {
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     return mingwGetSignalName(sigNum);
 #else
     return strsignal(sigNum);
 #endif
 }
 
-LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandlerFunc handler,
-                                                       SignalHandler* prevHandler) {
-#ifdef LIBDBG_MINGW
+DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandlerFunc handler,
+                                                        SignalHandler* prevHandler) {
+#ifdef DBGUTIL_MINGW
     SignalHandler prevHandlerLocal = signal(sigNum, handler);
     if (prevHandlerLocal == SIG_ERR) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to register signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     if (prevHandler != nullptr) {
         *prevHandler = prevHandlerLocal;
@@ -274,22 +274,22 @@ LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum, SignalHandler
     if (res != 0) {
         LOG_SYS_ERROR(sLogger, sigaction, "Failed to register signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     if (prevHandler != nullptr) {
         *prevHandler = prevHandlerLocal;
     }
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler& handler) {
-#ifdef LIBDBG_MINGW
+DbgUtilErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler& handler) {
+#ifdef DBGUTIL_MINGW
     SignalHandler prevHandlerLocal = signal(sigNum, handler);
     if (prevHandlerLocal == SIG_ERR) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to register signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 #else
     // install previous signal handler
@@ -297,22 +297,22 @@ LibDbgErr LinuxExceptionHandler::restoreSignalHandler(int sigNum, SignalHandler&
     if (res != 0) {
         LOG_SYS_ERROR(sLogger, sigaction, "Failed to register signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
+DbgUtilErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
     // register handler
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     SignalHandler prevHandler = nullptr;
 #else
     SignalHandler prevHandler = {};
 #endif
-    LibDbgErr res =
+    DbgUtilErr res =
         registerSignalHandler(sigNum, &LinuxExceptionHandler::signalHandlerStatic, &prevHandler);
-    if (res != LIBDBG_ERR_OK) {
+    if (res != DBGUTIL_ERR_OK) {
         return res;
     }
 
@@ -323,25 +323,25 @@ LibDbgErr LinuxExceptionHandler::registerSignalHandler(int sigNum) {
                   sigNum, getSignalName(sigNum));
         // best effort to restore previous handler
         restoreSignalHandler(sigNum, prevHandler);
-        return LIBDBG_ERR_ALREADY_EXISTS;
+        return DBGUTIL_ERR_ALREADY_EXISTS;
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxExceptionHandler::unregisterSignalHandler(int sigNum) {
+DbgUtilErr LinuxExceptionHandler::unregisterSignalHandler(int sigNum) {
     // find previous handler
     SigHandlerMap::iterator itr = m_prevHandlerMap.find(sigNum);
     if (itr == m_prevHandlerMap.end()) {
         LOG_ERROR(sLogger,
                   "Internal error, could not find previous signal handler for signal %d (%s)",
                   sigNum, getSignalName(sigNum));
-        return LIBDBG_ERR_NOT_FOUND;
+        return DBGUTIL_ERR_NOT_FOUND;
     }
 
     // restore previous handler
     SignalHandler prevHandler = itr->second;
-    LibDbgErr res = restoreSignalHandler(sigNum, prevHandler);
-    if (res != LIBDBG_ERR_OK) {
+    DbgUtilErr res = restoreSignalHandler(sigNum, prevHandler);
+    if (res != DBGUTIL_ERR_OK) {
         LOG_SYS_ERROR(sLogger, signal, "Failed to unregister signal handler for signal %d (%s)",
                       sigNum, getSignalName(sigNum));
         // continue, so we can clear the map entry
@@ -350,56 +350,56 @@ LibDbgErr LinuxExceptionHandler::unregisterSignalHandler(int sigNum) {
     return res;
 }
 
-LibDbgErr LinuxExceptionHandler::registerExceptionHandlers() {
-    LibDbgErr rc = registerSignalHandler(SIGSEGV);
-    if (rc != LIBDBG_ERR_OK) {
+DbgUtilErr LinuxExceptionHandler::registerExceptionHandlers() {
+    DbgUtilErr rc = registerSignalHandler(SIGSEGV);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = registerSignalHandler(SIGILL);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = registerSignalHandler(SIGFPE);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
     rc = registerSignalHandler(SIGBUS);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = registerSignalHandler(SIGTRAP);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxExceptionHandler::unregisterExceptionHandlers() {
-    LibDbgErr rc = unregisterSignalHandler(SIGSEGV);
-    if (rc != LIBDBG_ERR_OK) {
+DbgUtilErr LinuxExceptionHandler::unregisterExceptionHandlers() {
+    DbgUtilErr rc = unregisterSignalHandler(SIGSEGV);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = unregisterSignalHandler(SIGILL);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = unregisterSignalHandler(SIGFPE);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
     rc = unregisterSignalHandler(SIGBUS);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     rc = unregisterSignalHandler(SIGTRAP);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 void LinuxExceptionHandler::createInstance() {
@@ -419,13 +419,13 @@ void LinuxExceptionHandler::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr LinuxExceptionHandler::initializeEx() {
+DbgUtilErr LinuxExceptionHandler::initializeEx() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in Win32ExceptionHandler
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     if (getenv("MSYSTEM") != nullptr) {
-        if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
+        if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
             LOG_DEBUG(sLogger, "Registering signal handler for MinGW under MSYSTEM runtime");
             registerExceptionHandlers();
         }
@@ -433,16 +433,16 @@ LibDbgErr LinuxExceptionHandler::initializeEx() {
         LOG_DEBUG(sLogger, "Signal handler for MinGW not registered, not under MSYSTEM runtime");
     }
 #else
-    if (getGlobalFlags() & LIBDBG_CATCH_EXCEPTIONS) {
+    if (getGlobalFlags() & DBGUTIL_CATCH_EXCEPTIONS) {
         registerExceptionHandlers();
     }
 #endif
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxExceptionHandler::terminateEx() {
-#ifdef LIBDBG_MINGW
+DbgUtilErr LinuxExceptionHandler::terminateEx() {
+#ifdef DBGUTIL_MINGW
     if (getenv("MSYSTEM") != nullptr) {
         LOG_DEBUG(sLogger, "Unregistering signal handler for MinGW under MSYSTEM runtime");
         unregisterExceptionHandlers();
@@ -450,38 +450,38 @@ LibDbgErr LinuxExceptionHandler::terminateEx() {
 #else
     unregisterExceptionHandlers();
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr initLinuxExceptionHandler() {
+DbgUtilErr initLinuxExceptionHandler() {
     // code that was compiled under MinGW can run on windows console or on MinGW console, so we
     // distinguish the cases by MSYSTEM environment variable
     // we take the same consideration also in LinuxExceptionHandler
     registerLogger(sLogger, "linux_exception_handler");
     LinuxExceptionHandler::createInstance();
-    LibDbgErr rc = LinuxExceptionHandler::getInstance()->initialize();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = LinuxExceptionHandler::getInstance()->initialize();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
-#ifndef LIBDBG_MSVC
+#ifndef DBGUTIL_MSVC
     setExceptionHandler(LinuxExceptionHandler::getInstance());
 #endif
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termLinuxExceptionHandler() {
-#ifndef LIBDBG_MSVC
+DbgUtilErr termLinuxExceptionHandler() {
+#ifndef DBGUTIL_MSVC
     setExceptionHandler(nullptr);
 #endif
-    LibDbgErr rc = LinuxExceptionHandler::getInstance()->terminate();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = LinuxExceptionHandler::getInstance()->terminate();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     LinuxExceptionHandler::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // not defined LIBDBG_GCC
+#endif  // not defined DBGUTIL_GCC

@@ -1,13 +1,13 @@
-#ifndef __LIBDBG_EXCEPT_H__
-#define __LIBDBG_EXCEPT_H__
+#ifndef __DBG_UTIL_EXCEPT_H__
+#define __DBG_UTIL_EXCEPT_H__
 
 #include <cinttypes>
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-namespace libdbg {
+namespace dbgutil {
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 /**
  * @typedef Exception code type as defined by the ExceptionCode member of EXCEPTION_RECORD.
  * @note This is actually DWORD, but we don't want to force entire windows header inclusion here
@@ -20,7 +20,7 @@ typedef int exception_code_t;
 #endif
 
 /** @brief Exception information. */
-struct LIBDBG_API OsExceptionInfo {
+struct DBGUTIL_API OsExceptionInfo {
     /** @brief The exception code (e.g. SIGSEGV, STATUS_ACCESS_VIOLATION). */
     exception_code_t m_exceptionCode;
 
@@ -41,7 +41,7 @@ struct LIBDBG_API OsExceptionInfo {
 };
 
 /** @brief Exception listener. */
-class LIBDBG_API OsExceptionListener {
+class DBGUTIL_API OsExceptionListener {
 public:
     virtual ~OsExceptionListener() {}
 
@@ -58,6 +58,6 @@ protected:
     OsExceptionListener& operator=(const OsExceptionListener&) = delete;
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // __LIBDBG_EXCEPT_H__
+#endif  // __DBG_UTIL_EXCEPT_H__

@@ -3,14 +3,14 @@
 
 #include <exception>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
-#include "libdbg_except.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
+#include "dbg_util_except.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief Parent interface for exception handler. */
-class LIBDBG_API OsExceptionHandler {
+class DBGUTIL_API OsExceptionHandler {
 public:
     OsExceptionHandler(const OsExceptionHandler&) = delete;
     OsExceptionHandler(OsExceptionHandler&&) = delete;
@@ -18,10 +18,10 @@ public:
     virtual ~OsExceptionHandler() {}
 
     /** @brief Initializes the symbol engine. */
-    LibDbgErr initialize();
+    DbgUtilErr initialize();
 
     /** @brief Destroys the symbol engine. */
-    LibDbgErr terminate();
+    DbgUtilErr terminate();
 
     /**
      * @brief Retrieves symbol debug information (platform independent API).
@@ -36,10 +36,10 @@ protected:
     OsExceptionHandler() : m_exceptionListener(nullptr), m_prevTerminateHandler(nullptr) {}
 
     /** @brief Initializes the symbol engine. */
-    virtual LibDbgErr initializeEx() { return LIBDBG_ERR_OK; }
+    virtual DbgUtilErr initializeEx() { return DBGUTIL_ERR_OK; }
 
     /** @brief Destroys the symbol engine. */
-    virtual LibDbgErr terminateEx() { return LIBDBG_ERR_OK; }
+    virtual DbgUtilErr terminateEx() { return DBGUTIL_ERR_OK; }
 
     /** @brief Dispatches an exception to the exception listener. */
     void dispatchExceptionInfo(const OsExceptionInfo& exceptionInfo);
@@ -59,11 +59,11 @@ private:
 };
 
 /** @brief Installs a exception handler implementation. */
-extern LIBDBG_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
+extern DBGUTIL_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
 
 /** @brief Retrieves the installed exception handler implementation. */
-extern LIBDBG_API OsExceptionHandler* getExceptionHandler();
+extern DBGUTIL_API OsExceptionHandler* getExceptionHandler();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __OS_EXCEPTION_HANDLER_H__

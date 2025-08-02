@@ -6,10 +6,10 @@
 #include <shared_mutex>
 #include <string>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 // the main interface with this service, according to existing use cases, is as follows:
 //
@@ -23,7 +23,7 @@ namespace libdbg {
 // for this a lock is needed.
 
 /** @brief Loaded module information. */
-struct LIBDBG_API OsModuleInfo {
+struct DBGUTIL_API OsModuleInfo {
     OsModuleInfo(const char* modulePath = "", void* loadAddress = nullptr, uint64_t size = 0,
                  void* osData = nullptr)
         : m_modulePath(modulePath), m_loadAddress(loadAddress), m_size(size), m_osData(osData) {}
@@ -76,7 +76,7 @@ struct LIBDBG_API OsModuleInfo {
 };
 
 /** @brief Manages the list of modules loaded by the process, mostly for debugging purposes. */
-class LIBDBG_API OsModuleManager {
+class DBGUTIL_API OsModuleManager {
 public:
     OsModuleManager(const OsModuleManager&) = delete;
     OsModuleManager(OsModuleManager&&) = delete;
@@ -88,9 +88,9 @@ public:
      * @note If the module is not found then a system call is triggered.
      * @param address The address to search.
      * @param[out] moduleInfo The resulting module information.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    virtual LibDbgErr getModuleByAddress(void* address, OsModuleInfo& moduleInfo);
+    virtual DbgUtilErr getModuleByAddress(void* address, OsModuleInfo& moduleInfo);
 
     /**
      * @brief Searches for a module by name.
@@ -98,13 +98,13 @@ public:
      * @param[out] moduleInfo The resulting module information.
      * @param shouldRefreshModuleList Optionally specifies whether the module should be refreshed if
      * the module was not found (by default no refreshing takes place).
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr getModuleByName(const char* name, OsModuleInfo& moduleInfo,
-                              bool shouldRefreshModuleList = false);
+    DbgUtilErr getModuleByName(const char* name, OsModuleInfo& moduleInfo,
+                               bool shouldRefreshModuleList = false);
 
     /** @brief Queries for the main executable module of the current process. */
-    LibDbgErr getMainModule(OsModuleInfo& moduleInfo);
+    DbgUtilErr getMainModule(OsModuleInfo& moduleInfo);
 
     /**
      * @brief Traverses loaded modules. Consider calling @ref refreshModuleList() to traverse an
@@ -114,26 +114,26 @@ public:
      * moduleInfo, bool& shouldStop)". If the visitor function returns error code the module
      * traversal stops, and the error code is returned to the caller. If the shouldStop flag is set
      * to true by the visitor, then the module traversal stops, and E_OK is returned to the caller.
-     * @return LibDbgErr
+     * @return DbgUtilErr
      */
     template <typename F>
-    inline LibDbgErr forEachModule(F f) {
+    inline DbgUtilErr forEachModule(F f) {
         std::shared_lock<std::shared_mutex> lock(m_lock);
         for (const OsModuleInfo& moduleInfo : m_moduleSet) {
             bool shouldStop = false;
-            LibDbgErr rc = f(moduleInfo, shouldStop);
-            if (rc != LIBDBG_ERR_OK) {
+            DbgUtilErr rc = f(moduleInfo, shouldStop);
+            if (rc != DBGUTIL_ERR_OK) {
                 return rc;
             }
             if (shouldStop) {
                 break;
             }
         }
-        return LIBDBG_ERR_OK;
+        return DBGUTIL_ERR_OK;
     }
 
     /** @brief Refreshes the module list. */
-    virtual LibDbgErr refreshModuleList() = 0;
+    virtual DbgUtilErr refreshModuleList() = 0;
 
 protected:
     OsModuleManager() : m_mainModuleValid(false) {}
@@ -145,7 +145,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    virtual LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) = 0;
+    virtual DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) = 0;
 
     /** @brief Clears the module set. */
     void clearModuleSet();
@@ -166,15 +166,15 @@ private:
     bool m_mainModuleValid;
     OsModuleInfo m_mainModule;
 
-    LibDbgErr searchModule(const char* name, OsModuleInfo& moduleInfo);
+    DbgUtilErr searchModule(const char* name, OsModuleInfo& moduleInfo);
 };
 
 /** @brief Installs a module manager implementation. */
-extern LIBDBG_API void setModuleManager(OsModuleManager* moduleManager);
+extern DBGUTIL_API void setModuleManager(OsModuleManager* moduleManager);
 
 /** @brief Retrieves the installed module manager implementation. */
-extern LIBDBG_API OsModuleManager* getModuleManager();
+extern DBGUTIL_API OsModuleManager* getModuleManager();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __OS_MODULE_MANAGER_H__

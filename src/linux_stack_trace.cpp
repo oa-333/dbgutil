@@ -1,6 +1,6 @@
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_GCC
+#ifdef DBGUTIL_GCC
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -11,13 +11,13 @@
 #include "linux_thread_manager.h"
 #include "os_util.h"
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #include "win32_stack_trace.h"
 #endif
 
 #define DBGUTIL_GET_STACK_TRACE_REQUEST 1
 
-namespace libdbg {
+namespace dbgutil {
 
 LinuxStackTraceProvider* LinuxStackTraceProvider::sInstance = nullptr;
 
@@ -38,7 +38,7 @@ void LinuxStackTraceProvider::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
+DbgUtilErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void* context) {
     unw_context_t unw_context;
     if (context == nullptr) {
         unw_getcontext(&unw_context);
@@ -57,18 +57,18 @@ LibDbgErr LinuxStackTraceProvider::walkStack(StackFrameListener* listener, void*
         void* addr = (void*)ip;
         listener->onStackFrame(addr);
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
-                                                       RawStackTrace& stackTrace) {
+DbgUtilErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
+                                                        RawStackTrace& stackTrace) {
     // for current thread do regular stack walking
     if (threadId == OsUtil::getCurrentThreadId()) {
         return getStackTrace(nullptr, stackTrace);
     }
 
     // otherwise, execute thread request
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
     return Win32StackTraceProvider::getInstance()->getThreadStackTrace(threadId, stackTrace);
 #else
     class GetStackTraceExecutor : public ThreadExecutor {
@@ -76,7 +76,7 @@ LibDbgErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
         GetStackTraceExecutor(RawStackTrace& stackTrace) : m_stackTrace(stackTrace) {}
         ~GetStackTraceExecutor() final {}
 
-        LibDbgErr execRequest() final {
+        DbgUtilErr execRequest() final {
             return getStackTraceProvider()->getStackTrace(nullptr, m_stackTrace);
         }
 
@@ -85,28 +85,28 @@ LibDbgErr LinuxStackTraceProvider::getThreadStackTrace(os_thread_id_t threadId,
     };
 
     GetStackTraceExecutor executor(stackTrace);
-    LibDbgErr result = LIBDBG_ERR_OK;
-    LibDbgErr rc =
+    DbgUtilErr result = DBGUTIL_ERR_OK;
+    DbgUtilErr rc =
         LinuxThreadManager::getInstance()->execThreadRequest(threadId, &executor, result);
-    if (rc == LIBDBG_ERR_OK) {
+    if (rc == DBGUTIL_ERR_OK) {
         rc = result;
     }
     return rc;
 #endif
 }
 
-LibDbgErr initLinuxStackTrace() {
+DbgUtilErr initLinuxStackTrace() {
     LinuxStackTraceProvider::createInstance();
     setStackTraceProvider(LinuxStackTraceProvider::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termLinuxStackTrace() {
+DbgUtilErr termLinuxStackTrace() {
     setStackTraceProvider(nullptr);
     LinuxStackTraceProvider::destroyInstance();
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_GCC
+#endif  // DBGUTIL_GCC

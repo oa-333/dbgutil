@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief A syntactical path parsing utility class. */
 class PathParser {
@@ -22,7 +22,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr canonicalizePath(const char* path, std::string& canonPath);
+    static DbgUtilErr canonicalizePath(const char* path, std::string& canonPath);
 
     /**
      * @brief Canonicalizes a path, but instead return the canonical path components.
@@ -31,7 +31,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr canonicalizePath(const char* path, std::vector<std::string>& components);
+    static DbgUtilErr canonicalizePath(const char* path, std::vector<std::string>& components);
     /**
      * @brief Normalizes a path. A normalized path does not contain . and .. references.
      * @param path The file or directory path.
@@ -39,7 +39,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr normalizePath(const char* path, std::string& canonPath);
+    static DbgUtilErr normalizePath(const char* path, std::string& canonPath);
 
     /**
      * @brief Normalizes a path, but instead return the normalized path components.
@@ -48,7 +48,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr normalizePath(const char* path, std::vector<std::string>& components);
+    static DbgUtilErr normalizePath(const char* path, std::vector<std::string>& components);
 
     /**
      * @brief Queries whether a path is syntactically legal. This includes both path syntax check
@@ -57,7 +57,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr isPathLegal(const char* path);
+    static DbgUtilErr isPathLegal(const char* path);
 
     /**
      * @brief Queries whether a path is an absolute path, starting from root. No path syntax checks
@@ -75,7 +75,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If any component in the provided list is illegal.
      */
-    static LibDbgErr isPathComponentListLegal(const std::vector<std::string>& components);
+    static DbgUtilErr isPathComponentListLegal(const std::vector<std::string>& components);
 
     /**
      * @brief Queries whether a single path component is legal. This basically check for illegal
@@ -84,7 +84,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path component is illegal.
      */
-    static LibDbgErr isPathComponentLegal(const char* pathComponent);
+    static DbgUtilErr isPathComponentLegal(const char* pathComponent);
 
     /**
      * @brief Parse a path into its components.
@@ -93,7 +93,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr parsePath(const char* path, std::vector<std::string>& components);
+    static DbgUtilErr parsePath(const char* path, std::vector<std::string>& components);
 
     /**
      * @brief Retrieves the parent path of a given path. In essence retrieves the parent directory.
@@ -102,7 +102,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr getParentPath(const char* path, std::string& parentPath);
+    static DbgUtilErr getParentPath(const char* path, std::string& parentPath);
 
     /**
      * @brief Extracts the bare file name from a path.
@@ -111,7 +111,7 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr getFileName(const char* path, std::string& fileName);
+    static DbgUtilErr getFileName(const char* path, std::string& fileName);
 
     /**
      * @brief Composes a path from two parts components with syntax check.
@@ -123,8 +123,8 @@ public:
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */
-    static LibDbgErr composePath(const char* basePath, const char* subPath, std::string& path,
-                                 bool canonicalize = true);
+    static DbgUtilErr composePath(const char* basePath, const char* subPath, std::string& path,
+                                  bool canonicalize = true);
 
     /**
      * @brief Composes a path from separate components.
@@ -143,6 +143,6 @@ public:
                             std::vector<std::string>::const_iterator to, std::string& path);
 };
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __PATH_PARSER_H__

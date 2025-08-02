@@ -3,13 +3,13 @@
 
 #include <cstdint>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @brief A thread visitor used to traverse all threads. */
-class LIBDBG_API ThreadVisitor {
+class DBGUTIL_API ThreadVisitor {
 public:
     virtual ~ThreadVisitor() {}
 
@@ -28,7 +28,7 @@ protected:
     ThreadVisitor& operator=(const ThreadVisitor&) = delete;
 };
 
-class LIBDBG_API OsThreadManager {
+class DBGUTIL_API OsThreadManager {
 public:
     OsThreadManager(const OsThreadManager&) = delete;
     OsThreadManager(OsThreadManager&&) = delete;
@@ -40,17 +40,17 @@ public:
      * @param visitor The thread visitor.
      * @return The operation result.
      */
-    virtual LibDbgErr visitThreadIds(ThreadVisitor* visitor) = 0;
+    virtual DbgUtilErr visitThreadIds(ThreadVisitor* visitor) = 0;
 
 protected:
     OsThreadManager() {}
 };
 
 /** @brief Installs a thread manager. */
-extern LIBDBG_API void setThreadManager(OsThreadManager* provider);
+extern DBGUTIL_API void setThreadManager(OsThreadManager* provider);
 
 /** @brief Retrieves the installed thread manager. */
-extern LIBDBG_API OsThreadManager* getThreadManager();
+extern DBGUTIL_API OsThreadManager* getThreadManager();
 
 /** @brief Utility API for lambda syntax. */
 template <typename F>
@@ -64,6 +64,6 @@ inline void visitThreadIds(F f) {
     getThreadManager()->visitThreadIds(&visitor);
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __OS_THREAD_MANGER_H__

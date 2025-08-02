@@ -1,6 +1,6 @@
 #include "win32_module_manager.h"
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 
 // #include <dbghelp.h>
 #include <psapi.h>
@@ -8,15 +8,15 @@
 #include <cassert>
 #include <vector>
 
-#include "libdbg_log_imp.h"
+#include "dbgutil_log_imp.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
 Win32ModuleManager* Win32ModuleManager::sInstance = nullptr;
 
-LibDbgErr Win32ModuleManager::createInstance() {
+DbgUtilErr Win32ModuleManager::createInstance() {
     assert(sInstance == nullptr);
     sInstance = new (std::nothrow) Win32ModuleManager();
     assert(sInstance != nullptr);
@@ -34,12 +34,12 @@ void Win32ModuleManager::destroyInstance() {
     sInstance = nullptr;
 }
 
-LibDbgErr Win32ModuleManager::refreshModuleList() {
+DbgUtilErr Win32ModuleManager::refreshModuleList() {
     // figure out how many entries are needed
     DWORD bytesNeeded = 0;
     if (!EnumProcessModules(m_processHandle, nullptr, 0, &bytesNeeded)) {
         LOG_SYS_ERROR(sLogger, EnumProcessModules, "Failed to enumerate process modules");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     // allocate enough entries and get the module list
@@ -49,7 +49,7 @@ LibDbgErr Win32ModuleManager::refreshModuleList() {
                             &bytesNeeded)) {
         LOG_SYS_ERROR(sLogger, EnumProcessModules,
                       "Failed to enumerate process modules (second time)");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     // some modules may be loaded/unloaded manually so we clear the module set before adding the
@@ -61,8 +61,8 @@ LibDbgErr Win32ModuleManager::refreshModuleList() {
     for (uint32_t i = 0; i < moduleCount; ++i) {
         HMODULE module = moduleHandles[i];
         OsModuleInfo moduleInfo;
-        LibDbgErr rc = getOsModuleInfo(module, moduleInfo);
-        if (rc != LIBDBG_ERR_OK) {
+        DbgUtilErr rc = getOsModuleInfo(module, moduleInfo);
+        if (rc != DBGUTIL_ERR_OK) {
             LOG_ERROR(sLogger, "Failed to get module information");
             return rc;
         }
@@ -76,17 +76,17 @@ LibDbgErr Win32ModuleManager::refreshModuleList() {
 
     // record the main module
     setMainModule(mainModule);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr Win32ModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
+DbgUtilErr Win32ModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
     HMODULE mod = nullptr;
     if (address == nullptr) {
         mod = GetModuleHandleA(nullptr);
         if (mod == nullptr) {
             LOG_SYS_ERROR(sLogger, GetModuleHandle,
                           "Failed to get module handle for current process");
-            return LIBDBG_ERR_SYSTEM_FAILURE;
+            return DBGUTIL_ERR_SYSTEM_FAILURE;
         }
     } else {
         if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -94,7 +94,7 @@ LibDbgErr Win32ModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& 
                                 (LPCSTR)address, &mod)) {
             LOG_SYS_ERROR(sLogger, GetModuleHandleExA, "Failed to get module for address %p",
                           address);
-            return LIBDBG_ERR_SYSTEM_FAILURE;
+            return DBGUTIL_ERR_SYSTEM_FAILURE;
         }
     }
 
@@ -114,23 +114,23 @@ Win32ModuleManager::~Win32ModuleManager() {
     }
 }
 
-LibDbgErr Win32ModuleManager::initProcessHandle() {
+DbgUtilErr Win32ModuleManager::initProcessHandle() {
     // open current process handle
     m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
     if (m_processHandle == INVALID_HANDLE_VALUE) {
         LOG_SYS_ERROR(sLogger, OpenProcess,
                       "Cannot initialize symbol handler: failed to open current process handle");
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr Win32ModuleManager::getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo) {
+DbgUtilErr Win32ModuleManager::getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo) {
     MODULEINFO modInfo;
     if (!GetModuleInformation(m_processHandle, module, &modInfo, sizeof(MODULEINFO))) {
         LOG_SYS_ERROR(sLogger, GetModuleInformation, "Failed to get module %p information",
                       (void*)module);
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
 
     moduleInfo.m_loadAddress = modInfo.lpBaseOfDll;
@@ -141,50 +141,50 @@ LibDbgErr Win32ModuleManager::getOsModuleInfo(HMODULE module, OsModuleInfo& modu
     if (pathLen == 0) {
         LOG_SYS_ERROR(sLogger, GetModuleFileNameExA, "Failed to get module %p file name",
                       (void*)module);
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
     moduleInfo.m_modulePath = modulePath;
 
     LOG_TRACE(sLogger, "Loaded module %s at %p", moduleInfo.m_modulePath.c_str(),
               moduleInfo.m_loadAddress);
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr initWin32ModuleManager() {
+DbgUtilErr initWin32ModuleManager() {
     registerLogger(sLogger, "win32_module_manager");
-    LibDbgErr rc = Win32ModuleManager::createInstance();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ModuleManager::createInstance();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     setModuleManager(Win32ModuleManager::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termWin32ModuleManager() {
+DbgUtilErr termWin32ModuleManager() {
     setModuleManager(nullptr);
     Win32ModuleManager::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
 /*BEGIN_STARTUP_JOB(OsModuleManager) {
-    LibDbgErr rc = Win32ModuleManager::createInstance();
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = Win32ModuleManager::createInstance();
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     setModuleManager(Win32ModuleManager::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 END_STARTUP_JOB(OsModuleManager)
 
 BEGIN_TEARDOWN_JOB(OsModuleManager) {
     setModuleManager(nullptr);
     Win32ModuleManager::destroyInstance();
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 END_TEARDOWN_JOB(OsModuleManager)*/
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS

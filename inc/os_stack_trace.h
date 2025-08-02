@@ -3,16 +3,16 @@
 
 #include <vector>
 
-#include "libdbg_def.h"
-#include "libdbg_err.h"
+#include "dbg_util_def.h"
+#include "dbg_util_err.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @typedef Raw stack trace. */
 typedef std::vector<void*> RawStackTrace;
 
 /** @brief A stack frame listener used in conjunction with @ref walkStack. */
-class LIBDBG_API StackFrameListener {
+class DBGUTIL_API StackFrameListener {
 public:
     virtual ~StackFrameListener() {}
 
@@ -26,7 +26,7 @@ protected:
     StackFrameListener& operator=(StackFrameListener&) = delete;
 };
 
-class LIBDBG_API OsStackTraceProvider {
+class DBGUTIL_API OsStackTraceProvider {
 public:
     OsStackTraceProvider(const OsStackTraceProvider&) = delete;
     OsStackTraceProvider(OsStackTraceProvider&&) = delete;
@@ -37,38 +37,38 @@ public:
      * @brief Walks the call stack from possibly the given context point.
      * @param listener The stack frame listener.
      * @param context The call context. Pass null to capture current thread call stack.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    virtual LibDbgErr walkStack(StackFrameListener* listener, void* context) = 0;
+    virtual DbgUtilErr walkStack(StackFrameListener* listener, void* context) = 0;
 
     /**
      * @brief Retrieves stack trace for a specific thread by id.
      * @param threadId The thread id.
      * @param[out] stackTrace The resulting stack trace.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    virtual LibDbgErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) = 0;
+    virtual DbgUtilErr getThreadStackTrace(os_thread_id_t threadId, RawStackTrace& stackTrace) = 0;
 
     /**
      * @brief Retrieves stack trace of a thread by context.
      * @param context The call context. Pass null to capture current thread call stack.
      * @param[out] stackTrace The resulting stack trace.
-     * @return LibDbgErr The operation result.
+     * @return DbgUtilErr The operation result.
      */
-    LibDbgErr getStackTrace(void* conetxt, RawStackTrace& stackTrace);
+    DbgUtilErr getStackTrace(void* conetxt, RawStackTrace& stackTrace);
 
 protected:
     OsStackTraceProvider() {}
 
-    // LibDbgErr collectThreadStackTrace;
+    // DbgUtilErr collectThreadStackTrace;
 };
 
 /** @brief Installs a stack trace provider. */
-extern LIBDBG_API void setStackTraceProvider(OsStackTraceProvider* provider);
+extern DBGUTIL_API void setStackTraceProvider(OsStackTraceProvider* provider);
 
 /** @brief Retrieves the installed stack trace provider. */
-extern LIBDBG_API OsStackTraceProvider* getStackTraceProvider();
+extern DBGUTIL_API OsStackTraceProvider* getStackTraceProvider();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
 #endif  // __OS_STACK_TRACE_H__

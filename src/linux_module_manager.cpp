@@ -1,6 +1,6 @@
 #include "linux_module_manager.h"
 
-#ifdef LIBDBG_LINUX
+#ifdef DBGUTIL_LINUX
 #include <dlfcn.h>
 
 #include <cassert>
@@ -9,7 +9,7 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "libdbg_log_imp.h"
+#include "dbgutil_log_imp.h"
 #include "os_util.h"
 
 // general note regarding implementation
@@ -25,7 +25,7 @@
 // can it co-exist with Win32ModuleManager (but only one of them is registered as the
 // OsModuleManager)?
 
-namespace libdbg {
+namespace dbgutil {
 
 static Logger sLogger;
 
@@ -50,9 +50,9 @@ void LinuxModuleManager::destroyInstance() {
 
 LinuxModuleManager::LinuxModuleManager() {}
 
-LibDbgErr LinuxModuleManager::refreshModuleList() { return refreshOsModuleList(); }
+DbgUtilErr LinuxModuleManager::refreshModuleList() { return refreshOsModuleList(); }
 
-LibDbgErr LinuxModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
+DbgUtilErr LinuxModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) {
     // when trying to get main process module details we can only parse /proc/self/maps
     // when trying to get some shared object file, we can use dladdr() call, but that will only get
     // module base address and image path, but module total size is still missing, so we still need
@@ -65,13 +65,13 @@ LibDbgErr LinuxModuleManager::getOsModuleByAddress(void* address, OsModuleInfo& 
     return refreshOsModuleList(address, &moduleInfo);
 }
 
-LibDbgErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
-                                                  OsModuleInfo* moduleInfo /* = nullptr */) {
+DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
+                                                   OsModuleInfo* moduleInfo /* = nullptr */) {
     // TODO: function too long, and also API is not good
     // parse /proc/self/maps
     std::vector<std::string> lines;
-    LibDbgErr rc = OsUtil::readEntireFileToLines("/proc/self/maps", lines);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = OsUtil::readEntireFileToLines("/proc/self/maps", lines);
+    if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to read /proc/self/maps: %s", errorCodeToStr(rc));
         return rc;
     }
@@ -79,7 +79,7 @@ LibDbgErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
     // get current process executable image path
     std::string mainImagePath;
     rc = getCurrentProcessImagePath(mainImagePath);
-    if (rc != LIBDBG_ERR_OK) {
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
 
@@ -94,11 +94,11 @@ LibDbgErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
 
     for (std::string& line : lines) {
         LOG_DEBUG(sLogger, "Processing proc-maps line: %s", line.c_str());
-        LibDbgErr rc = parseProcLine(line, imagePath, addrLo, addrHi);
-        if (rc == LIBDBG_ERR_NOT_FOUND) {
+        DbgUtilErr rc = parseProcLine(line, imagePath, addrLo, addrHi);
+        if (rc == DBGUTIL_ERR_NOT_FOUND) {
             continue;
         }
-        if (rc != LIBDBG_ERR_OK) {
+        if (rc != DBGUTIL_ERR_OK) {
             return rc;
         }
         LOG_DEBUG(sLogger, "Collected module info: %p-%p %s", (void*)addrLo, (void*)addrHi,
@@ -126,7 +126,7 @@ LibDbgErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
                            imagePath, OsModuleInfo(imagePath.c_str(), (void*)newLo, size)))
                        .second;
         if (!res) {
-            return LIBDBG_ERR_INTERNAL_ERROR;
+            return DBGUTIL_ERR_INTERNAL_ERROR;
         }
     }
 
@@ -170,24 +170,24 @@ LibDbgErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */,
         }
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxModuleManager::getCurrentProcessImagePath(std::string& path) {
+DbgUtilErr LinuxModuleManager::getCurrentProcessImagePath(std::string& path) {
     // this time we need to read into buffer and rely on null byte after program path
     // this is ugly, but there is no other way
     std::vector<char> buf;
-    LibDbgErr rc = OsUtil::readEntireFileToBuf("/proc/self/cmdline", buf);
-    if (rc != LIBDBG_ERR_OK) {
+    DbgUtilErr rc = OsUtil::readEntireFileToBuf("/proc/self/cmdline", buf);
+    if (rc != DBGUTIL_ERR_OK) {
         return rc;
     }
     path = &buf[0];
     LOG_DEBUG(sLogger, "Current process image path is: %s", path.c_str());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr LinuxModuleManager::parseProcLine(std::string& line, std::string& imagePath,
-                                            uint64_t& addrLo, uint64_t& addrHi) {
+DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& imagePath,
+                                             uint64_t& addrLo, uint64_t& addrHi) {
     // parse buffer to tokens
     std::istringstream iss(line);
     std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
@@ -197,15 +197,15 @@ LibDbgErr LinuxModuleManager::parseProcLine(std::string& line, std::string& imag
     // in some cases last token is missing
     if (tokens.size() == 5) {
         LOG_DEBUG(sLogger, "Skipping line with no module");
-        return LIBDBG_ERR_NOT_FOUND;
+        return DBGUTIL_ERR_NOT_FOUND;
     }
     if (tokens.size() == 1) {
         LOG_DEBUG(sLogger, "Skipping line with one token");
-        return LIBDBG_ERR_NOT_FOUND;
+        return DBGUTIL_ERR_NOT_FOUND;
     }
     if (tokens.size() != 6) {
         LOG_DEBUG(sLogger, "Line has invalid token count %u, aborting", tokens.size());
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
     imagePath = tokens[5];
@@ -213,7 +213,7 @@ LibDbgErr LinuxModuleManager::parseProcLine(std::string& line, std::string& imag
     std::string::size_type dashPos = addrRange.find('-');
     if (dashPos == std::string::npos) {
         LOG_DEBUG(sLogger, "Invalid address range: %s", addrRange.c_str());
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
     try {
         std::size_t pos = 0;
@@ -221,38 +221,38 @@ LibDbgErr LinuxModuleManager::parseProcLine(std::string& line, std::string& imag
         addrLo = std::stoull(addrPart1, &pos, 16);
         if (pos != dashPos) {
             LOG_DEBUG(sLogger, "Invalid start of range: %s", addrPart1.c_str());
-            return LIBDBG_ERR_DATA_CORRUPT;
+            return DBGUTIL_ERR_DATA_CORRUPT;
         }
 
         std::string addrPart2 = addrRange.substr(dashPos + 1);
         addrHi = std::stoull(addrPart2, &pos, 16);
         if (pos != (addrRange.length() - dashPos - 1)) {
             LOG_DEBUG(sLogger, "Invalid end of range: %s", addrPart2.c_str());
-            return LIBDBG_ERR_DATA_CORRUPT;
+            return DBGUTIL_ERR_DATA_CORRUPT;
         }
     } catch (std::exception& e) {
         LOG_SYS_ERROR(sLogger, stoull, "Failed to parse address range %s: %s", addrRange.c_str(),
                       e.what());
-        return LIBDBG_ERR_DATA_CORRUPT;
+        return DBGUTIL_ERR_DATA_CORRUPT;
     }
 
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr initLinuxModuleManager() {
+DbgUtilErr initLinuxModuleManager() {
     registerLogger(sLogger, "linux_module_manager");
     LinuxModuleManager::createInstance();
     setModuleManager(LinuxModuleManager::getInstance());
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-LibDbgErr termLinuxModuleManager() {
+DbgUtilErr termLinuxModuleManager() {
     setModuleManager(nullptr);
     LinuxModuleManager::destroyInstance();
     unregisterLogger(sLogger);
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_LINUX
+#endif  // DBGUTIL_LINUX

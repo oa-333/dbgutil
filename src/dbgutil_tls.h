@@ -1,23 +1,23 @@
-#ifndef __LIBDBG_TLS_H__
-#define __LIBDBG_TLS_H__
+#ifndef __DBGUTIL_TLS_H__
+#define __DBGUTIL_TLS_H__
 
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifndef LIBDBG_WINDOWS
+#ifndef DBGUTIL_WINDOWS
 #include <pthread.h>
 #endif
 
-namespace libdbg {
+namespace dbgutil {
 
 /** @typedef Thread local storage key type. */
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 typedef unsigned long TlsKey;
 #else
 typedef pthread_key_t TlsKey;
 #endif
 
 /** @def Invalid TLS key value. */
-#define LIBDBG_INVALID_TLS_KEY ((TlsKey) - 1)
+#define DBGUTIL_INVALID_TLS_KEY ((TlsKey) - 1)
 
 /** @typedef TLS destructor function type. */
 typedef void (*tlsDestructorFunc)(void*);
@@ -68,6 +68,6 @@ extern void* getTls(TlsKey key);
  */
 extern bool setTls(TlsKey key, void* value);
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // __LIBDBG_TLS_H__
+#endif  // __DBGUTIL_TLS_H__

@@ -1,13 +1,13 @@
 #ifndef __LINUX_MODULE_MANAGER_H__
 #define __LINUX_MODULE_MANAGER_H__
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 
-#ifdef LIBDBG_LINUX
-#include "libdbg_log_imp.h"
+#ifdef DBGUTIL_LINUX
+#include "dbgutil_log_imp.h"
 #include "os_module_manager.h"
 
-namespace libdbg {
+namespace dbgutil {
 
 class LinuxModuleManager : public OsModuleManager {
 public:
@@ -21,7 +21,7 @@ public:
     static void destroyInstance();
 
     /** @brief Refreshes the module list. */
-    LibDbgErr refreshModuleList() final;
+    DbgUtilErr refreshModuleList() final;
 
 protected:
     /**
@@ -30,7 +30,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
+    DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
 
 private:
     LinuxModuleManager();
@@ -39,19 +39,19 @@ private:
     static LinuxModuleManager* sInstance;
 
     /** @brief Refreshes the module list. */
-    LibDbgErr refreshOsModuleList(void* address = nullptr, OsModuleInfo* moduleInfo = nullptr);
+    DbgUtilErr refreshOsModuleList(void* address = nullptr, OsModuleInfo* moduleInfo = nullptr);
 
-    LibDbgErr getCurrentProcessImagePath(std::string& path);
+    DbgUtilErr getCurrentProcessImagePath(std::string& path);
 
-    LibDbgErr parseProcLine(std::string& line, std::string& imagePath, uint64_t& addrLo,
-                            uint64_t& addrHi);
+    DbgUtilErr parseProcLine(std::string& line, std::string& imagePath, uint64_t& addrLo,
+                             uint64_t& addrHi);
 };
 
-extern LibDbgErr initLinuxModuleManager();
-extern LibDbgErr termLinuxModuleManager();
+extern DbgUtilErr initLinuxModuleManager();
+extern DbgUtilErr termLinuxModuleManager();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_LINUX
+#endif  // DBGUTIL_LINUX
 
 #endif  // __LINUX_MODULE_MANAGER_H__

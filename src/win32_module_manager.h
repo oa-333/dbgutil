@@ -1,23 +1,23 @@
 #ifndef __WIN32_MODULE_MANAGER_H__
 #define __WIN32_MODULE_MANAGER_H__
 
-#include "libdbg_common.h"
+#include "dbgutil_common.h"
 
-#ifdef LIBDBG_WINDOWS
-#include "libdbg_log_imp.h"
+#ifdef DBGUTIL_WINDOWS
+#include "dbgutil_log_imp.h"
 #include "os_module_manager.h"
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
-namespace libdbg {
+namespace dbgutil {
 
 class Win32ModuleManager : public OsModuleManager {
 public:
     /** @brief Creates the singleton instance of the module manager for Windows platform. */
-    static LibDbgErr createInstance();
+    static DbgUtilErr createInstance();
 
     /** @brief Retrieves a reference to the single instance of the module manager. */
     static Win32ModuleManager* getInstance();
@@ -26,7 +26,7 @@ public:
     static void destroyInstance();
 
     /** @brief Refreshes the module list. */
-    LibDbgErr refreshModuleList() final;
+    DbgUtilErr refreshModuleList() final;
 
     inline HANDLE getProcessHandle() { return m_processHandle; }
 
@@ -37,7 +37,7 @@ protected:
      * @param[out] moduleInfo The resulting module information.
      * @return OsModuleInfo* The module containing the address, or null if none was found.
      */
-    LibDbgErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
+    DbgUtilErr getOsModuleByAddress(void* address, OsModuleInfo& moduleInfo) final;
 
 private:
     Win32ModuleManager();
@@ -50,16 +50,16 @@ private:
 
     HANDLE m_processHandle;
 
-    LibDbgErr initProcessHandle();
+    DbgUtilErr initProcessHandle();
 
-    LibDbgErr getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo);
+    DbgUtilErr getOsModuleInfo(HMODULE module, OsModuleInfo& moduleInfo);
 };
 
-extern LibDbgErr initWin32ModuleManager();
-extern LibDbgErr termWin32ModuleManager();
+extern DbgUtilErr initWin32ModuleManager();
+extern DbgUtilErr termWin32ModuleManager();
 
-}  // namespace libdbg
+}  // namespace dbgutil
 
-#endif  // LIBDBG_WINDOWS
+#endif  // DBGUTIL_WINDOWS
 
 #endif  // __WIN32_MODULE_MANAGER_H__

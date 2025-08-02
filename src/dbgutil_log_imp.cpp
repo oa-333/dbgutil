@@ -1,6 +1,6 @@
-#include "libdbg_def.h"
+#include "dbg_util_def.h"
 
-#ifdef LIBDBG_MINGW
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -11,14 +11,14 @@
 #include <cstring>
 #include <vector>
 
-#include "libdbg_common.h"
-#include "libdbg_log_imp.h"
-#include "libdbg_tls.h"
+#include "dbgutil_common.h"
+#include "dbgutil_log_imp.h"
+#include "dbgutil_tls.h"
 #include "log_buffer.h"
 
 #define MAX_LOGGERS ((size_t)1024)
 
-namespace libdbg {
+namespace dbgutil {
 
 // log severity string constants
 static const char* sLogSeverityStr[] = {"FATAL", "ERROR", "WARN",  "NOTICE",
@@ -65,7 +65,7 @@ public:
 
 // use TLS instead of thread_local due to MinGW bug (static thread_local variable destruction
 // sometimes takes place twice, not clear under which conditions)
-static TlsKey sLogDataKey = LIBDBG_INVALID_TLS_KEY;
+static TlsKey sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
 
 inline LogData* allocLogData() { return new (std::nothrow) LogData(); }
 
@@ -112,27 +112,27 @@ inline void ensureLogDataExists() {
     }
 }
 
-inline LibDbgErr createLogDataKey() {
-    if (sLogDataKey != LIBDBG_INVALID_TLS_KEY) {
+inline DbgUtilErr createLogDataKey() {
+    if (sLogDataKey != DBGUTIL_INVALID_TLS_KEY) {
         fprintf(stderr, "Cannot create record builder TLS key, already created\n");
         return false;
     }
     if (!createTls(sLogDataKey, freeLogData)) {
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    return LIBDBG_ERR_OK;
+    return DBGUTIL_ERR_OK;
 }
 
-inline LibDbgErr destroyLogDataKey() {
-    if (sLogDataKey == LIBDBG_INVALID_TLS_KEY) {
+inline DbgUtilErr destroyLogDataKey() {
+    if (sLogDataKey == DBGUTIL_INVALID_TLS_KEY) {
         // silently ignore the request
-        return LIBDBG_ERR_OK;
+        return DBGUTIL_ERR_OK;
     }
     if (!destroyTls(sLogDataKey)) {
-        return LIBDBG_ERR_SYSTEM_FAILURE;
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
-    sLogDataKey = LIBDBG_INVALID_TLS_KEY;
-    return LIBDBG_ERR_OK;
+    sLogDataKey = DBGUTIL_INVALID_TLS_KEY;
+    return DBGUTIL_ERR_OK;
 }
 
 static LogData* getLogData() {
@@ -167,11 +167,11 @@ void initLog(LogHandler* logHandler, LogSeverity severity) {
     sLogSeverity = severity;
 }
 
-LibDbgErr finishInitLog() { return createLogDataKey(); }
+DbgUtilErr finishInitLog() { return createLogDataKey(); }
 
-LibDbgErr beginTermLog() { return destroyLogDataKey(); }
+DbgUtilErr beginTermLog() { return destroyLogDataKey(); }
 
-LibDbgErr termLog() {
+DbgUtilErr termLog() {
     // NOTE: it is expected that at this point there are no log data lists at any thread
     // the recommended behavior is to arrive here after all application threads have terminated,
     // such that in each thread the TLS destructor was called
@@ -186,7 +186,7 @@ void setLoggerSeverity(size_t loggerId, LogSeverity severity) {
     }
 }
 
-const char* logSeverityToString(LogSeverity severity) {
+DBGUTIL_API const char* logSeverityToString(LogSeverity severity) {
     if (severity < sLogSeverityCount) {
         return sLogSeverityStr[severity];
     }
@@ -224,7 +224,7 @@ static void finishLogData(LogData* logData) {
 void registerLogger(Logger& logger, const char* loggerName) {
     if (sLoggers.size() > MAX_LOGGERS) {
         fprintf(stderr, "Cannot register logger %s, reached limit %zu\n", loggerName, MAX_LOGGERS);
-        logger.m_loggerId = LIBDBG_INVALID_LOGGER_ID;
+        logger.m_loggerId = DBGUTIL_INVALID_LOGGER_ID;
         return;
     }
     logger.m_loggerId = sLoggers.size();
@@ -237,7 +237,7 @@ void registerLogger(Logger& logger, const char* loggerName) {
 }
 
 void unregisterLogger(Logger& logger) {
-    if (logger.m_loggerId == LIBDBG_INVALID_LOGGER_ID) {
+    if (logger.m_loggerId == DBGUTIL_INVALID_LOGGER_ID) {
         // silently ignore
         return;
     }
@@ -335,7 +335,7 @@ void finishLog() { finishLogData(getLogData()); }
 const char* sysErrorToStr(int sysErrorCode) {
     const int BUF_LEN = 256;
     static thread_local char buf[BUF_LEN];
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
     (void)strerror_s(buf, BUF_LEN, sysErrorCode);
     return buf;
 #else
@@ -348,7 +348,7 @@ const char* sysErrorToStr(int sysErrorCode) {
 #endif
 }
 
-#ifdef LIBDBG_WINDOWS
+#ifdef DBGUTIL_WINDOWS
 char* win32SysErrorToStr(unsigned long sysErrorCode) {
     LPSTR messageBuffer = nullptr;
     FormatMessageA(
@@ -362,4 +362,4 @@ void win32FreeErrorStr(char* errStr) { LocalFree(errStr); }
 
 #endif
 
-}  // namespace libdbg
+}  // namespace dbgutil
