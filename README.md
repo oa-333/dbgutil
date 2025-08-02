@@ -24,7 +24,7 @@ In order to use the library, first include the main header "dbg_util.h", and ini
     #include "dbg_util.h"
 
     // initialize the library
-    DbgUtilErr res = dbgutil::initDbgUtil();
+    dbgutil::DbgUtilErr res = dbgutil::initDbgUtil();
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -112,7 +112,7 @@ For CMake builds it is possible to use FetchContent as follows:
 
     FetchContent_Declare(dbgutil
         GIT_REPOSITORY https://github.com/oa-333/dbgutil.git
-        GIT_TAG v0.1.1
+        GIT_TAG v0.1.2
     )
     FetchContent_MakeAvailable(dbgutil)
     target_include_directories(
@@ -146,7 +146,7 @@ Raw stack trace (frame addresses only), can be achieved as follows:
 
     #include "dbg_stack_trace.h"
 
-    DbgUtilErr res = dbgutil::RawStackTrace rawStackTrace;
+    dbgutil::DbgUtilErr res = dbgutil::RawStackTrace rawStackTrace;
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -154,7 +154,7 @@ Raw stack trace (frame addresses only), can be achieved as follows:
 In order to resolve all stack frames (i.e. get symbol info, file, line, module, etc.), do this:
 
     dbgutil::StackTrace stackTrace;
-    res = dbgutil::resolveRawStackTrace(rawStackTrace, stackTrace);
+    dbgutil::DbgUtilErr res = dbgutil::resolveRawStackTrace(rawStackTrace, stackTrace);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -229,7 +229,7 @@ In addition, dbgutil can be ordered to catch std::terminate() as well:
 
 If all that is required is to write exception information to log, then adding the DBGUTIL_LOG_EXCEPTIONS suffices:
 
-    dbgutil::initDbgUtil(nullptr, nullptr, LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
+    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_LOG_EXCEPTIONS);
 
 This will have all exception information sent to the installed [log handler](#log-handling).
 
@@ -245,7 +245,7 @@ In order to register such a listener, first derive from OsExceptionListener, and
 
     static MyExceptionListener myExceptionListener;
 
-    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, 
+    dbgutil::initDbgUtil(&myExceptionListener, nullptr, dbgutil::LS_FATAL, 
         DBGUTIL_CATCH_EXCEPTIONS | DBGUTIL_SET_TERMINATE_HANDLER);
 
 ### Generating Core Dumps on Windows/Linux during Crash Handling
@@ -254,7 +254,7 @@ It is possible to order dbgutil to generate core dump file before crashing.
 
 To enable this option, dbgutil should be initialized with the DBGUTIL_EXCEPTION_DUMP_CORE flag:
 
-    dbgutil::initDbgUtil(null, nullptr, LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
+    dbgutil::initDbgUtil(nullptr, nullptr, dbgutil::LS_FATAL, DBGUTIL_EXCEPTION_DUMP_CORE);
     
 On Windows this will have dbgutil generate a mini-dump file.  
 Be advised that having a process generate its own mini-dump is not advised according to MSDN documentation,  
@@ -264,7 +264,7 @@ so consider this is a best effort attempt.
 
 If all exception options are to be used, then this form can be used instead:
 
-    dbgutil::initDbgUtil(&myExceptionListener, nullptr, LS_FATAL, DBGUTIL_FLAGS_ALL);
+    dbgutil::initDbgUtil(&myExceptionListener, nullptr, dbgutil::LS_FATAL, DBGUTIL_FLAGS_ALL);
 
 ### Exception Handling Sequence
 
@@ -283,15 +283,13 @@ In order to receive exception messages, as well internal errors or traces, a log
 A default log handler that prints to the standard error stream can be used as follows:
 
     // initialize the library
-    DbgUtilErr res = dbgutil::initDbgUtil(DBGUTIL_DEFAULT_LOG_HANDLER, LS_FATAL);
+    dbgutil::DbgUtilErr res = dbgutil::initDbgUtil(DBGUTIL_DEFAULT_LOG_HANDLER, dbgutil::LS_FATAL);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
 
 It is possible to derive from LogHandler, and redirect dbgutil log messages into the application's  
 standard logging system:
-
-
 
     class MyLogHandler : public dbgutil::LogHandler {
     public:
@@ -321,7 +319,7 @@ standard logging system:
     // receive messages with INFO and higher log level
     // receive exception log messages
     // no exception listener used
-    DbgUtilErr res = dbgutil::initDbgUtil(nullptr, &logHandler, dbgutil::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
+    dbgutil::DbgUtilErr res = dbgutil::initDbgUtil(nullptr, &logHandler, dbgutil::LS_INFO, DBGUTIL_LOG_EXCEPTIONS);
     if (res != DBGUTIL_ERR_OK) {
         // handle error
     }
@@ -347,7 +345,7 @@ It is possible to directly retrieve the debug symbol information for a given add
 
     void* symAddress = ...;
     dbgutil::SymbolInfo symInfo;
-    DbgUtilErr rc = getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
+    dbgutil::DbgUtilErr rc = dbgutil::getSymbolEngine()->getSymbolInfo(symAddress, symInfo);
     if (rc == DBGUTIL_ERR_OK) {
         // do something with symbol info
     }
