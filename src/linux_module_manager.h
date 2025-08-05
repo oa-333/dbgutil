@@ -12,7 +12,7 @@ namespace dbgutil {
 class LinuxModuleManager : public OsModuleManager {
 public:
     /** @brief Creates the singleton instance of the module manager for Windows platform. */
-    static void createInstance();
+    static DbgUtilErr createInstance();
 
     /** @brief Retrieves a reference to the single instance of the module manager. */
     static LinuxModuleManager* getInstance();

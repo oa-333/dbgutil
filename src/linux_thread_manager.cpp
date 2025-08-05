@@ -24,6 +24,7 @@
 #include "dbgutil_log_imp.h"
 #include "dir_scanner.h"
 #include "linux_thread_manager.h"
+#include "os_thread_manager_internal.h"
 #include "os_util.h"
 
 #ifdef DBGUTIL_MINGW

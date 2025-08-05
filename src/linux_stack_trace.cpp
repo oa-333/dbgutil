@@ -9,6 +9,7 @@
 
 #include "linux_stack_trace.h"
 #include "linux_thread_manager.h"
+#include "os_stack_trace_internal.h"
 #include "os_util.h"
 
 #ifdef DBGUTIL_MINGW

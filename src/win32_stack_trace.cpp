@@ -12,6 +12,7 @@
 
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_stack_trace_internal.h"
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
 

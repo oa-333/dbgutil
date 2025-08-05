@@ -169,9 +169,6 @@ private:
     DbgUtilErr searchModule(const char* name, OsModuleInfo& moduleInfo);
 };
 
-/** @brief Installs a module manager implementation. */
-extern DBGUTIL_API void setModuleManager(OsModuleManager* moduleManager);
-
 /** @brief Retrieves the installed module manager implementation. */
 extern DBGUTIL_API OsModuleManager* getModuleManager();
 

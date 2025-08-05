@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "dbgutil_log_imp.h"
+#include "os_module_manager_internal.h"
 #include "os_util.h"
 
 // general note regarding implementation
@@ -28,13 +29,27 @@
 namespace dbgutil {
 
 static Logger sLogger;
+static void* sSelfLoadAddress = nullptr;
 
 LinuxModuleManager* LinuxModuleManager::sInstance = nullptr;
 
-void LinuxModuleManager::createInstance() {
+DbgUtilErr LinuxModuleManager::createInstance() {
+    // initialize self module address
+    Dl_info info = {};
+    if (dladdr(&sSelfLoadAddress, &info) == 0) {
+        LOG_ERROR(
+            sLogger,
+            "Failed to initialize linux module manager: could not retrieve load address of current "
+            "module by address %p",
+            (void*)&sSelfLoadAddress);
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+    sSelfLoadAddress = info.dli_fbase;
+
     assert(sInstance == nullptr);
     sInstance = new (std::nothrow) LinuxModuleManager();
     assert(sInstance != nullptr);
+    return DBGUTIL_ERR_OK;
 }
 
 LinuxModuleManager* LinuxModuleManager::getInstance() {
@@ -241,7 +256,10 @@ DbgUtilErr LinuxModuleManager::parseProcLine(std::string& line, std::string& ima
 
 DbgUtilErr initLinuxModuleManager() {
     registerLogger(sLogger, "linux_module_manager");
-    LinuxModuleManager::createInstance();
+    DbgUtilErr rc = LinuxModuleManager::createInstance();
+    if (rc != DBGUTIL_ERR_OK) {
+        return rc;
+    }
     setModuleManager(LinuxModuleManager::getInstance());
     return DBGUTIL_ERR_OK;
 }
@@ -252,6 +270,8 @@ DbgUtilErr termLinuxModuleManager() {
     unregisterLogger(sLogger);
     return DBGUTIL_ERR_OK;
 }
+
+void* getSelfLoadAddress() { return sSelfLoadAddress; }
 
 }  // namespace dbgutil
 

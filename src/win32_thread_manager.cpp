@@ -21,6 +21,7 @@
 
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_thread_manager_internal.h"
 #include "win32_thread_manager.h"
 
 namespace dbgutil {

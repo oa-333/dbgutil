@@ -23,6 +23,7 @@
 #include "dbg_stack_trace.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_symbol_engine_internal.h"
 #include "path_parser.h"
 #include "win32_module_manager.h"
 #include "win32_symbol_engine.h"

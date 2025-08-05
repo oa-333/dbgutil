@@ -6,6 +6,7 @@
 #include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_module_manager_internal.h"
 
 namespace dbgutil {
 
@@ -17,6 +18,25 @@ static thread_local char sCallStackBuf[CALL_STACK_BUF_SIZE];
 static size_t sCallStackBufLen = 0;
 
 static OsExceptionHandler* sExceptionHandler = nullptr;
+
+class CallStackFilter : public StackEntryFilter {
+public:
+    CallStackFilter() {}
+    CallStackFilter(const CallStackFilter&) = delete;
+    CallStackFilter(CallStackFilter&&) = delete;
+    CallStackFilter& operator=(const CallStackFilter&) = delete;
+    ~CallStackFilter() final {}
+
+    /**
+     * @brief Filters a stack trace entry
+     * @param stackEntry The stack entry.
+     * @return true if the stack entry is to be processed, or false if should be skipped.
+     */
+    bool filterStackEntry(const StackEntry& stackEntry) final {
+        // discard dbgutil frames
+        return stackEntry.m_entryInfo.m_moduleBaseAddress != getSelfLoadAddress();
+    }
+};
 
 /** @brief Stack entry printer to string. */
 class CallStackBufPrinter : public StackEntryPrinter {
@@ -74,8 +94,9 @@ void OsExceptionHandler::dispatchExceptionInfo(const OsExceptionInfo& exceptionI
 
 const char* OsExceptionHandler::prepareCallStack(void* context) {
     // get stack trace information
+    CallStackFilter filter;
     CallStackBufPrinter callStackBufPrinter;
-    printStackTraceContext(context, 0, &callStackBufPrinter);
+    printStackTraceContext(context, 0, &filter, nullptr, &callStackBufPrinter);
     return sCallStackBuf;
 }
 
@@ -100,8 +121,9 @@ void OsExceptionHandler::terminateHandler() noexcept {
 
 void OsExceptionHandler::handleTerminate() {
     // prepare call stack first
+    CallStackFilter filter;
     CallStackBufPrinter callStackBufPrinter;
-    printStackTraceContext(nullptr, 1, &callStackBufPrinter);
+    printStackTraceContext(nullptr, 0, &filter, nullptr, &callStackBufPrinter);
 
     // dispatch to exception listener
     if (m_exceptionListener != nullptr) {

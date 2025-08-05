@@ -46,9 +46,6 @@ protected:
     OsThreadManager() {}
 };
 
-/** @brief Installs a thread manager. */
-extern DBGUTIL_API void setThreadManager(OsThreadManager* provider);
-
 /** @brief Retrieves the installed thread manager. */
 extern DBGUTIL_API OsThreadManager* getThreadManager();
 

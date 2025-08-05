@@ -18,6 +18,7 @@
 #include "dbgutil_log_imp.h"
 #include "linux_exception_handler.h"
 #include "linux_stack_trace.h"
+#include "os_exception_handler_internal.h"
 
 namespace dbgutil {
 

@@ -58,9 +58,6 @@ private:
     void handleTerminate();
 };
 
-/** @brief Installs a exception handler implementation. */
-extern DBGUTIL_API void setExceptionHandler(OsExceptionHandler* symbolEngine);
-
 /** @brief Retrieves the installed exception handler implementation. */
 extern DBGUTIL_API OsExceptionHandler* getExceptionHandler();
 

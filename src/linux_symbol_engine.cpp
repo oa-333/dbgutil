@@ -7,6 +7,7 @@
 #include "os_image_reader.h"
 #include "os_module_manager.h"
 #include "os_symbol_engine.h"
+#include "os_symbol_engine_internal.h"
 
 #ifdef DBGUTIL_MINGW
 // required for module info

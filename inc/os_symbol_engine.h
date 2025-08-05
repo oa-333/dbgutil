@@ -97,9 +97,6 @@ protected:
     OsSymbolEngine() {}
 };
 
-/** @brief Installs a symbol engine implementation. */
-extern DBGUTIL_API void setSymbolEngine(OsSymbolEngine* symbolEngine);
-
 /** @brief Retrieves the installed symbol engine implementation. */
 extern DBGUTIL_API OsSymbolEngine* getSymbolEngine();
 

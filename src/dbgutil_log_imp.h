@@ -87,8 +87,11 @@ extern void win32FreeErrorStr(char* errStr);
               sysErrorToStr(sysErr));                                       \
     LOG_ERROR(logger, fmt, ##__VA_ARGS__);
 
-#define LOG_SYS_ERROR(logger, syscall, fmt, ...) \
-    LOG_SYS_ERROR_NUM(logger, syscall, errno, fmt, ##__VA_ARGS__)
+#define LOG_SYS_ERROR(logger, syscall, fmt, ...)                             \
+    {                                                                        \
+        int localSysErr = errno;                                             \
+        LOG_SYS_ERROR_NUM(logger, syscall, localSysErr, fmt, ##__VA_ARGS__); \
+    }
 
 // Windows system error logging macros
 #ifdef DBGUTIL_WINDOWS
@@ -100,8 +103,11 @@ extern void win32FreeErrorStr(char* errStr);
         LOG_ERROR(logger, fmt, ##__VA_ARGS__);                                                    \
     }
 
-#define LOG_WIN32_ERROR(logger, syscall, fmt, ...) \
-    LOG_WIN32_ERROR_NUM(logger, syscall, ::GetLastError(), fmt, ##__VA_ARGS__)
+#define LOG_WIN32_ERROR(logger, syscall, fmt, ...)                             \
+    {                                                                          \
+        DWORD localSysErr = ::GetLastError();                                  \
+        LOG_WIN32_ERROR_NUM(logger, syscall, localSysErr, fmt, ##__VA_ARGS__); \
+    }
 
 #endif  // DBGUTIL_WINDOWS
 

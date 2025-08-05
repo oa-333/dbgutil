@@ -9,10 +9,12 @@
 #include <vector>
 
 #include "dbgutil_log_imp.h"
+#include "os_module_manager_internal.h"
 
 namespace dbgutil {
 
 static Logger sLogger;
+static void* sSelfLoadAddress = nullptr;
 
 Win32ModuleManager* Win32ModuleManager::sInstance = nullptr;
 
@@ -122,6 +124,18 @@ DbgUtilErr Win32ModuleManager::initProcessHandle() {
                       "Cannot initialize symbol handler: failed to open current process handle");
         return DBGUTIL_ERR_SYSTEM_FAILURE;
     }
+
+    // initialize self load address
+    HMODULE hModule = NULL;
+    if (!GetModuleHandleExA(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            (LPCSTR)&sSelfLoadAddress, &hModule)) {
+        LOG_WIN32_ERROR(sLogger, GetModuleHandleExA, "Failed to get module handle by address %p",
+                        (void*)&sSelfLoadAddress);
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    } else {
+        sSelfLoadAddress = (void*)hModule;
+    }
     return DBGUTIL_ERR_OK;
 }
 
@@ -168,22 +182,7 @@ DbgUtilErr termWin32ModuleManager() {
     return DBGUTIL_ERR_OK;
 }
 
-/*BEGIN_STARTUP_JOB(OsModuleManager) {
-    DbgUtilErr rc = Win32ModuleManager::createInstance();
-    if (rc != DBGUTIL_ERR_OK) {
-        return rc;
-    }
-    setModuleManager(Win32ModuleManager::getInstance());
-    return DBGUTIL_ERR_OK;
-}
-END_STARTUP_JOB(OsModuleManager)
-
-BEGIN_TEARDOWN_JOB(OsModuleManager) {
-    setModuleManager(nullptr);
-    Win32ModuleManager::destroyInstance();
-    return DBGUTIL_ERR_OK;
-}
-END_TEARDOWN_JOB(OsModuleManager)*/
+void* getSelfLoadAddress() { return sSelfLoadAddress; }
 
 }  // namespace dbgutil
 

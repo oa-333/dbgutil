@@ -81,8 +81,13 @@ std::string DefaultStackEntryFormatter::formatStackEntry(const StackEntry& stack
 
 class PrintFrameListener : public StackFrameListener {
 public:
-    PrintFrameListener(int skip, StackEntryPrinter* printer, StackEntryFormatter* formatter)
-        : m_skip(skip), m_printer(printer), m_formatter(formatter), m_frameIndex(0) {}
+    PrintFrameListener(int skip, StackEntryFilter* filter, StackEntryFormatter* formatter,
+                       StackEntryPrinter* printer)
+        : m_skip(skip),
+          m_filter(filter),
+          m_formatter(formatter),
+          m_printer(printer),
+          m_frameIndex(0) {}
     PrintFrameListener(const PrintFrameListener&) = delete;
     PrintFrameListener(PrintFrameListener&&) = delete;
     PrintFrameListener& operator=(const PrintFrameListener&) = delete;
@@ -101,6 +106,11 @@ public:
         stackEntry.m_frameAddress = frameAddress;
         (void)getSymbolEngine()->getSymbolInfo(frameAddress, stackEntry.m_entryInfo);
 
+        // filter frame
+        if (m_filter != nullptr && !m_filter->filterStackEntry(stackEntry)) {
+            return;
+        }
+
         // format stack frame entry string
         std::string entry = m_formatter->formatStackEntry(stackEntry);
 
@@ -110,8 +120,9 @@ public:
 
 private:
     int m_skip;
-    StackEntryPrinter* m_printer;
+    StackEntryFilter* m_filter;
     StackEntryFormatter* m_formatter;
+    StackEntryPrinter* m_printer;
     uint32_t m_frameIndex;
 };
 
@@ -128,6 +139,7 @@ DbgUtilErr resolveRawStackTrace(RawStackTrace& rawStackTrace, StackTrace& stackT
 }
 
 std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip /* = 0 */,
+                                  StackEntryFilter* filter /* = nullptr */,
                                   StackEntryFormatter* formatter /* = nullptr */,
                                   os_thread_id_t threadId /* = 0 */) {
     StringStackEntryPrinter printer;
@@ -140,7 +152,7 @@ std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip /* =
         threadId = OsUtil::getCurrentThreadId();
     }
     printer.onBeginStackTrace(threadId);
-    PrintFrameListener listener(skip, &printer, formatter);
+    PrintFrameListener listener(skip, filter, formatter, &printer);
     for (void* frameAddress : stackTrace) {
         listener.onStackFrame(frameAddress);
     }
@@ -149,6 +161,7 @@ std::string rawStackTraceToString(const RawStackTrace& stackTrace, int skip /* =
 }
 
 std::string stackTraceToString(const StackTrace& stackTrace, int skip /* = 0 */,
+                               StackEntryFilter* filter /* = nullptr */,
                                StackEntryFormatter* formatter /* = nullptr */,
                                os_thread_id_t threadId /* = 0 */) {
     StringStackEntryPrinter printer;
@@ -161,10 +174,15 @@ std::string stackTraceToString(const StackTrace& stackTrace, int skip /* = 0 */,
         threadId = OsUtil::getCurrentThreadId();
     }
     printer.onBeginStackTrace(threadId);
-    for (const auto& stackEntry : stackTrace) {
+    for (const StackEntry& stackEntry : stackTrace) {
         // skip required number of frames
         if (skip > 0) {
             --skip;
+            continue;
+        }
+
+        // check for special filter
+        if (filter != nullptr && !filter->filterStackEntry(stackEntry)) {
             continue;
         }
 
@@ -175,8 +193,10 @@ std::string stackTraceToString(const StackTrace& stackTrace, int skip /* = 0 */,
     return printer.getStackTrace();
 }
 
-void printStackTraceContext(void* context, int skip, StackEntryPrinter* printer,
-                            StackEntryFormatter* formatter) {
+void printStackTraceContext(void* context /* = nullptr */, int skip /* = 0 */,
+                            StackEntryFilter* filter /* = nullptr */,
+                            StackEntryFormatter* formatter /* = nullptr */,
+                            StackEntryPrinter* printer /* = nullptr*/) {
     // setup defaults if needed
     StderrStackEntryPrinter defaultPrinter;
     DefaultStackEntryFormatter defaultFormatter;
@@ -188,7 +208,7 @@ void printStackTraceContext(void* context, int skip, StackEntryPrinter* printer,
     }
 
     printer->onBeginStackTrace(OsUtil::getCurrentThreadId());
-    PrintFrameListener listener(skip, printer, formatter);
+    PrintFrameListener listener(skip, filter, formatter, printer);
     getStackTraceProvider()->walkStack(&listener, context);
     printer->onEndStackTrace();
 }
@@ -230,17 +250,19 @@ DbgUtilErr getAppRawStackTrace(AppRawStackTrace& appStackTrace) {
 }
 
 std::string appRawStackTraceToString(const AppRawStackTrace& appStackTrace, int skip /* = 0 */,
+                                     StackEntryFilter* filter /* = nullptr */,
                                      StackEntryFormatter* formatter /* = nullptr */) {
     std::stringstream res;
     for (auto& stackTrace : appStackTrace) {
-        res << rawStackTraceToString(stackTrace.second, skip, formatter, stackTrace.first);
+        res << rawStackTraceToString(stackTrace.second, skip, filter, formatter, stackTrace.first);
         res << std::endl;
     }
     return res.str();
 }
 
-void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = nullptr */,
-                        StackEntryFormatter* formatter /* = nullptr */) {
+void printAppStackTrace(int skip /* = 0 */, StackEntryFilter* filter /* = nullptr */,
+                        StackEntryFormatter* formatter /* = nullptr */,
+                        StackEntryPrinter* printer /* = nullptr */) {
     AppRawStackTrace appStackTrace;
     if (getAppRawStackTrace(appStackTrace) == DBGUTIL_ERR_OK) {
         // setup defaults if needed
@@ -255,7 +277,7 @@ void printAppStackTrace(int skip /* = 0 */, StackEntryPrinter* printer /* = null
 
         for (auto& stackTrace : appStackTrace) {
             printer->onBeginStackTrace(stackTrace.first);
-            PrintFrameListener listener(skip, printer, formatter);
+            PrintFrameListener listener(skip, filter, formatter, printer);
             for (void* frame : stackTrace.second) {
                 listener.onStackFrame(frame);
             }

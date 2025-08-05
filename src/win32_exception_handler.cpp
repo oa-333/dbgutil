@@ -14,6 +14,7 @@
 #include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_exception_handler_internal.h"
 #include "win32_exception_handler.h"
 #include "win32_symbol_engine.h"
 

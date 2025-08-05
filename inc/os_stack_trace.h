@@ -63,9 +63,6 @@ protected:
     // DbgUtilErr collectThreadStackTrace;
 };
 
-/** @brief Installs a stack trace provider. */
-extern DBGUTIL_API void setStackTraceProvider(OsStackTraceProvider* provider);
-
 /** @brief Retrieves the installed stack trace provider. */
 extern DBGUTIL_API OsStackTraceProvider* getStackTraceProvider();
 
