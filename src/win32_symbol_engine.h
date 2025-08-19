@@ -55,7 +55,7 @@ private:
     Win32SymbolEngine(const Win32SymbolEngine&) = delete;
     Win32SymbolEngine(Win32SymbolEngine&&) = delete;
     Win32SymbolEngine& operator=(const Win32SymbolEngine&) = delete;
-    ~Win32SymbolEngine() {}
+    ~Win32SymbolEngine() final {}
 
     static Win32SymbolEngine* sInstance;
 

@@ -1,6 +1,10 @@
 #ifndef __DBG_UTIL_ERR_H__
 #define __DBG_UTIL_ERR_H__
 
+#include <cstdint>
+
+#include "dbg_util_def.h"
+
 // error codes
 #define DBGUTIL_ERR_OK 0
 #define DBGUTIL_ERR_NOMEM 1
@@ -21,7 +25,10 @@
 namespace dbgutil {
 
 /** @typedef Error type. */
-typedef int DbgUtilErr;
+typedef uint32_t DbgUtilErr;
+
+/** @brief Converts error code to string. */
+extern DBGUTIL_API const char* errorToString(DbgUtilErr err);
 
 }  // namespace dbgutil
 

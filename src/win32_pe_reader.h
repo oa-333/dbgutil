@@ -14,7 +14,7 @@ namespace dbgutil {
 class Win32PEReader : public OsImageReader {
 public:
     Win32PEReader();
-    ~Win32PEReader() {}
+    ~Win32PEReader() final {}
 
 protected:
     DbgUtilErr readImage() final;

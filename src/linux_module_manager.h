@@ -34,7 +34,7 @@ protected:
 
 private:
     LinuxModuleManager();
-    ~LinuxModuleManager() {}
+    ~LinuxModuleManager() final {}
 
     static LinuxModuleManager* sInstance;
 

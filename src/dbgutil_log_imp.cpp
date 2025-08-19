@@ -160,7 +160,7 @@ static void popLogData() {
 
 void initLog(LogHandler* logHandler, LogSeverity severity) {
     if (logHandler == DBGUTIL_DEFAULT_LOG_HANDLER) {
-        logHandler = &sDefaultLogHandler;
+        sLogHandler = &sDefaultLogHandler;
     } else {
         sLogHandler = logHandler;
     }

@@ -44,7 +44,7 @@ private:
     Win32ModuleManager(const Win32ModuleManager&) = delete;
     Win32ModuleManager(Win32ModuleManager&&) = delete;
     Win32ModuleManager& operator=(const Win32ModuleManager&) = delete;
-    ~Win32ModuleManager();
+    ~Win32ModuleManager() final;
 
     static Win32ModuleManager* sInstance;
 

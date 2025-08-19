@@ -84,7 +84,7 @@ extern DBGUTIL_API void setLoggerSeverity(size_t loggerId, LogSeverity severity)
 extern DBGUTIL_API const char* logSeverityToString(LogSeverity severity);
 
 /** @def A special constant denoting default log handler (prints to standard error stream). */
-#define DBGUTIL_DEFAULT_LOG_HANDLER ((LogHandler*)-1)
+#define DBGUTIL_DEFAULT_LOG_HANDLER ((dbgutil::LogHandler*)-1)
 
 }  // namespace dbgutil
 

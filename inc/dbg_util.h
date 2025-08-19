@@ -28,6 +28,9 @@ extern DBGUTIL_API DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener
 /** @brief Terminates the debug utility library. */
 extern DBGUTIL_API DbgUtilErr termDbgUtil();
 
+/** @brief Queries whether the debug utility library is initialized. */
+extern DBGUTIL_API bool isDbgUtilInitialized();
+
 }  // namespace dbgutil
 
 #endif  // __DBG_UTIL_H__

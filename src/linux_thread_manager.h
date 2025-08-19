@@ -71,7 +71,7 @@ public:
 
 private:
     LinuxThreadManager() {}
-    ~LinuxThreadManager() {}
+    ~LinuxThreadManager() final {}
 
     static LinuxThreadManager* sInstance;
 };

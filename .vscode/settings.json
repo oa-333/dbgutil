@@ -71,7 +71,8 @@
         "bitset": "cpp",
         "csignal": "cpp",
         "future": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "regex": "cpp"
     },
     "cSpell.words": [
         "crtexe",

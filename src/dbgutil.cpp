@@ -2,6 +2,7 @@
 
 #ifdef DBGUTIL_MSVC
 #include "win32_exception_handler.h"
+#include "win32_life_sign_manager.h"
 #include "win32_module_manager.h"
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
@@ -12,6 +13,7 @@
 #include "linux_symbol_engine.h"
 #include "linux_thread_manager.h"
 #include "win32_exception_handler.h"
+#include "win32_life_sign_manager.h"
 #include "win32_module_manager.h"
 #include "win32_stack_trace.h"
 #include "win32_symbol_engine.h"
@@ -19,6 +21,7 @@
 #else
 #include "elf_reader.h"
 #include "linux_exception_handler.h"
+#include "linux_life_sign_manager.h"
 #include "linux_module_manager.h"
 #include "linux_stack_trace.h"
 #include "linux_symbol_engine.h"
@@ -38,6 +41,8 @@
 #include "win32_pe_reader.h"
 
 namespace dbgutil {
+
+static bool sIsInitialized = false;
 
 #ifdef DBGUTIL_WINDOWS
 static DbgUtilErr initWin32DbgUtil();
@@ -61,6 +66,9 @@ static DbgUtilErr termLinuxDbgUtil();
 DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
                        LogHandler* logHandler /* = nullptr */,
                        LogSeverity severity /* = LS_FATAL */, uint32_t flags /* = 0 */) {
+    if (sIsInitialized) {
+        return DBGUTIL_ERR_INVALID_STATE;
+    }
     // TLS and logger initialization is tricky, and must be done in parts
     initLog(logHandler, severity);
     initTls();
@@ -86,10 +94,14 @@ DbgUtilErr initDbgUtil(OsExceptionListener* exceptionListener /* = nullptr */,
     OsImageReader::initLogger();
     OsUtil::initLogger();
 
+    sIsInitialized = true;
     return DBGUTIL_ERR_OK;
 }
 
 DbgUtilErr termDbgUtil() {
+    if (!sIsInitialized) {
+        return DBGUTIL_ERR_INVALID_STATE;
+    }
     PathParser::termLogger();
     BufferedFileReader::termLogger();
     DirScanner::termLogger();
@@ -109,8 +121,11 @@ DbgUtilErr termDbgUtil() {
     EXEC_CHECK_OP(beginTermLog);
     termTls();
     EXEC_CHECK_OP(termLog);
+    sIsInitialized = false;
     return DBGUTIL_ERR_OK;
 }
+
+bool isDbgUtilInitialized() { return sIsInitialized; }
 
 #ifdef DBGUTIL_WINDOWS
 DbgUtilErr initWin32DbgUtil() {
@@ -120,6 +135,7 @@ DbgUtilErr initWin32DbgUtil() {
     EXEC_CHECK_OP(initWin32ThreadManager);
     EXEC_CHECK_OP(initWin32StackTrace);
     EXEC_CHECK_OP(initWin32PEReader);
+    EXEC_CHECK_OP(initWin32LifeSignManager);
     return DBGUTIL_ERR_OK;
 }
 #endif
@@ -135,6 +151,7 @@ DbgUtilErr initLinuxDbgUtil() {
     EXEC_CHECK_OP(initLinuxStackTrace);
 #ifdef DBGUTIL_LINUX
     EXEC_CHECK_OP(initElfReader);
+    EXEC_CHECK_OP(initLinuxLifeSignManager);
 #endif
     return DBGUTIL_ERR_OK;
 }
@@ -142,6 +159,7 @@ DbgUtilErr initLinuxDbgUtil() {
 
 #ifdef DBGUTIL_WINDOWS
 DbgUtilErr termWin32DbgUtil() {
+    EXEC_CHECK_OP(termWin32LifeSignManager);
     EXEC_CHECK_OP(termWin32PEReader);
     EXEC_CHECK_OP(termWin32StackTrace);
     EXEC_CHECK_OP(termWin32ExceptionHandler);
@@ -155,6 +173,7 @@ DbgUtilErr termWin32DbgUtil() {
 #ifndef DBGUTIL_MSVC
 DbgUtilErr termLinuxDbgUtil() {
 #ifdef DBGUTIL_LINUX
+    EXEC_CHECK_OP(termLinuxLifeSignManager);
     EXEC_CHECK_OP(termElfReader);
 #endif
     EXEC_CHECK_OP(termLinuxStackTrace);

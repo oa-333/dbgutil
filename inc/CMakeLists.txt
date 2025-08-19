@@ -11,8 +11,10 @@ target_sources(
             dbg_util_flags.h
             dbg_util_log.h
             dbg_util.h
+            life_sign_manager.h
             os_exception_handler.h
             os_module_manager.h
+            os_shm.h
             os_stack_trace.h
             os_symbol_engine.h
             os_thread_manager.h)

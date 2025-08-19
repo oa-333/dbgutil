@@ -16,10 +16,9 @@ set_target_properties(dbgutil PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if (DEFINED CMAKE_CXX_STANDARD)
     message(STATUS "dbgutil Using externally defined CXX standard: ${CMAKE_CXX_STANDARD}")
-    target_compile_features(dbgutil PRIVATE ${CMAKE_CXX_STANDARD})
 else()
     message(STATUS "CXX standard not defined, dbgutil defaulting to cxx_std_11")
-    target_compile_features(dbgutil PRIVATE cxx_std_11)
+    target_compile_features(dbgutil PUBLIC cxx_std_11)
 endif()
 
 #############################################################

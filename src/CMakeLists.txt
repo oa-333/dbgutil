@@ -2,6 +2,7 @@ target_sources(dbgutil PRIVATE
     ./buffered_file_reader.cpp
     ./dbg_stack_trace.cpp
     ./dbgutil_common.cpp
+    ./dbgutil_err.cpp
     ./dbgutil_log_imp.cpp
     ./dbgutil_tls.cpp
     ./dbgutil_win32_dll_event.cpp
@@ -13,8 +14,11 @@ target_sources(dbgutil PRIVATE
     ./dwarf_util.cpp
     ./elf_reader.cpp
     ./fixed_input_stream.cpp
+    ./life_sign_manager.cpp
     ./linux_exception_handler.cpp
+    ./linux_life_sign_manager.cpp
     ./linux_module_manager.cpp
+    ./linux_shm.cpp
     ./linux_stack_trace.cpp
     ./linux_symbol_engine.cpp
     ./linux_thread_manager.cpp
@@ -29,8 +33,10 @@ target_sources(dbgutil PRIVATE
     ./path_parser.cpp
     ./win32_exception_handler.cpp
     ./win32_fdata_sync.cpp
+    ./win32_life_sign_manager.cpp
     ./win32_module_manager.cpp
     ./win32_pe_reader.cpp
+    ./win32_shm.cpp
     ./win32_stack_trace.cpp
     ./win32_symbol_engine.cpp
     ./win32_thread_manager.cpp)

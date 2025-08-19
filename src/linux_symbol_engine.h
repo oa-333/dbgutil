@@ -78,7 +78,7 @@ public:
 
 private:
     LinuxSymbolEngine();
-    ~LinuxSymbolEngine() {}
+    ~LinuxSymbolEngine() final {}
 
     static LinuxSymbolEngine* sInstance;
 
