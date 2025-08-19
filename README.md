@@ -16,6 +16,7 @@ The dbgutil library allows:
 - Resolving symbol information (with file and line, on Windows/Linux/MinGW)
 - Catching fatal exceptions and receiving elaborate exception information
 - Querying loaded module information
+- Sending life-sign reports to a shared memory segment, for post-mortem crash analysis
 
 ## Getting Started
 
@@ -358,3 +359,177 @@ The SymbolInfo struct contains the following information:
 - Symbol memory location (start address of symbol, offset of given address within symbol bounds)
 
 Normally, this API should be used for locating function information and not for data.
+
+### Managing Life-Signs
+
+In order to allow post-mortem crash analysis, dbgutil provides API for the application to occasionally send data to a shared memory segment. This is done by the life-sign manager. This is a rather generic interface, providing the infrastructure, yet placing much responsibility on the application.
+
+#### Initializing The Life-Sign Manager
+
+In order to initialize this mechanism, the following needs to be done:
+
+    dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->createLifeSignShmSegment(
+        contextAreaSize, lifeSignAreaSize, maxThreads, shareWrite);
+
+The life-sign shared memory segment is divided into two main areas:
+
+- The context area
+- The life-sign area
+
+Both areas are organized in records. Usually this should be text, but not necessarily. The application is free to use any format it wishes, as the interpretation of records is the application's responsibility as well.
+
+The context area is designed to be used for storing general data and metadata required for interpreting periodic life-sign record. This could be thread names according to id, for instance, or application version number, etc. The context area is limited in size, and once all area is used up, no more context records can be added.
+
+The life-sign area is designed to be used for periodic ongoing life-sign records. This should include hints as to what happened just right before the application crashed. The life-sign area is divided into sub-areas per-thread, so that there are no race conditions or performance hit, but on the expense of less flexibility in thread area size. The maxThreads parameter determines the maximum number of concurrent threads that can send life-sign reports, and it directly affects the size of each thread-area. Each thread-area is managed as a ring buffer, such that when all area is used up, new records begin to overwrite old records.
+
+#### Writing Context and Life-Sign Records
+
+The API for writing context and life-sign records is straightforward:
+
+    DbgUtilErr writeContextRecord(const char* recPtr, uint32_t recLen);
+    DbgUtilErr writeLifeSignRecord(const char* recPtr, uint32_t recLen);
+
+Both calls are thread-safe, with the context record API incurring probable slight performance hit due to concurrency. On the other-hand, the life-sign record API does not touch any shared resources, but only a thread-local ring-buffer, and is expected to incur minimal performance hit. This is in-line with the design concept, that context records are rather rare, and pertain to infrequent global events (e.g. thread start/end), while life-sign reports may be quite frequent and invoked by many threads concurrently.
+
+Both context records and life-sign records keep record boundary when writing records via writeContextRecord() and writeLifeSignRecord(), such that when reading records (see below), the original record length is known.
+
+#### Closing The Life-Sign Manager
+
+When the application is about to exit without any crash, it should close the shared segment if the life-sign manager:
+
+    DbgUtilErr closeLifeSignShmSegment(bool deleteShm = false);
+
+It is possible at this occasion also to delete the shared memory segment. On Windows, that means deleting the backing file, and on POSIX-compliant systems, this means unlinking the shared memory segment.
+
+#### Listing Existing Life-Sign Segments
+
+An external application may wish to list all active and inactive shared memory segments of current and past processes. This can be done as follows:
+
+    dbgutil::ShmSegmentList shmObjects;
+    dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->listLifeSignShmSegments(shmObjects);
+
+Each item in this list can be used for further inspection.
+
+#### Inspecting Life-Sign Segments
+
+An external application may wish to inspect life-sign shared memory segments of running and terminated processes. This can be done by opening the shared memory segment through the life-sign manager:
+
+    DbgUtilErr openLifeSignShmSegment(const char* segmentName, uint32_t totalSize, bool allowWrite,
+                                      bool allowMapBackingFile = false);
+
+This will open an existing shared memory segment. The total size needs to be known by the caller. This information is available when [listing existing segments](#listing-existing-life-sign-segments). Each element in the returned list is a pair of segment name and total size.
+
+From this point onward, the application can inspect the shared memory segment. The first step would be to read the main header:
+
+    DbgUtilErr readLifeSignHeader(LifeSignHeader*& hdr);
+
+The header contains several important details regarding the shared memory segment. Most notably, the maximum number of threads is required for further inspecting life-sign records. Context records may be read one-by-one using the following API:
+
+    DbgUtilErr readContextRecord(uint32_t& offset, char*& recPtr, uint32_t& recLen);
+
+The caller should start with offset initialized to zero, and continue reading records until DBGUTIL_END_OF_STREAM is returned:
+
+    uint32_t offset = 0;
+    char* recPtr = nullptr;
+    uint32_t recLen = 0;
+    bool done = false;
+    while (!done) {
+        dbgutil::DbgUtilErr rc =
+            dbgutil::getLifeSignManager()->readContextRecord(offset, recPtr, recLen);
+        if (rc == DBGUTIL_ERR_END_OF_STREAM) {
+            done = true;
+        } else if (rc != DBGUTIL_ERR_OK) {
+            printf("Failed to read context record at offset %u: %s\n", offset, dbgutil::errorToString(rc));
+            return ERR_READ_SHM;
+        } else {
+            // user can process context record pointed by recPtr with length recLen
+        }
+    }
+
+Reading life-sign records requires more work, specifically getting the details for each thread slot. For this, the maximum number of threads needs to be retrieved from the main segment header:
+
+    dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->readLifeSignHeader(LifeSignHeader*& hdr);
+    if (rc != DBGUTIL_ERR_OK) {
+        printf("Failed to read life-sign header: %s\n", dbgutil::errorToString(rc));
+    }
+
+Now the life-sign records of each thread can be examined as follows:
+
+    uint64_t threadId = 0;
+    int64_t startEpoch = 0;
+    int64_t endEpoch = 0;
+    bool isRunning = false;
+    uint32_t useCount = 0;
+
+    for (uint32_t threadSlotId = 0; threadSlotId < hdr->m_maxThreads; ++threadSlotId) {
+        dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->readThreadLifeSignDetails(
+            threadSlotId, threadId, startEpoch, endEpoch, isRunning, useCount);
+        if (rc != DBGUTIL_ERR_OK) {
+            printf("Failed to read life-sign details of thread at slot %u: %s", threadSlotId, dbgutil::errorToString(rc));
+            return ERR_READ_SHM;
+        }
+
+        if (useCount == 0) {
+            // slot never been used
+            continue;
+        }
+
+        // user can print thread details (id, start/end time, etc.)
+        // user can print life-sign records (see below)
+    }
+
+The last part is reading life-sign records, which is very similar to reading context record. All ring-buffer details are hidden from the user:
+
+    uint32_t offset = 0;
+    char* recPtr = nullptr;
+    uint32_t recLen = 0;
+    bool done = false;
+    bool callerShouldRelease = false;
+    while (!done) {
+        dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->readLifeSignRecord(
+            threadSlotId, offset, recPtr, recLen, callerShouldRelease);
+        if (rc == DBGUTIL_ERR_END_OF_STREAM) {
+            break;
+        }
+        if (rc != DBGUTIL_ERR_OK) {
+            printf("Failed to read context record at offset %u: %s\n", offset, dbgutil::errorToString(rc));
+            return ERR_READ_SHM;
+        }
+
+        // user can process life-sign record here, if text records was saved, then it can be printed directly
+
+        // release life-sign record if needed
+        if (callerShouldRelease) {
+            dbgutil::getLifeSignManager()->releaseLifeSignRecord(recPtr);
+        }
+    }
+
+Note that with life-sign records the caller may occasionally need to release the returned record, since life-sign records reside in a cyclic buffer and may cross buffer boundaries and wrap around.
+
+#### Keeping Windows Life-Sign Segments In-Sync
+
+Unlike POSIX-compliant systems, on Windows, a shared memory segment is deleted when the process crashes, unless another process has an open handle to the segment. For this reason, it would be good if the backing file would be in-sync with the shared memory contents. For this purpose the following API was added:
+
+    dbgutil::DbgUtilErr rc = dbgutil::getLifeSignManager()->syncLifeSignShmSegment();
+
+This call incurs a performance penalty, as it requires flushing shared memory contents to disk, so it is recommended to make this call from a background thread in the application, or from an external process (see below for more details).
+
+#### Keeping Windows Life-Sign Segments Alive
+
+Periodically synchronizing shared memory segment contents to disk on Windows platforms is a good step forward, but not enough. A much better approach would be to keep the shared memory segment alive, by opening a handle from another process. For this purpose, some guardian process is required to make sure that shared memory segments do not get deleted. Such a guardian process may also regularly synchronize each monitored shared memory segment to disk. 
+
+The [ELog Logging Framework](https://github.com/oa-333/elog) contains such a utility out of the box, along with a CLI for managing life-sign shared memory segments. The ELog Shared Memory Guardian does the following:
+
+- Periodically checks for new shared memory segments
+- Opens handles to each segment, ensuring the kernel object is not deleted if the owner process crashes
+- Regularly synchronizes segments to disk, such that if the guardian crashes the backing file may contain up to date data
+- Detects when processes terminate and writes contents of their segment to disk, such that even if the guardian crashes, the backing file on disk is already fully synchronized to disk and is ready ready for later inspection
+
+The [ELog Logging Framework](https://github.com/oa-333/elog) Life-Sign CLI is a cross-platform tool that allows performing the following operations:
+
+- Listing all available shared memory segments
+- Dumping the contents of a shared memory segment
+- Deleting a shared memory segment (with a possible backing file)
+- Deleting all shared memory segments
+
+For more information, refer to the [ELog Documentation](https://github.com/oa-333/elog#documentation).
