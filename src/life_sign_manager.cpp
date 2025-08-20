@@ -386,7 +386,7 @@ DbgUtilErr LifeSignManager::listLifeSignShmSegments(ShmSegmentList& shmObjects) 
     s << "^" << DBGUTIL_SHM_PREFIX << ".*" << DBGUTIL_SHM_SUFFIX << "$";
     std::string shmNamePattern = s.str();
     std::regex pattern(shmNamePattern);
-#if __cplusplus >= 202002L
+#if DBGUTIL_CPP_VER >= 202002L
     std::erase_if(fileNames, [&pattern](const std::string& fileName) {
         return !std::regex_match(fileName, pattern);
     });

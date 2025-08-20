@@ -39,6 +39,13 @@
 #error "Unsupported platform"
 #endif
 
+// define incorrect __cplusplus on MSVC
+#if defined(DBGUTIL_WINDOWS) && defined(_MSVC_LANG)
+#define DBGUTIL_CPP_VER _MSVC_LANG
+#else
+#define DBGUTIL_CPP_VER __cplusplus
+#endif
+
 // define strcasecmp for MSVC
 #ifdef DBGUTIL_MSVC
 #define strncasecmp _strnicmp
