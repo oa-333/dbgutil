@@ -49,9 +49,9 @@ DbgUtilErr LinuxShm::createShm(const char* name, size_t size, bool shareWrite) {
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr LinuxShm::openShm(const char* name, size_t size, bool allowWrite,
-                             bool allowMapBackingFile) {
-    (void)allowMapBackingFile;
+DbgUtilErr LinuxShm::openShm(const char* name, size_t size, bool allowWrite /* = false */,
+                             bool allowMapBackingFile /* = false */,
+                             bool* backingFileMapped /* = nullptr */) {
     if (m_shmPtr != nullptr) {
         LOG_ERROR(sLogger, "Cannot open shared memory segment, already open");
         return DBGUTIL_ERR_INVALID_STATE;

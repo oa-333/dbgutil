@@ -29,7 +29,7 @@ struct TlsCleanupData {
 static void tlsCleanup(int event, void* userData) {
     TlsCleanupData* cleanupData = (TlsCleanupData*)userData;
     if (event == DBGUTIL_DLL_THREAD_DETACH) {
-        // fprintf(stderr, "Running TLS cleanup at %p\n", cleanupData);
+        LOG_TRACE(sLogger, "Running TLS cleanup at %p", cleanupData);
         if (cleanupData == nullptr) {
             // no cleanup data, we give up
             return;

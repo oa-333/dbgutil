@@ -132,15 +132,20 @@ public:
      * @brief Opens an existing life-sign shared memory segment for reading.
      * @param segmentName The name of the existing shared memory segment.
      * @param totalSize The total size of the shared memory segment.
-     * @param allowWrite Specifies whether the shared memory segment should be opened also for
-     * writing.
-     * @param allowMapBackingFile (Windows only) Specifies whether to attempt mapping an existing
-     * backing file in case the shared memory segment cannot be opened (i.e. the owning process died
-     * and there was no other open handle to the shared memory).
+     * @param allowWrite Optionally specifies whether the shared memory segment should be opened
+     * also for writing.
+     * @param allowMapBackingFile (Windows only) Optionally specifies whether to attempt mapping an
+     * existing backing file in case the shared memory segment cannot be opened (i.e. the owning
+     * process died and there was no other open handle to the shared memory). In this case, the
+     * mapped file and the shared memory segment are opened for read-only. The optional output
+     * parameter @ref backingFileMapped can be used to distinguish between the two cases.
+     * @param[out] backingFileMapped Optionally on return indicates whether the backing file was
+     * mapped or not.
      * @return DbgUtilErr The operation's result.
      */
-    DbgUtilErr openLifeSignShmSegment(const char* segmentName, uint32_t totalSize, bool allowWrite,
-                                      bool allowMapBackingFile = false);
+    DbgUtilErr openLifeSignShmSegment(const char* segmentName, uint32_t totalSize,
+                                      bool allowWrite = false, bool allowMapBackingFile = false,
+                                      bool* backingFileMapped = nullptr);
 
     /**
      * @brief Synchronizes the shared memory segment to backing file (not required/supported on all

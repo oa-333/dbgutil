@@ -72,8 +72,9 @@ DbgUtilErr Win32Shm::createShm(const char* name, size_t size, bool shareWrite) {
     return DBGUTIL_ERR_OK;
 }
 
-DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite,
-                             bool allowMapBackingFile) {
+DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* = false */,
+                             bool allowMapBackingFile /* = false */,
+                             bool* backingFileMapped /* = nullptr */) {
     if (m_shmPtr != nullptr) {
         LOG_ERROR(sLogger, "Cannot open shared memory segment, already open");
         return DBGUTIL_ERR_INVALID_STATE;
@@ -113,6 +114,9 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite,
             closeShm();
             return DBGUTIL_ERR_SYSTEM_FAILURE;
         } else {
+            // since open shm failed, it means there is no active shm, so in this case there is no
+            // writing expected, so we remove write permission in case it was set
+            mapOpts = FILE_MAP_READ;
             m_mapFile =
                 CreateFileMappingA(m_backingFile, NULL, PAGE_READONLY, 0, 0, localName.c_str());
             if (m_mapFile == NULL) {
@@ -122,6 +126,9 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite,
                                 name);
                 closeShm();
                 return DBGUTIL_ERR_SYSTEM_FAILURE;
+            }
+            if (backingFileMapped != nullptr) {
+                *backingFileMapped = true;
             }
         }
     }

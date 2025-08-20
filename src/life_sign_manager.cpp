@@ -184,8 +184,9 @@ DbgUtilErr LifeSignManager::createLifeSignShmSegment(uint32_t contextAreaSize,
 }
 
 DbgUtilErr LifeSignManager::openLifeSignShmSegment(const char* segmentName, uint32_t totalSize,
-                                                   bool allowWrite,
-                                                   bool allowMapBackingFile /* = false */) {
+                                                   bool allowWrite /* = false */,
+                                                   bool allowMapBackingFile /* = false */,
+                                                   bool* backingFileMapped /* = nullptr */) {
     // check state
     if (m_shm != nullptr) {
         LOG_ERROR(sLogger, "Cannot open life-sign shared memory segment, already created");
@@ -200,7 +201,8 @@ DbgUtilErr LifeSignManager::openLifeSignShmSegment(const char* segmentName, uint
     }
 
     // open shared memory segment
-    DbgUtilErr rc = m_shm->openShm(segmentName, totalSize, allowWrite, allowMapBackingFile);
+    DbgUtilErr rc =
+        m_shm->openShm(segmentName, totalSize, allowWrite, allowMapBackingFile, backingFileMapped);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to open shared memory segment by name %s, with total size %u",
                   segmentName, totalSize);
@@ -622,7 +624,7 @@ int32_t LifeSignManager::obtainThreadSlot() {
 }
 
 void LifeSignManager::releaseThreadSlot(int32_t slotId) {
-    fprintf(stderr, "Releasing life-sign thread slot %d\n", slotId);
+    LOG_TRACE(sLogger, "Releasing life-sign thread slot %d", slotId);
     std::unique_lock<std::mutex> lock(m_lock);
     m_vacantSlots.push_back(slotId);
     uint32_t threadAreaSize = m_lifeSignHeader->m_lifeSignAreaSize / m_lifeSignHeader->m_maxThreads;
