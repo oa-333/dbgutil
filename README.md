@@ -139,7 +139,38 @@ Oren A. (oa.github.333@gmail.com)
 
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
 
-## Examples
+# Documentation
+
+## Contents
+- [Stack Traces](#stack-traces)
+    - [Playing with Stack Traces](#playing-with-stack-traces)
+    - [Dumping pstack-like Stack Trace](#dumping-pstack-like-application-stack-trace-of-all-threads)
+- [Exception Handling](#exception-handling)
+    - [Enabling Exception Handling](#enabling-exception-handling)
+    - [Handling std::terminate()](#handling-stdterminate)
+    - [Sending Exception Report To Log](#sending-exception-report-to-log)
+    - [Registering Custom Exception Listener](#registering-custom-exception-listener)
+    - [Generating Core Dumps](#generating-core-dumps-on-windowslinux-during-crash-handling)
+    - [Combining All Options](#combining-all-options)
+    - [Exception Handling Sequence](#exception-handling-sequence)
+- [Log Handling](#log-handling)
+- [Threads](#threads)
+    - [Traverse All Thread Ids](#traverse-all-thread-ids)
+    - [Executing Asynchronous Thread Request](#executing-asynchronous-requests-on-target-thread-context)
+    - [Asynchronous Request Waiting Modes](#asynchronous-request-waiting-modes)
+    - [Submitting Asynchronous Requests](#submitting-asynchronous-requests)
+    - [Handling Asynchronous Request Deadlocks](#handling-asynchronous-request-deadlocks)
+- [Retrieving Symbol Information](#retrieving-symbol-information)
+- [Life Sign Management](#life-sign-management)
+    - [Initializing The Life-Sign Manager](#initializing-the-life-sign-manager)
+    - [Writing Context and Life-Sign Records](#writing-context-and-life-sign-records)
+    - [Closing The Life-Sign Manager](#closing-the-life-sign-manager)
+    - [Listing Existing Life-Sign Segments](#listing-existing-life-sign-segments)
+    - [Inspecting Life-Sign Segments](#inspecting-life-sign-segments)
+    - [Keeping Windows Life-Sign Segments In-Sync](#keeping-windows-life-sign-segments-in-sync)
+    - [Keeping Windows Life-Sign Segments Alive](#keeping-windows-life-sign-segments-alive)
+
+## Stack Traces
 
 ### Playing with Stack Traces
 
@@ -204,7 +235,9 @@ It is also possible to retrieve this dump as a string so it can be sent to a log
 
     dbgutil::getAppStackTraceString();
 
-### Exception Handling
+## Exception Handling
+
+### Enabling Exception Handling
 
 In order to enable exception handling, the dbgutil must be initialized with at least DBGUTIL_CATCH_EXCEPTIONS flag enabled:
 
@@ -220,7 +253,7 @@ By default, dbgutil catches the following signals on Linux and MinGW:
 
 On Windows, an unhandled exception filter is registered to catch all critical exceptions.
 
-### std::terminate() Handling
+### Handling std::terminate()
 
 In addition, dbgutil can be ordered to catch std::terminate() as well:
 
@@ -278,7 +311,7 @@ When an exception occurs, and the user configured dbgutil to catch exceptions, t
 - On Windows, if user configured to do so, an attempt is made to generate mini-dump
 - On Linux the default core dump generation takes place without any intervention required
 
-### Log Handling
+## Log Handling
 
 In order to receive exception messages, as well internal errors or traces, a log handler should be installed.  
 A default log handler that prints to the standard error stream can be used as follows:
@@ -325,7 +358,9 @@ standard logging system:
         // handle error
     }
 
-### Traverse All Threads
+## Threads
+
+### Traverse All Thread Ids
 
 It is possible to get a list of the identifiers of all active threads, as follows:
 
@@ -340,7 +375,135 @@ and not the pthread_t handle.
 
 Also note the PRItid format specification that is defined properly per platform.
 
-### Retrieving Symbol Information
+### Executing Asynchronous Requests on Target Thread Context
+
+Although not strictly being a debug utility, the dbgutil library also provides the ability to execute requests on a given thread. This is can be done as follows:
+
+    // derive from ThreadExecutor and implement desired action
+    class Executor : public dbgutil::ThreadExecutor {
+    public:
+        dbgutil::DbgUtilErr execRequest() {
+            // TODO: execute request
+        }
+    };
+
+    // run executor on target thread
+    Executor executor;
+    dbgutil::DbgUtilErr requestResult = DBGUTIL_ERR_OK;
+    dbgutil::DbgUtilErr rc = dbgutil::execThreadRequest(threadId, &executor, requestResult);
+    if (rc != DBGUTIL_ERR_OK) {
+        fprintf(stderr, "Failed to execute request on thread %" PRItid ": %s\n", threadId, 
+            dbgutil::errorToString(rc));
+    } else {
+        if (requestResult != DBGUTIL_ERR_OK) {
+            fprintf(stderr, "Request execution on target thread %" PRItid " ended with error: %s\n", 
+                threadId, dbgutil::errorToString(requestResult));
+        }
+    }
+
+### Asynchronous Request Waiting Modes
+
+Waiting for asynchronous requests can be done in two modes:
+
+- Polling
+- Notification via condition variable
+
+The wait mode can be specified through an additional ThreadWaitParams parameter. By default a tight loop is used. This can be modified with the ThreadWaitParams members:
+
+    uint64_t pollIntervalMicros = 500;
+    dbgutil::ThreadWaitParams waitParams(dbgutil::ThreadWaitMode::TWM_POLLING, pollIntervalMicros);
+    dbgutil::DbgUtilErr rc = dbgutil::execThreadRequest(threadId, &executor, requestResult, waitParams);
+
+For notification through a condition variable, the following should be done:
+
+    dbgutil::ThreadWaitParams waitParams(dbgutil::ThreadWaitMode::TWM_NOTIFY);
+    dbgutil::execThreadRequest(threadId, &executor, requestResult, waitParams);
+
+In both cases the wait is executed internally by dbgutil during the call to @ref execThreadRequest().
+
+### Submitting Asynchronous Requests
+
+It is possible to just submit the request to the target thread, and wait for the result at a later point in the future. It can be sone as follows:
+
+    // derive from ThreadExecutor and implement desired action
+    class Executor : public dbgutil::ThreadExecutor {
+    public:
+        dbgutil::DbgUtilErr execRequest() {
+            // TODO: execute request
+        }
+    };
+
+    // submit executor to run on target thread
+    Executor executor;
+    ThreadRequestFuture* future = nullptr;
+    dbgutil::DbgUtilErr rc = dbgutil::submitThreadRequest(threadId, &executor, future);
+    if (rc != DBGUTIL_ERR_OK) {
+        fprintf(stderr, "Failed to submit request to execute on thread %" PRItid ": %s\n", threadId, 
+            dbgutil::errorToString(rc));
+    } else {
+        // do some application stuff
+
+        // then wait for future to finish
+        dbgutil::DbgUtilErr requestResult = future->wait();
+        if (requestResult != DBGUTIL_ERR_OK) {
+            fprintf(stderr, "Request execution on target thread %" PRItid " ended with error: %s\n", 
+                threadId, dbgutil::errorToString(requestResult));
+        }
+
+        // cleanup
+        future->release();
+    }
+
+The waiting mode used by the future is determined by the ThreadWaitParams, as explained [above](#asynchronous-request-waiting-modes).
+
+### Handling Asynchronous Request Deadlocks
+
+Since running asynchronous calls on a target thread involves sending a signal, or asynchronous procedure call (APC) request on Windows platforms, it is quite possible that the target thread is either busy doing some user-space work, or even worse, asleep in a condition that does not allow processing incoming signals/APCs.
+
+In such a case it is required to notify the target thread that it should check for incoming signals/APCs. In case of sleep/wait. the target thread just needs to be interrupted from sleep/wait, and return immediately to sleep/wait, and that would suffice to trigger processing of queues signals/APCs. Other conditions may require other measures.
+
+For this purpose a utility helper interface was added, namely @ref ThreadNotifier, such that the user can derive from it and implement any required logic to notify the target thread it needs to process queued signals/APCs. Since on Windows platforms this problem is especially acute when the target thread waits on std::condition_variable object, a helper class, namely CVThreadNotifier, was added.
+
+The following example may clarify how to use a notifier:
+
+    class Notifier : public dbgutil::ThreadNotifier {
+    public:
+        void notify() override {
+            // TODO: implement logic to wake up target thread
+        }
+    };
+
+    // run executor on target thread as usual, with notifier passed in wait parameters
+    Executor executor;
+    dbgutil::DbgUtilErr requestResult = DBGUTIL_ERR_OK;
+    dbgutil::ThreadWaitParams waitParams;
+    waitParams.m_notifier = notifier;
+    dbgutil::DbgUtilErr rc = dbgutil::execThreadRequest(threadId, &executor, requestResult, waitParams);
+
+When submitting a thread request and waiting on a future object, the target thread may be notified by the caller before waiting on the future object. Therefore, in this case, the notifier member of the wait parameters object is ignored. The correct logic is as follows:
+
+    ThreadRequestFuture* future = nullptr;
+    dbgutil::DbgUtilErr rc = dbgutil::submitThreadRequest(threadId, &executor, future);
+    if (rc != DBGUTIL_ERR_OK) {
+        fprintf(stderr, "Failed to submit request to execute on thread %" PRItid ": %s\n", threadId, 
+            dbgutil::errorToString(rc));
+    } else {
+        // TODO: trigger target thread to wake up and process incoming signals/APCs
+        
+        // do some application stuff
+
+        // then wait for future to finish
+        dbgutil::DbgUtilErr requestResult = future->wait();
+        if (requestResult != DBGUTIL_ERR_OK) {
+            fprintf(stderr, "Request execution on target thread %" PRItid " ended with error: %s\n", 
+                threadId, dbgutil::errorToString(requestResult));
+        }
+
+        // cleanup
+        future->release();
+    }
+
+## Retrieving Symbol Information
 
 It is possible to directly retrieve the debug symbol information for a given address:
 
@@ -360,11 +523,11 @@ The SymbolInfo struct contains the following information:
 
 Normally, this API should be used for locating function information and not for data.
 
-### Managing Life-Signs
+## Life Sign Management
 
 In order to allow post-mortem crash analysis, dbgutil provides API for the application to occasionally send data to a shared memory segment. This is done by the life-sign manager. This is a rather generic interface, providing the infrastructure, yet placing much responsibility on the application.
 
-#### Initializing The Life-Sign Manager
+### Initializing The Life-Sign Manager
 
 In order to initialize this mechanism, the following needs to be done:
 
@@ -382,7 +545,7 @@ The context area is designed to be used for storing general data and metadata re
 
 The life-sign area is designed to be used for periodic ongoing life-sign records. This should include hints as to what happened just right before the application crashed. The life-sign area is divided into sub-areas per-thread, so that there are no race conditions or performance hit, but on the expense of less flexibility in thread area size. The maxThreads parameter determines the maximum number of concurrent threads that can send life-sign reports, and it directly affects the size of each thread-area. Each thread-area is managed as a ring buffer, such that when all area is used up, new records begin to overwrite old records.
 
-#### Writing Context and Life-Sign Records
+### Writing Context and Life-Sign Records
 
 The API for writing context and life-sign records is straightforward:
 
@@ -393,7 +556,7 @@ Both calls are thread-safe, with the context record API incurring probable sligh
 
 Both context records and life-sign records keep record boundary when writing records via writeContextRecord() and writeLifeSignRecord(), such that when reading records (see below), the original record length is known.
 
-#### Closing The Life-Sign Manager
+### Closing The Life-Sign Manager
 
 When the application is about to exit without any crash, it should close the shared segment if the life-sign manager:
 
@@ -401,7 +564,7 @@ When the application is about to exit without any crash, it should close the sha
 
 It is possible at this occasion also to delete the shared memory segment. On Windows, that means deleting the backing file, and on POSIX-compliant systems, this means unlinking the shared memory segment.
 
-#### Listing Existing Life-Sign Segments
+### Listing Existing Life-Sign Segments
 
 An external application may wish to list all active and inactive shared memory segments of current and past processes. This can be done as follows:
 
@@ -410,7 +573,7 @@ An external application may wish to list all active and inactive shared memory s
 
 Each item in this list can be used for further inspection.
 
-#### Inspecting Life-Sign Segments
+### Inspecting Life-Sign Segments
 
 An external application may wish to inspect life-sign shared memory segments of running and terminated processes. This can be done by opening the shared memory segment through the life-sign manager:
 
@@ -506,7 +669,7 @@ The last part is reading life-sign records, which is very similar to reading con
 
 Note that with life-sign records the caller may occasionally need to release the returned record, since life-sign records reside in a cyclic buffer and may cross buffer boundaries and wrap around.
 
-#### Keeping Windows Life-Sign Segments In-Sync
+### Keeping Windows Life-Sign Segments In-Sync
 
 Unlike POSIX-compliant systems, on Windows, a shared memory segment is deleted when the process crashes, unless another process has an open handle to the segment. For this reason, it would be good if the backing file would be in-sync with the shared memory contents. For this purpose the following API was added:
 
@@ -514,7 +677,7 @@ Unlike POSIX-compliant systems, on Windows, a shared memory segment is deleted w
 
 This call incurs a performance penalty, as it requires flushing shared memory contents to disk, so it is recommended to make this call from a background thread in the application, or from an external process (see below for more details).
 
-#### Keeping Windows Life-Sign Segments Alive
+### Keeping Windows Life-Sign Segments Alive
 
 Periodically synchronizing shared memory segment contents to disk on Windows platforms is a good step forward, but not enough. A much better approach would be to keep the shared memory segment alive, by opening a handle from another process. For this purpose, some guardian process is required to make sure that shared memory segments do not get deleted. Such a guardian process may also regularly synchronize each monitored shared memory segment to disk. 
 
