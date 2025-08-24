@@ -10,14 +10,6 @@
 
 namespace dbgutil {
 
-/**
- * @brief Converts error code to string.
- * @note This mechanism is made extensible to other libraries via @ref registerErrorCodeHandler().
- * @param errorCode The error code to convert.
- * @return const char* The resulting error string. This will never be null.
- */
-extern const char* errorCodeToStr(DbgUtilErr rc);
-
 /** @brief Sets the global flags settings for dbgutil. */
 extern void setGlobalFlags(uint32_t flags);
 

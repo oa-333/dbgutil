@@ -11,6 +11,12 @@
 #ifdef DBGUTIL_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+
+// on MinGW we need this definition for QueueUserAPC2
+#ifdef DBGUTIL_MINGW
+#define NTDDI_VERSION NTDDI_WIN10_MN
+#endif
+
 #include <windows.h>
 #endif
 
@@ -29,6 +35,30 @@ namespace dbgutil {
 static Logger sLogger;
 
 Win32ThreadManager* Win32ThreadManager::sInstance = nullptr;
+
+static void apcRoutine(ULONG_PTR data) {
+    LOG_DEBUG(sLogger, "Received APC");
+    SignalRequest* request = (SignalRequest*)(void*)data;
+    request->exec();
+}
+
+DbgUtilErr submitThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
+    HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, osThreadId);
+    if (hThread == INVALID_HANDLE_VALUE) {
+        LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to get thread %" PRItid " handle", osThreadId);
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+
+    if (!QueueUserAPC2(apcRoutine, hThread, (ULONG_PTR)request,
+                       QUEUE_USER_APC_FLAGS_SPECIAL_USER_APC)) {
+        LOG_WIN32_ERROR(sLogger, QueueUserAPC2, "Failed to queue user APC to thread %" PRItid,
+                        osThreadId);
+        CloseHandle(hThread);
+        return DBGUTIL_ERR_SYSTEM_FAILURE;
+    }
+    CloseHandle(hThread);
+    return DBGUTIL_ERR_OK;
+}
 
 void Win32ThreadManager::createInstance() {
     assert(sInstance == nullptr);

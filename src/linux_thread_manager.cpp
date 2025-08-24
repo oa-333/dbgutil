@@ -41,9 +41,6 @@
 #endif
 #endif
 
-// currently polling tightly
-#define DBGUTIL_REQUEST_POLL_FREQ_MILLIS 0
-
 #ifndef DBGUTIL_MINGW
 #define SIG_EXEC_REQUEST (SIGRTMIN + 1)
 #endif
@@ -63,81 +60,16 @@ namespace dbgutil {
 
 static Logger sLogger;
 
-// static thread_local bool isHandlingSignal = false;
+LinuxThreadManager* LinuxThreadManager::sInstance = nullptr;
 
-class SignalRequest {
-protected:
-    SignalRequest() : m_flag(false) {}
-
-    void notify() { m_flag.store(true, std::memory_order_relaxed); }
-
-    virtual void execImpl() = 0;
-
-public:
-    void wait(uint32_t pollMillis) {
-        while (m_flag.load(std::memory_order_relaxed) == false) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(pollMillis));
-        }
-    }
-
-    void exec() {
-        execImpl();
-        notify();
-    }
-
-private:
-    std::atomic<bool> m_flag;
-};
-
-class ExternRequest : public SignalRequest {
-public:
-    ExternRequest(ThreadExecutor* executor = nullptr)
-        : m_executor(executor), m_result(DBGUTIL_ERR_OK) {}
-
-    inline DbgUtilErr getResult() const { return m_result; }
-
-protected:
-    void execImpl() { m_result = m_executor->execRequest(); }
-
-private:
-    ThreadExecutor* m_executor;
-    DbgUtilErr m_result;
-};
-
-/*static void verifyAsyncSignalSafe() {
-    if (isHandlingSignal) {
-        fprintf(stderr, "*** VIOLATING ASYNC-SIGNAL SAFETY ***\n");
-    }
-}*/
-
-#ifdef DBGUTIL_MINGW
-static void apcRoutine(ULONG_PTR data) {
-    LOG_DEBUG(sLogger, "Received APC");
-    SignalRequest* request = (SignalRequest*)(void*)data;
+#ifdef DBGUTIL_LINUX
+static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
+    LOG_DEBUG(sLogger, "Received signal: %s (%d)", strsignal(sigNum), sigNum);
+    SignalRequest* request = (SignalRequest*)sigInfo->si_value.sival_ptr;
     request->exec();
 }
-#endif
 
-#ifdef DBGUTIL_MINGW
-static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
-    HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, osThreadId);
-    if (hThread == INVALID_HANDLE_VALUE) {
-        LOG_WIN32_ERROR(sLogger, OpenThread, "Failed to get thread %" PRItid " handle", osThreadId);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
-    }
-
-    // if (!QueueUserAPC2(apcRoutine, hThread, NULL, QUEUE_USER_APC_FLAGS_SPECIAL_USER_APC)) {
-    if (!QueueUserAPC(apcRoutine, hThread, (ULONG_PTR)request)) {
-        LOG_WIN32_ERROR(sLogger, QueueUserAPC, "Failed to queue user APC to thread %" PRItid,
-                        osThreadId);
-        CloseHandle(hThread);
-        return DBGUTIL_ERR_SYSTEM_FAILURE;
-    }
-    CloseHandle(hThread);
-    return DBGUTIL_ERR_OK;
-}
-#else
-static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
+DbgUtilErr submitThreadSignalRequest(os_thread_id_t osThreadId, SignalRequest* request) {
     siginfo_t si;
     si.si_code = SI_QUEUE;
     si.si_pid = getpid();
@@ -150,21 +82,7 @@ static DbgUtilErr execThreadSignalRequest(os_thread_id_t osThreadId, SignalReque
     }
     return DBGUTIL_ERR_OK;
 }
-#endif
 
-LinuxThreadManager* LinuxThreadManager::sInstance = nullptr;
-
-#ifdef DBGUTIL_LINUX
-static void signalHandler(int sigNum, siginfo_t* sigInfo, void* context) {
-    // isHandlingSignal = true;
-    LOG_DEBUG(sLogger, "Received signal: %s (%d)", strsignal(sigNum), sigNum);
-    SignalRequest* request = (SignalRequest*)sigInfo->si_value.sival_ptr;
-    request->exec();
-    // isHandlingSignal = false;
-}
-#endif
-
-#ifdef DBGUTIL_LINUX
 static DbgUtilErr registerSignalHandler(int sigNum) {
     struct sigaction sa = {};
     memset(&sa, 0, sizeof(struct sigaction));
@@ -276,7 +194,7 @@ DbgUtilErr LinuxThreadManager::visitThreadIds(ThreadVisitor* visitor) {
     DbgUtilErr rc = DirScanner::visitDirEntries("/proc/self/task", &dirVisitor);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to list directory entries under /proc/self/task: %s",
-                  errorCodeToStr(rc));
+                  errorToString(rc));
         return rc;
     }
 
@@ -311,33 +229,6 @@ DbgUtilErr LinuxThreadManager::getThreadHandle(os_thread_id_t threadId, pthread_
         }
     }
     return rc;
-}
-
-DbgUtilErr LinuxThreadManager::execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
-                                                 DbgUtilErr& requestResult) {
-    // if requesting to execute on current thread then we don't need to send a signal
-    if (threadId == OsUtil::getCurrentThreadId()) {
-        requestResult = executor->execRequest();
-        return DBGUTIL_ERR_OK;
-    }
-
-    ExternRequest request(executor);
-    DbgUtilErr rc = execThreadSignalRequest(threadId, &request);
-    if (rc != DBGUTIL_ERR_OK) {
-        LOG_ERROR(sLogger, "Failed to send exec-request signal to thread %" PRItid, threadId);
-        return rc;
-    }
-
-    // there is no escaping indefinite block until signal is served or error occurs
-    // if we bail out too early, and suddenly the signal is delivered, then the signal handler will
-    // access the thread map without lock-guard
-
-    LOG_DEBUG(sLogger, "Signal SENT, waiting for signal handler to finish executing");
-    request.wait(DBGUTIL_REQUEST_POLL_FREQ_MILLIS);
-    requestResult = request.getResult();
-    LOG_DEBUG(sLogger, "Waiting DONE with result: %s", errorCodeToStr(requestResult));
-
-    return DBGUTIL_ERR_OK;
 }
 
 DbgUtilErr initLinuxThreadManager() {

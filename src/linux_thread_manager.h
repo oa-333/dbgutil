@@ -12,17 +12,6 @@
 
 namespace dbgutil {
 
-/** @brief An active executor used for executing some operation on a target thread context. */
-class ThreadExecutor {
-public:
-    virtual ~ThreadExecutor() {}
-
-    virtual DbgUtilErr execRequest() = 0;
-
-protected:
-    ThreadExecutor() {}
-};
-
 class LinuxThreadManager : public OsThreadManager {
 public:
     /** @brief Creates the singleton instance of the module manager for Windows platform. */
@@ -54,20 +43,6 @@ public:
      * @return DbgUtilErr The operation result.
      */
     DbgUtilErr getThreadHandle(os_thread_id_t threadId, pthread_t& threadHandle);
-
-    /**
-     * @brief Requests to execute an operation on another thread (blocking call).
-     * @param threadId The destination thread id.
-     * @param executor The request executor.
-     * @param[out] requestResult The request execution result (valid only if entire function
-     * result is ok).
-     * @return DbgUtilErr The operation result. This refers only to the ability to post the
-     * operation to be executed on the target thread, and then collecting the result. The actual
-     * result of the operation being executed on the target thread, is returned via the @ref
-     * opResult out parameter.
-     */
-    DbgUtilErr execThreadRequest(os_thread_id_t threadId, ThreadExecutor* executor,
-                                 DbgUtilErr& requestResult);
 
 private:
     LinuxThreadManager() {}

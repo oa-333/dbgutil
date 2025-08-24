@@ -465,7 +465,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
         uint8_t addressSize = 0;
         DbgUtilErr rc = readAddrRangeHeader(is, len, is64Bit, offset, addressSize);
         if (rc != DBGUTIL_ERR_OK) {
-            LOG_DEBUG(sLogger, "ERROR: failed to range range set header: %s", errorCodeToStr(rc));
+            LOG_DEBUG(sLogger, "ERROR: failed to range range set header: %s", errorToString(rc));
             return rc;
         }
         LOG_DEBUG(sLogger, "Read address range header: len=%u, CU offset: %u, address-size=%u",
@@ -489,7 +489,7 @@ DbgUtilErr DwarfUtil::buildRangeCuMap() {
             rc = is.skipBytes(align - alignDiff, bytesSkipped);
             if (rc != DBGUTIL_ERR_OK) {
                 LOG_DEBUG(sLogger, "ERROR: Failed to skip %u bytes to first range pair: %s",
-                          align - alignDiff, errorCodeToStr(rc));
+                          align - alignDiff, errorToString(rc));
                 return rc;
             }
             if (bytesSkipped != (align - alignDiff)) {

@@ -87,7 +87,7 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
     std::vector<std::string> lines;
     DbgUtilErr rc = OsUtil::readEntireFileToLines("/proc/self/maps", lines);
     if (rc != DBGUTIL_ERR_OK) {
-        LOG_DEBUG(sLogger, "Failed to read /proc/self/maps: %s", errorCodeToStr(rc));
+        LOG_DEBUG(sLogger, "Failed to read /proc/self/maps: %s", errorToString(rc));
         return rc;
     }
 

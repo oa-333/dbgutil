@@ -69,7 +69,7 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
         symAddress, symbolInfo.m_symbolName, symbolInfo.m_fileName, &symbolInfo.m_startAddress);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to find symbol %p in binary image: %s", symAddress,
-                  errorCodeToStr(rc));
+                  errorToString(rc));
     } else {
         LOG_DEBUG(
             sLogger,
@@ -145,7 +145,7 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
     }
 
     if (rc != DBGUTIL_ERR_OK) {
-        LOG_DEBUG(sLogger, "Failed to get symbol %p info: %s", symAddress, errorCodeToStr(rc));
+        LOG_DEBUG(sLogger, "Failed to get symbol %p info: %s", symAddress, errorToString(rc));
     }
     return rc;
 }
@@ -169,7 +169,7 @@ void LinuxSymbolEngine::prepareModuleData(
                                                     symModData->m_moduleInfo.m_loadAddress);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to open module image file %s for reading: %s",
-                  symModData->m_moduleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
+                  symModData->m_moduleInfo.m_modulePath.c_str(), errorToString(rc));
         // image reader is kept open, we might still be able to use it
         // (file is already closed anyway, only relevant sections are kept in memory)
         // TODO: keep only required sections and drop entire file buffer
@@ -194,7 +194,7 @@ void LinuxSymbolEngine::prepareModuleData(
             symModData->m_dwarfData, symModData->m_moduleInfo.m_loadAddress,
             symModData->m_imageReader->getIs64Bit(), symModData->m_imageReader->getIsExe());
         if (rc != DBGUTIL_ERR_OK) {
-            LOG_DEBUG(sLogger, "Failed to open dwarf data: %s", errorCodeToStr(rc));
+            LOG_DEBUG(sLogger, "Failed to open dwarf data: %s", errorToString(rc));
         } else {
             symModData->m_dwarfUtilValid = true;
         }
@@ -227,7 +227,7 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
     DbgUtilErr rc = getModuleManager()->getModuleByAddress(symAddress, moduleInfo);
     if (rc != DBGUTIL_ERR_OK || moduleInfo.m_loadAddress == nullptr) {
         LOG_DEBUG(sLogger, "Failed to find module for symbol %p: %s", symAddress,
-                  errorCodeToStr(rc));
+                  errorToString(rc));
         return rc;
     }
 

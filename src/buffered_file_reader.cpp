@@ -28,7 +28,7 @@ DbgUtilErr BufferedFileReader::open(const char* filePath,
     DbgUtilErr rc = OsUtil::openFile(filePath, O_BINARY | O_RDONLY, 0, m_fd);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to open file %s for binary reading: %s", filePath,
-                  errorCodeToStr(rc));
+                  errorToString(rc));
         return rc;
     }
     m_fileOffset = 0;
@@ -44,7 +44,7 @@ DbgUtilErr BufferedFileReader::close() {
     }
     DbgUtilErr rc = OsUtil::closeFile(m_fd);
     if (rc != DBGUTIL_ERR_OK) {
-        LOG_ERROR(sLogger, "Failed to close file: %s", errorCodeToStr(rc));
+        LOG_ERROR(sLogger, "Failed to close file: %s", errorToString(rc));
         return rc;
     }
     m_fd = 0;

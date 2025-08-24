@@ -68,7 +68,7 @@ DbgUtilErr Win32SymbolEngine::initialize() {
     rc = PathParser::getParentPath(mainModuleInfo.m_modulePath.c_str(), m_processDir);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to extract parent path from module '%s': %s",
-                  mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
+                  mainModuleInfo.m_modulePath.c_str(), errorToString(rc));
         return rc;
     }
     LOG_TRACE(sLogger, "Process directory is: %s", m_processDir.c_str());
@@ -77,7 +77,7 @@ DbgUtilErr Win32SymbolEngine::initialize() {
     rc = PathParser::getFileName(mainModuleInfo.m_modulePath.c_str(), m_processName);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_ERROR(sLogger, "Failed to extract file name from module '%s': %s",
-                  mainModuleInfo.m_modulePath.c_str(), errorCodeToStr(rc));
+                  mainModuleInfo.m_modulePath.c_str(), errorToString(rc));
         return rc;
     }
     std::string::size_type lastDotPos = m_processName.find_last_of('.');
