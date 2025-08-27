@@ -234,7 +234,7 @@ void LinuxExceptionHandler::finalizeSignalHandling(OsExceptionInfo& exInfo, void
     }
 
     // generate core
-    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() & DBGUTIL_EXCEPTION_DUMP_CORE) {
         LOG_FATAL(sLogger, "Aborting after fatal exception, see details above.");
         abort();
     }

@@ -9,18 +9,18 @@
 
 #ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 namespace dbgutil {
 
 class Win32Shm : public OsShm {
 public:
-    Win32Shm() : m_backingFile(INVALID_HANDLE_VALUE), m_mapFile(NULL) {}
+    Win32Shm() : m_backingFile(INVALID_HANDLE_VALUE), m_mapFile(nullptr) {}
     Win32Shm(const Win32Shm&) = delete;
     Win32Shm(Win32Shm&&) = delete;
     Win32Shm& operator=(const Win32Shm&) = delete;
-    ~Win32Shm() {}
+    ~Win32Shm() final {}
 
     /**
      * @brief Creates a shared memory segment for reading/writing by the given name and size.

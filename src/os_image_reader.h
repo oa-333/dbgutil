@@ -56,8 +56,8 @@ public:
      * @param[out] address The actual start address of the symbol.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr searchSymbol(void* symAddress, std::string& symName, std::string& fileName,
-                                    void** address);
+    virtual DbgUtilErr searchSymbol(void* symbolAddress, std::string& symbolName,
+                                    std::string& fileName, void** address);
 
     /**
      * @brief Retrieves a section by name.

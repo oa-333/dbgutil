@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "os_stack_trace_internal.h"
+
 namespace dbgutil {
 
 static OsStackTraceProvider* sProvider = nullptr;

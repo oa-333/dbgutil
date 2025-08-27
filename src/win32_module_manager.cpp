@@ -2,8 +2,7 @@
 
 #ifdef DBGUTIL_WINDOWS
 
-// #include <dbghelp.h>
-#include <psapi.h>
+#include <Psapi.h>
 
 #include <cassert>
 #include <vector>
@@ -126,7 +125,7 @@ DbgUtilErr Win32ModuleManager::initProcessHandle() {
     }
 
     // initialize self load address
-    HMODULE hModule = NULL;
+    HMODULE hModule = nullptr;
     if (!GetModuleHandleExA(
             GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
             (LPCSTR)&sSelfLoadAddress, &hModule)) {

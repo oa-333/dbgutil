@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "os_module_manager_internal.h"
+
 namespace dbgutil {
 
 static OsModuleManager* sModuleManager = nullptr;

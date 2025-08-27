@@ -329,10 +329,10 @@ private:
     char* m_lifeSignArea;
 
     std::mutex m_lock;
-    std::list<int32_t> m_vacantSlots;
+    std::list<uint32_t> m_vacantSlots;
 
-    int32_t obtainThreadSlot();
-    void releaseThreadSlot(int32_t slotId);
+    uint32_t obtainThreadSlot();
+    void releaseThreadSlot(uint32_t slotId);
 
     friend void cleanupThreadSlot(void*);
 };

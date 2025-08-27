@@ -7,7 +7,7 @@
 #ifndef DBGUTIL_NO_WINDOWS_HEADER
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #define DBGUTIL_WINDOWS

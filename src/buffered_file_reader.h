@@ -71,7 +71,7 @@ public:
      * @brief Reads data from the buffered file reader.
      * @param buffer The buffer into which data is to be read.
      * @param len The buffer length.
-     * @param bytesRead[out] The actual number of bytes read.
+     * @param[out] bytesRead The actual number of bytes read.
      * @return E_OK If the operation succeeded. The amount of bytes is put in bytesRead. This can be
      * less the requested amount of bytes to read, in case end of file was reached. Note that in
      * this case E_EOF is not returned.

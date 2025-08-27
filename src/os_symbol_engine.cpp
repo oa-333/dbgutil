@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "os_symbol_engine_internal.h"
+
 namespace dbgutil {
 
 static OsSymbolEngine* sSymbolEngine = nullptr;

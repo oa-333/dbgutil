@@ -22,6 +22,34 @@ else()
 endif()
 
 #############################################################
+# clang flags
+#############################################################
+
+set(DBGUTIL_CLANG OFF)
+if ("$ENV{CXX}" MATCHES ".*clang.*")
+    set(DBGUTIL_CLANG ON)
+endif()
+
+if (DBGUTIL_CLANG)
+    target_compile_options(dbgutil PRIVATE -Wno-c++98-compat)
+    target_compile_options(dbgutil PRIVATE -Wno-c++98-compat-pedantic)
+    target_compile_options(dbgutil PRIVATE -Wno-old-style-cast)
+    target_compile_options(dbgutil PRIVATE -Wno-final-dtor-non-final-class)
+    target_compile_options(dbgutil PRIVATE -Wno-newline-eof)
+    target_compile_options(dbgutil PRIVATE -Wno-gnu-zero-variadic-macro-arguments)
+    target_compile_options(dbgutil PRIVATE -Wno-unsafe-buffer-usage)
+    target_compile_options(dbgutil PRIVATE -Wno-reserved-macro-identifier)
+    target_compile_options(dbgutil PRIVATE -Wno-covered-switch-default)
+    target_compile_options(dbgutil PRIVATE -Wno-format-nonliteral)
+    target_compile_options(dbgutil PRIVATE -Wno-unused-command-line-argument)
+    target_compile_options(dbgutil PRIVATE -Wno-extra-semi-stmt)
+    target_compile_options(dbgutil PRIVATE -Wno-cast-align)
+    target_compile_options(dbgutil PRIVATE -Wno-exit-time-destructors)
+    target_compile_options(dbgutil PRIVATE -Wno-global-constructors)
+endif()
+
+
+#############################################################
 # Compile flags
 #############################################################
 if (MSVC)

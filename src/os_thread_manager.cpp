@@ -93,6 +93,7 @@ DbgUtilErr OsThreadManager::submitThreadRequest(
                   "Cannot submit thread request, failed to allocate request object, out of memory");
         return DBGUTIL_ERR_NOMEM;
     }
+    future = request;
 
     // if requesting to execute on current thread then we don't need to send a signal
     if (threadId == OsUtil::getCurrentThreadId()) {

@@ -2,10 +2,10 @@
 
 #ifdef DBGUTIL_WINDOWS
 
-#ifdef DBGUTIL_WINDOWS
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include <cassert>

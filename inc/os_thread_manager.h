@@ -17,8 +17,6 @@ public:
     /**
      * @brief Handles a visited thread.
      * @param threadId The system thread id.
-     * @param osData Any additional OS-specific thread-related information. On Linux this can be
-     * cast directly to pthread_t.
      */
     virtual void onThreadId(os_thread_id_t threadId) = 0;
 
@@ -223,7 +221,8 @@ inline DbgUtilErr execThreadRequest(os_thread_id_t threadId, DbgUtilErr& request
         Executor(const Executor&) = delete;
         Executor(Executor&&) = delete;
         Executor& operator=(const Executor&) = delete;
-        DbgUtilErr execRequest() { return m_f(); }
+        ~Executor() final {}
+        DbgUtilErr execRequest() final { return m_f(); }
         F m_f;
     };
     Executor executor(f);
@@ -239,8 +238,9 @@ inline DbgUtilErr submitThreadRequest(os_thread_id_t threadId, ThreadRequestFutu
         Executor() = delete;
         Executor(const Executor&) = delete;
         Executor(Executor&&) = delete;
+        ~Executor() final {}
         Executor& operator=(const Executor&) = delete;
-        DbgUtilErr execRequest() { return m_f(); }
+        DbgUtilErr execRequest() final { return m_f(); }
         F m_f;
     };
     Executor executor(f);

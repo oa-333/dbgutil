@@ -63,9 +63,9 @@ DbgUtilErr OsImageReader::searchSymbol(void* symAddress, std::string& symName,
     LOG_DEBUG(sLogger, "Searching for symbol %p at offset %u", symAddress, (unsigned)symOff);
     SymInfoSet::iterator itr =
         std::lower_bound(m_symInfoSet.begin(), m_symInfoSet.end(), symOff,
-                         [](const OsSymbolInfo& symInfo, uint64_t symOff) {
+                         [](const OsSymbolInfo& symInfo, uint64_t localSymOff) {
                              // stop search when end point of interval surpasses searched offset
-                             return symInfo.m_offset + symInfo.m_size <= symOff;
+                             return symInfo.m_offset + symInfo.m_size <= localSymOff;
                          });
 
     if (itr == m_symInfoSet.end()) {

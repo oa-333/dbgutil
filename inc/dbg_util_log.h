@@ -49,8 +49,10 @@ public:
      * @return LogSeverity The desired severity for the logger. If not to be changed, then return
      * the severity with which the logger was registered.
      */
-    virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* /* loggerName */,
-                                         size_t /* loggerId */) {
+    virtual LogSeverity onRegisterLogger(LogSeverity severity, const char* loggerName,
+                                         size_t loggerId) {
+        (void)loggerName;
+        (void)loggerId;
         return severity;
     }
 

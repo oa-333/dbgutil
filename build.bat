@@ -11,6 +11,7 @@ REM -i|--install-dir <INSTALL_DIR>
 REM -c|--clean
 REM -r|--rebuild (no reconfigure)
 REM -g|--reconfigure
+REM -a|--clang
 
 REM set default values
 SET PLATFORM=WINDOWS
@@ -21,6 +22,7 @@ SET FULL=0
 SET CLEAN=0
 SET REBUILD=0
 SET RE_CONFIG=0
+SET CLANG=0
 
 echo [DEBUG] Parsing args
 :GET_OPTS
@@ -45,6 +47,8 @@ IF /I "%1" == "-r" SET REBUILD=1 & SET CLEAN=1 & GOTO CHECK_OPTS
 IF /I "%1" == "--rebuild" SET REBUILD=1 & SET CLEAN=1 & GOTO CHECK_OPTS
 IF /I "%1" == "-g" SET RE_CONFIG=1 & SET REBUILD=1 & SET CLEAN=1 & GOTO CHECK_OPTS
 IF /I "%1" == "--reconfigure" SET RE_CONFIG=1 & SET REBUILD=1  & SET CLEAN=1 & GOTO CHECK_OPTS
+IF /I "%1" == "-a" SET CLANG=1 & GOTO CHECK_OPTS
+IF /I "%1" == "--clang" SET CLANG=1 & GOTO CHECK_OPTS
 
 REM handle invalid option
 IF NOT "%1" == "" (
@@ -65,6 +69,7 @@ echo [DEBUG] VERBOSE=%VERBOSE%
 echo [DEBUG] CLEAN=%CLEAN%
 echo [DEBUG] REBUILD=%REBUILD%
 echo [DEBUG] RE_CONFIG=%RE_CONFIG%
+echo [DEBUG] CLANG=%CLANG%
 echo [DEBUG] Args parsed, options left: %*
 
 REM set normal options
@@ -82,6 +87,7 @@ if errorlevel 1 (
     echo [ERROR] failed to create build directory %BUILD_DIR%
     goto HANDLE_ERROR
 )
+IF %CLANG% EQU 1 SET CXX=clang-cl
 
 pushd %BUILD_DIR% > NUL
 

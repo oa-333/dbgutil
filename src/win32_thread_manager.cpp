@@ -17,10 +17,10 @@
 #define NTDDI_VERSION NTDDI_WIN10_MN
 #endif
 
-#include <windows.h>
+#include <Windows.h>
 #endif
 
-#include <tlhelp32.h>
+#include <TlHelp32.h>
 
 #include <cassert>
 #include <cinttypes>

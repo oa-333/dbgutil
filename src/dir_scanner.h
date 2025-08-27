@@ -45,7 +45,7 @@ public:
     /**
      * @brief Scans for directory entries (files or directories).
      * @param dirPath The directory path to scan.
-     * @param[out] dirEntries The resulting directory entries.
+     * @param visitor The visitor that is called for each directory entry.
      * @return DbgUtilErr Operation result.
      */
     static DbgUtilErr visitDirEntries(const char* dirPath, DirEntryVisitor* visitor);

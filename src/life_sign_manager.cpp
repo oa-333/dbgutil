@@ -16,8 +16,8 @@
 #define DBGUTIL_SHM_PREFIX "dbgutil.life-sign"
 #define DBGUTIL_SHM_SUFFIX "shm"
 
-#define DBGUTIL_INVALID_THREAD_SLOT_ID ((int32_t)-1)
-#define DBGUTIL_NO_THREAD_SLOT_ID ((int32_t)-2)
+#define DBGUTIL_INVALID_THREAD_SLOT_ID ((uint32_t)-1)
+#define DBGUTIL_NO_THREAD_SLOT_ID ((uint32_t)-2)
 
 #define ALIGN(size, align) (((size) + (align) - 1) / (align) * (align))
 #define ALIGN_SIZE_BYTES 4
@@ -29,7 +29,7 @@ static Logger sLogger;
 static LifeSignManager* sLifeSignManager = nullptr;
 
 static TlsKey sThreadSlotKey = DBGUTIL_INVALID_TLS_KEY;
-static thread_local int32_t sThreadSlotId = DBGUTIL_INVALID_THREAD_SLOT_ID;
+static thread_local uint32_t sThreadSlotId = DBGUTIL_INVALID_THREAD_SLOT_ID;
 
 inline int64_t getEpochTimeMilliseconds() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -38,12 +38,14 @@ inline int64_t getEpochTimeMilliseconds() {
 }
 
 void cleanupThreadSlot(void* key) {
-    int32_t slotId = (int32_t)(uint64_t)key;
+    uint32_t slotId = (uint32_t)(uint64_t)key;
     // NOTE: slot id is saved offset by, so that it would not be equal to zero, and then cleanup
     // function will not be called
-    --slotId;
-
-    getLifeSignManager()->releaseThreadSlot(slotId);
+    if (slotId == 0) {
+        LOG_WARN(sLogger, "Invalid life-sign zero slot id in cleanupThreadSlot()");
+    } else {
+        getLifeSignManager()->releaseThreadSlot(slotId - 1);
+    }
 }
 
 DbgUtilErr LifeSignManager::createLifeSignShmSegment(uint32_t contextAreaSize,
@@ -163,8 +165,7 @@ DbgUtilErr LifeSignManager::createLifeSignShmSegment(uint32_t contextAreaSize,
         // initialize header
         new (threadOffset) LifeSignThreadAreaHeader();
         threadOffset += m_lifeSignHeader->m_threadAreaSize;
-        // NOTE: cast is ok due to DBGUTIL_MAX_THREADS_UPPER_BOUND
-        m_vacantSlots.push_back((int32_t)i);
+        m_vacantSlots.push_back(i);
     }
 
 // synchronize to disk all initial data
@@ -305,13 +306,14 @@ DbgUtilErr LifeSignManager::writeLifeSignRecord(const char* recPtr, uint32_t rec
             LOG_ERROR(sLogger,
                       "Cannot write life-sign record, cannot obtain slot for current thread, all "
                       "slots are used");
-            sThreadSlotId = DBGUTIL_INVALID_THREAD_SLOT_ID;
+            // mark as already attempted
+            sThreadSlotId = DBGUTIL_NO_THREAD_SLOT_ID;
             return DBGUTIL_ERR_RESOURCE_LIMIT;
         }
     }
 
     // if already tried once we back off
-    if (sThreadSlotId == DBGUTIL_INVALID_THREAD_SLOT_ID) {
+    if (sThreadSlotId == DBGUTIL_NO_THREAD_SLOT_ID) {
         return DBGUTIL_ERR_RESOURCE_LIMIT;
     }
 
@@ -600,14 +602,14 @@ DbgUtilErr LifeSignManager::composeShmName(std::string& shmName) {
     return DBGUTIL_ERR_OK;
 }
 
-int32_t LifeSignManager::obtainThreadSlot() {
+uint32_t LifeSignManager::obtainThreadSlot() {
     std::unique_lock<std::mutex> lock(m_lock);
     if (m_vacantSlots.empty()) {
-        return -1;
+        return DBGUTIL_INVALID_THREAD_SLOT_ID;
     }
 
     // find oldest which is always found in the front
-    int32_t slot = m_vacantSlots.front();
+    uint32_t slot = m_vacantSlots.front();
     setTls(sThreadSlotKey, (void*)(uint64_t)(slot + 1));
     m_vacantSlots.pop_front();
     uint32_t threadAreaSize = m_lifeSignHeader->m_lifeSignAreaSize / m_lifeSignHeader->m_maxThreads;
@@ -623,8 +625,8 @@ int32_t LifeSignManager::obtainThreadSlot() {
     return slot;
 }
 
-void LifeSignManager::releaseThreadSlot(int32_t slotId) {
-    LOG_TRACE(sLogger, "Releasing life-sign thread slot %d", slotId);
+void LifeSignManager::releaseThreadSlot(uint32_t slotId) {
+    LOG_TRACE(sLogger, "Releasing life-sign thread slot %u", slotId);
     std::unique_lock<std::mutex> lock(m_lock);
     m_vacantSlots.push_back(slotId);
     uint32_t threadAreaSize = m_lifeSignHeader->m_lifeSignAreaSize / m_lifeSignHeader->m_maxThreads;

@@ -24,9 +24,8 @@ public:
     DbgUtilErr terminate();
 
     /**
-     * @brief Retrieves symbol debug information (platform independent API).
-     * @param symAddress The symbol address.
-     * @param[out] symbolInfo The symbol information.
+     * @brief Installs an exception listener.
+     * @param exceptionListener The exception listener.
      */
     inline void setExceptionListener(OsExceptionListener* exceptionListener) {
         m_exceptionListener = exceptionListener;

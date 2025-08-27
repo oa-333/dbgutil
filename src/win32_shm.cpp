@@ -29,7 +29,7 @@ DbgUtilErr Win32Shm::createShm(const char* name, size_t size, bool shareWrite) {
     // NOTE: we use GENERIC_WRITE so that OS can flush shared memory to disk occasionally
     // TODO: probably more security measures are required here
     m_backingFile = CreateFileA(backingFilePath.c_str(), GENERIC_READ | GENERIC_WRITE, shareOpts,
-                                NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+                                nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (m_backingFile == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, CreateFileA,
                         "Failed to create backing file at %s for shared memory segment by name "
@@ -42,12 +42,12 @@ DbgUtilErr Win32Shm::createShm(const char* name, size_t size, bool shareWrite) {
     // NOTE: backing file size will be increased to match to shared memory segment size
     std::string localName = std::string("Local\\") + name;
     m_mapFile = CreateFileMappingA(m_backingFile,       // use backing file or paging file
-                                   NULL,                // default security
+                                   nullptr,             // default security
                                    PAGE_READWRITE,      // read/write access
                                    0,                   // maximum object size (high-order DWORD)
                                    (DWORD)size,         // maximum object size (low-order DWORD)
                                    localName.c_str());  // name of mapping object
-    if (m_mapFile == NULL) {
+    if (m_mapFile == nullptr) {
         LOG_WIN32_ERROR(sLogger, CreateFileMappingA,
                         "Failed to create shared memory segment by name %s with size %zu", name,
                         size);
@@ -59,7 +59,7 @@ DbgUtilErr Win32Shm::createShm(const char* name, size_t size, bool shareWrite) {
     m_shmPtr = MapViewOfFile(m_mapFile,                       // handle to map object
                              FILE_MAP_READ | FILE_MAP_WRITE,  // read/write permission
                              0, 0, size);
-    if (m_shmPtr == NULL) {
+    if (m_shmPtr == nullptr) {
         LOG_WIN32_ERROR(
             sLogger, MapViewOfFile,
             "Failed to map shared memory segment %s to address space of current process", name);
@@ -86,8 +86,8 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* =
     // NOTE: guardian process requires write access (or anyone else calling syncShm)
     if (allowWrite || allowMapBackingFile) {
         m_backingFile = CreateFileA(backingFilePath.c_str(), GENERIC_READ | GENERIC_WRITE,
-                                    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                                    FILE_ATTRIBUTE_NORMAL, NULL);
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                                    FILE_ATTRIBUTE_NORMAL, nullptr);
         if (m_backingFile == INVALID_HANDLE_VALUE) {
             LOG_WIN32_ERROR(sLogger, CreateFileA,
                             "Failed to open backing file at %s of shared memory segment by name "
@@ -107,7 +107,7 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* =
     m_mapFile = OpenFileMappingA(mapOpts,             // map permissions
                                  FALSE,               // do not inherit the name
                                  localName.c_str());  // name of mapping object
-    if (m_mapFile == NULL) {
+    if (m_mapFile == nullptr) {
         if (!allowMapBackingFile) {
             LOG_WIN32_ERROR(sLogger, OpenFileMappingA,
                             "Failed to open shared memory segment by name %s", name);
@@ -118,8 +118,8 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* =
             // writing expected, so we remove write permission in case it was set
             mapOpts = FILE_MAP_READ;
             m_mapFile =
-                CreateFileMappingA(m_backingFile, NULL, PAGE_READONLY, 0, 0, localName.c_str());
-            if (m_mapFile == NULL) {
+                CreateFileMappingA(m_backingFile, nullptr, PAGE_READONLY, 0, 0, localName.c_str());
+            if (m_mapFile == nullptr) {
                 LOG_WIN32_ERROR(sLogger, CreateFileMappingA,
                                 "Failed to create new shared memory segment mapping to existing "
                                 "backing file (name: %s)",
@@ -138,7 +138,7 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* =
     m_shmPtr = MapViewOfFile(m_mapFile,  // handle to map object
                              mapOpts,    // map permissions
                              0, 0, size);
-    if (m_shmPtr == NULL) {
+    if (m_shmPtr == nullptr) {
         LOG_WIN32_ERROR(sLogger, MapViewOfFile,
                         "Failed to map %zu bytes of shared memory segment %s to address space of "
                         "current process",
@@ -197,13 +197,13 @@ DbgUtilErr Win32Shm::closeShm() {
         m_shmPtr = nullptr;
     }
 
-    if (m_mapFile != NULL) {
+    if (m_mapFile != nullptr) {
         if (!CloseHandle(m_mapFile)) {
             LOG_WIN32_ERROR(sLogger, CloseHandle, "Failed to close shared memory segment %s handle",
                             m_name.c_str());
             return DBGUTIL_ERR_SYSTEM_FAILURE;
         }
-        m_mapFile = NULL;
+        m_mapFile = nullptr;
     }
 
     if (m_backingFile != INVALID_HANDLE_VALUE) {

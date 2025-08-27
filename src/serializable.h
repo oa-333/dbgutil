@@ -5,7 +5,7 @@
 #include "output_stream.h"
 
 #ifdef DBGUTIL_WINDOWS
-#include "winsock2.h"
+#include "WinSock2.h"
 #else
 #include <endian.h>
 #include <netinet/in.h>

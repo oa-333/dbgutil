@@ -55,7 +55,7 @@ public:
      * @param[out] stackTrace The resulting stack trace.
      * @return DbgUtilErr The operation result.
      */
-    DbgUtilErr getStackTrace(void* conetxt, RawStackTrace& stackTrace);
+    DbgUtilErr getStackTrace(void* context, RawStackTrace& stackTrace);
 
 protected:
     OsStackTraceProvider() {}

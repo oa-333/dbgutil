@@ -179,7 +179,7 @@ void LinuxSymbolEngine::prepareModuleData(
 
     // collect debug section references from image reader
     symModData->m_imageReader->forEachSection(
-        ".debug", [symModData, this](const OsImageSection& section) {
+        ".debug", [symModData](const OsImageSection& section) {
             LOG_DEBUG(sLogger, "Adding debug section: %s", section.m_name.c_str());
             symModData->m_dwarfData.addSection(section.m_name.c_str(),
                                                {section.m_start, section.m_size});

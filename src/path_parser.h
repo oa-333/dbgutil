@@ -118,8 +118,8 @@ public:
      * @param basePath The base path.
      * @param subPath The sub-path.
      * @param[out] path The resulting path.
-     * @param canonicalize[opt] Optionally specifies whether to canonicalize the path, including
-     * path legality checks (default is true).
+     * @param canonicalize Optionally specifies whether to canonicalize the path, including path
+     * legality checks (default is true).
      * @return E_OK If the operation succeeded.
      * @return E_INVALID_ARGUMENT If the provided path is illegal.
      */

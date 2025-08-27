@@ -6,6 +6,7 @@
 #include "dbg_util_flags.h"
 #include "dbgutil_common.h"
 #include "dbgutil_log_imp.h"
+#include "os_exception_handler_internal.h"
 #include "os_module_manager_internal.h"
 
 namespace dbgutil {
@@ -56,7 +57,7 @@ public:
         }
     }
     void onEndStackTrace() override {}
-    void onStackEntry(const char* stackEntry) {
+    void onStackEntry(const char* stackEntry) override {
         int res = snprintf(sCallStackBuf + sCallStackBufLen, CALL_STACK_BUF_SIZE - sCallStackBufLen,
                            "%s\n", stackEntry);
         if (res > 0) {

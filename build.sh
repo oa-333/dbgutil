@@ -11,6 +11,7 @@ PLATFORM=$(uname -s)
 # -c|--clean
 # -r|--rebuild (no reconfigure)
 # -g|--reconfigure
+# -a|--clang
 
 # set default values
 BUILD_TYPE=Debug
@@ -24,9 +25,10 @@ VERBOSE=0
 CLEAN=0
 REBUILD=0
 RE_CONFIG=0
+CLANG=0
 
 # parse options
-TEMP=$(getopt -o vdrwcrgi: -l verbose,debug,release,rel-with-debug-info,clean,rebuild,reconfigure,install-dir: -- "$@")
+TEMP=$(getopt -o vdrwcrgai: -l verbose,debug,release,rel-with-debug-info,clean,rebuild,reconfigure,clang,install-dir: -- "$@")
 eval set -- "$TEMP"
 
 declare -a CONNS=()
@@ -40,6 +42,7 @@ while true; do
     -c | --clean) CLEAN=1; shift ;;
     -r | --rebuild) REBUILD=1; CLEAN=1; shift ;;
     -g | --reconfigure) RE_CONFIG=1; REBUILD=1; CLEAN=1; shift ;;
+    -a | --clang) CLANG=1; shift ;;
     -- ) shift; break ;;
     * ) echo "ERROR: Invalid option $1, aborting"; exit 1; break ;;
   esac
@@ -52,6 +55,13 @@ OPTS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 if [ $VERBOSE -eq 1 ]; then
     OPTS+=" -DCMAKE_VERBOSE_MAKEFILE=ON"
     VERBOSE_OPT=--verbose
+fi
+if [ "$CLANG" == "1" ]; then
+    export CXX=`which clang++`;
+    if [ -z "$CXX" ]; then
+        echo "[ERROR] clang not found, aborting"
+        exit 1
+    fi
 fi
 
 # prepare build directory

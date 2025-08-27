@@ -1,8 +1,12 @@
 #include "dbg_util_def.h"
 
 #ifdef DBGUTIL_WINDOWS
+
+// Windows header is not included by dbg_util_def.h on MinGW, so we do it now
+#ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
+#endif
 
 #include <algorithm>
 #include <cassert>
@@ -216,8 +220,8 @@ DbgUtilErr Win32PEReader::readSectionHeaders() {
                   secName.c_str(), secHdr->PointerToRawData, secHdr->VirtualAddress,
                   secHdr->Misc.VirtualSize);
         if (!m_sectionMap
-                 .insert(OsSectionMap::value_type(
-                     secName, {secName, secHdr->PointerToRawData, secHdr->Misc.VirtualSize, 0}))
+                 .insert(OsSectionMap::value_type(secName, {secName, secHdr->PointerToRawData,
+                                                            secHdr->Misc.VirtualSize, nullptr}))
                  .second) {
             return DBGUTIL_ERR_DATA_CORRUPT;
         }

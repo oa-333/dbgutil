@@ -77,7 +77,7 @@ bool LogBuffer::appendV(const char* fmt, va_list args) {
     // NOTE: cast to int is safe (since size is limited to DBGUTIL_MAX_BUFFER_SIZE = 16KB)
     if (res32 < sizeLeft) {
         va_end(apCopy);
-        m_offset += res;
+        m_offset += res32;
         return true;
     }
 

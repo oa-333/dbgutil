@@ -2,20 +2,22 @@
 #define DBGUTIL_NO_WINDOWS_HEADER
 #include "dbg_util_def.h"
 
-// this is good only for Microsoft Visual C++ compiler
+// The symbol engine is also available on MinGW since some modules may have been built by Microsoft
+// Visual C++ compiler
+
 // Although this code compiles on MinGW, the g++ compiler does not generate a pdb symbol file
 // so most symbol engine functions fail, but this is still useful for stack walking, without symbol
 // extraction, which takes place in bfd symbol engine.
 #ifdef DBGUTIL_WINDOWS
 
-// we put this in ifdef so that vscode auto-format will not move it around...
-#ifdef DBGUTIL_WINDOWS
+// now we can include Windows header (also prevent clang-format from moving around directives)
+// clang-format off
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
+#include <Windows.h>
+// clang-format on
 
-#include <dbghelp.h>
-#include <psapi.h>
+#include <DbgHelp.h>
+#include <Psapi.h>
 
 #include <cassert>
 #include <cinttypes>
@@ -172,7 +174,7 @@ DbgUtilErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
 
     // get file/line info
     DWORD offsetFromSymbol = 0;
-    IMAGEHLP_LINE64 lineInfo = {0};
+    IMAGEHLP_LINE64 lineInfo = {};
     lineInfo.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
     if (SymGetLineFromAddr64(m_processHandle, (DWORD64)symAddress, &offsetFromSymbol, &lineInfo)) {
         symbolInfo.m_fileName = lineInfo.FileName;
@@ -192,8 +194,8 @@ void Win32SymbolEngine::walkThreadStack(HANDLE hThread, CONTEXT& context,
     initStackFrame(context, stackFrame);
 
     do {
-        if (!StackWalk64(m_imageType, m_processHandle, hThread, &stackFrame, &context, NULL,
-                         SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
+        if (!StackWalk64(m_imageType, m_processHandle, hThread, &stackFrame, &context, nullptr,
+                         SymFunctionTableAccess64, SymGetModuleBase64, nullptr)) {
             break;
         }
 
@@ -240,8 +242,8 @@ void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     s << m_processDir << "\\" << m_processName << ".core." << _getpid();
     std::string dumpPath = s.str();
     LOG_TRACE(sLogger, "Attempting to generate mini-dump at %s", dumpPath.c_str());
-    HANDLE hFile = CreateFileA(dumpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_NEW,
-                               FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(dumpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,
+                               CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
         LOG_WIN32_ERROR(sLogger, CreateFileA, "Failed to create dump file: %s", dumpPath.c_str());
         return;
@@ -249,7 +251,7 @@ void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     _MINIDUMP_EXCEPTION_INFORMATION mdExceptInfo = {GetThreadId(GetCurrentThread()),
                                                     (_EXCEPTION_POINTERS*)ExceptionInfo, FALSE};
     if (!MiniDumpWriteDump(m_processHandle, GetCurrentProcessId(), hFile, MiniDumpWithFullMemory,
-                           &mdExceptInfo, NULL, NULL)) {
+                           &mdExceptInfo, nullptr, nullptr)) {
         LOG_WIN32_ERROR(sLogger, MiniDumpWriteDump, "Failed to write mini-dump file");
     }
     CloseHandle(hFile);

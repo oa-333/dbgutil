@@ -5,7 +5,7 @@
 // MinGW requires including windows main header, and this should be the topmost include directive
 #ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include <cassert>
@@ -225,7 +225,7 @@ void Win32ExceptionHandler::unhandledExceptionFilter(_EXCEPTION_POINTERS* except
     }
 
     // finally, attempt to dump core
-    if (getGlobalFlags() && DBGUTIL_EXCEPTION_DUMP_CORE) {
+    if (getGlobalFlags() & DBGUTIL_EXCEPTION_DUMP_CORE) {
         LOG_WARN(sLogger, "Dumping core");
         Win32SymbolEngine::getInstance()->dumpCore(exceptionInfo);
         LOG_WARN(sLogger, "Finished dumping core");

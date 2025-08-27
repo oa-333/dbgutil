@@ -78,7 +78,7 @@ public:
 
     /** @brief Retrieves current UTC time (seconds). */
     inline app_time_t getCurrentTime() {
-        time_t now = time(NULL);
+        time_t now = time(nullptr);
         return (app_time_t)now;
     }
 
@@ -194,7 +194,7 @@ public:
      * @param fd The file descriptor
      * @param buf The buffer to write.
      * @param len The buffer length.
-     * @param[out] bytesRead The number of bytes actually written.
+     * @param[out] bytesWritten The number of bytes actually written.
      * @param[out] sysErr Optional parameter, receiving system error code in case of error.
      * @return DbgUtilErr The operation result.
      */
@@ -240,7 +240,7 @@ public:
     /**
      * @brief Reads entire file contents from disk into a vector of strings.
      * @param path The file path.
-     * @param buf The buffer.
+     * @param lines The resulting file lines.
      * @return DbgUtilErr The operation result.
      */
     static DbgUtilErr readEntireFileToLines(const char* path, std::vector<std::string>& lines);

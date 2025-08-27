@@ -16,7 +16,7 @@ namespace dbgutil {
 // name, but this requires API change
 #define SYM_ALIGN 2
 #define FILE_ALIGN 40
-#define LIB_ALIGN 30
+// #define LIB_ALIGN 30
 
 std::string DefaultStackEntryFormatter::formatStackEntry(const StackEntry& stackEntry) {
     // format frame address

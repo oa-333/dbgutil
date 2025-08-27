@@ -362,7 +362,7 @@ DbgUtilErr DwarfLineUtil::execLineProgram(FixedInputStream& is) {
 
 void DwarfLineUtil::appendLineMatrix() {
     m_lineMatrix.push_back({m_stateMachine.m_address, m_stateMachine.m_fileIndex,
-                            m_stateMachine.m_lineNumber, m_stateMachine.m_columnIndex});
+                            m_stateMachine.m_lineNumber, m_stateMachine.m_columnIndex, 0});
 }
 
 DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& is) {
@@ -398,7 +398,7 @@ DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& i
             }
             // carefully update the value, line number cannot go below 1
             if (advance >= 0) {
-                m_stateMachine.m_lineNumber += (int32_t)advance;
+                m_stateMachine.m_lineNumber += (uint32_t)advance;
             } else {
                 uint32_t advanceAbs32 = (uint32_t)(-advance);
                 if (advanceAbs32 >= m_stateMachine.m_lineNumber) {
@@ -409,7 +409,7 @@ DbgUtilErr DwarfLineUtil::execStandardOpCode(uint8_t opCode, FixedInputStream& i
                     // this is either internal error or corrupt data
                     return DBGUTIL_ERR_DATA_CORRUPT;
                 }
-                m_stateMachine.m_lineNumber += (int32_t)advance;
+                m_stateMachine.m_lineNumber -= advanceAbs32;
             }
             LOG_DEBUG(sLogger, "Executed DW_LNS_advance_line: %" PRId64 " --> %s", advance,
                       m_stateMachine.toString().c_str());
@@ -529,8 +529,16 @@ void DwarfLineUtil::advancePC(uint8_t opCode, bool advanceLine /* = false */) {
 
     advanceAddress(opAdvance);
     if (advanceLine) {
-        int8_t lineAdvance = m_lineBase + (adjustedOpCode % m_lineRange);
-        m_stateMachine.m_lineNumber += lineAdvance;
+        // be careful with overflow here, since m_lineBase is int8, and adjustedOpCode is uint8
+        // so we first convert m_lineBase to int32 and then add uint8
+        int32_t lineAdvance = ((int32_t)m_lineBase) + (int32_t)(adjustedOpCode % m_lineRange);
+
+        // NOTE: line advance can be negative, so we update unsigned m_lineNumber carefully
+        if (lineAdvance >= 0) {
+            m_stateMachine.m_lineNumber += (uint32_t)lineAdvance;
+        } else {
+            m_stateMachine.m_lineNumber -= (uint32_t)(-lineAdvance);
+        }
     }
 }
 

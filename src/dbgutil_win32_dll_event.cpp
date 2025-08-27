@@ -5,7 +5,7 @@
 // on MinGW we need to include windows header
 #ifdef DBGUTIL_MINGW
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include <algorithm>
@@ -114,13 +114,15 @@ BOOL WINAPI DllMain(HINSTANCE /* hinstDLL */,  // handle to DLL module
             break;
 
         case DLL_PROCESS_DETACH:
-
             if (lpvReserved != nullptr) {
                 break;  // do not do cleanup if process termination scenario
             }
 
             // Perform any necessary cleanup.
             dbgutil::notifyProcessDetach();
+            break;
+
+        default:
             break;
     }
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
