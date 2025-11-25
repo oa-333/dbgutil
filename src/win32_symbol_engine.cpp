@@ -239,7 +239,7 @@ DbgUtilErr Win32SymbolEngine::getSymbolModule(void* symAddress, SymbolInfo& symb
 void Win32SymbolEngine::dumpCore(void* ExceptionInfo) {
     // try to create mini-dump
     std::stringstream s;
-    s << m_processDir << "\\" << m_processName << ".core." << _getpid();
+    s << m_processDir << "\\" << m_processName << "." << _getpid() << ".dmp";
     std::string dumpPath = s.str();
     LOG_TRACE(sLogger, "Attempting to generate mini-dump at %s", dumpPath.c_str());
     HANDLE hFile = CreateFileA(dumpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,

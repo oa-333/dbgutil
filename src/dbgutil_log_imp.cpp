@@ -115,7 +115,7 @@ inline void ensureLogDataExists() {
 inline DbgUtilErr createLogDataKey() {
     if (sLogDataKey != DBGUTIL_INVALID_TLS_KEY) {
         fprintf(stderr, "Cannot create record builder TLS key, already created\n");
-        return false;
+        return DBGUTIL_ERR_INVALID_STATE;
     }
     if (!createTls(sLogDataKey, freeLogData)) {
         return DBGUTIL_ERR_SYSTEM_FAILURE;

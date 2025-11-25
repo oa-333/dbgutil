@@ -116,9 +116,15 @@ DbgUtilErr Win32Shm::openShm(const char* name, size_t size, bool allowWrite /* =
         } else {
             // since open shm failed, it means there is no active shm, so in this case there is no
             // writing expected, so we remove write permission in case it was set
-            mapOpts = FILE_MAP_READ;
+            // NOTE: above comment is incorrect, as we may need to modify the segment state after
+            // process died abruptly
+            // mapOpts = FILE_MAP_READ;
+            DWORD protectMode = PAGE_READONLY;
+            if (allowWrite) {
+                protectMode = PAGE_READWRITE;
+            }
             m_mapFile =
-                CreateFileMappingA(m_backingFile, nullptr, PAGE_READONLY, 0, 0, localName.c_str());
+                CreateFileMappingA(m_backingFile, nullptr, protectMode, 0, 0, localName.c_str());
             if (m_mapFile == nullptr) {
                 LOG_WIN32_ERROR(sLogger, CreateFileMappingA,
                                 "Failed to create new shared memory segment mapping to existing "

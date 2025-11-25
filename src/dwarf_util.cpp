@@ -248,6 +248,12 @@ DbgUtilErr DwarfUtil::readCUData(uint64_t offset, CUData& cuData) {
             } else if (attr.m_form == DW_FORM_data1) {
                 uint8_t val;
                 DBGUTIL_DESERIALIZE_INT8(is, val);
+            } else if (attr.m_form == DW_FORM_data2) {
+                uint16_t val;
+                DBGUTIL_DESERIALIZE_INT32(is, val);
+            } else if (attr.m_form == DW_FORM_data4) {
+                uint32_t val;
+                DBGUTIL_DESERIALIZE_INT32(is, val);
             } else if (attr.m_form == DW_FORM_data8) {
                 uint64_t val;
                 DBGUTIL_DESERIALIZE_INT64(is, val);

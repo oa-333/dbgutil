@@ -204,11 +204,23 @@ template <typename F>
 inline void visitThreadIds(F f) {
     struct Visitor final : public ThreadVisitor {
         Visitor(F f) : m_f(f) {}
-        void onThread(os_thread_id_t threadId) { m_f(threadId); }
+        Visitor() = delete;
+        Visitor(const Visitor&) = delete;
+        Visitor(Visitor&&) = delete;
+        Visitor& operator=(const Visitor&) = delete;
+        ~Visitor() final {}
+        void onThreadId(os_thread_id_t threadId) { m_f(threadId); }
         F m_f;
     };
     Visitor visitor(f);
     getThreadManager()->visitThreadIds(&visitor);
+}
+
+/** @brief Retrieves the current thread count. */
+inline uint32_t getThreadCount() {
+    uint32_t threadCount = 0;
+    visitThreadIds([&threadCount](os_thread_id_t /* threadId */) { ++threadCount; });
+    return threadCount;
 }
 
 /** @brief Utility API for lambda syntax. */

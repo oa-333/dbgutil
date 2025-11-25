@@ -33,7 +33,7 @@
 
 namespace dbgutil {
 
-/** @typedef Shared memory segment list. */
+/** @typedef Shared memory segment list (file name and file size). */
 typedef std::vector<std::pair<std::string, uint32_t>> ShmSegmentList;
 
 /**
