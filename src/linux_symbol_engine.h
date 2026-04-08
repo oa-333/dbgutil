@@ -73,8 +73,18 @@ public:
      * @brief Retrieves symbol debug information (platform independent API).
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
+     * @return Operation's result.
      */
     DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
+
+    /**
+     * @brief Traverses all symbols having a name that matches a regular expression. This variant
+     * can be used if @ref searchSymbols() may yield too many symbols at once.
+     * @param visitor The thread visitor.
+     * @return The operation result.
+     */
+    DbgUtilErr visitSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                            SymbolInfoVisitor* visitor) final;
 
 private:
     LinuxSymbolEngine();
@@ -90,6 +100,7 @@ private:
                                  SymbolInfo& symbolInfo);
 
     SymbolModuleData* findSymbolModule(void* address);
+    SymbolModuleData* getSymbolModule(const OsModuleInfo& moduleInfo, void* address);
     void prepareModuleData(SymbolModuleData* symModData);
 };
 

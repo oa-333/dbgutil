@@ -51,7 +51,7 @@ void OsImageReader::close() {
     resetData();
 }
 
-DbgUtilErr OsImageReader::searchSymbol(void* symAddress, std::string& symName,
+DbgUtilErr OsImageReader::searchSymbol(void* symAddress, uint32_t& symSize, std::string& symName,
                                        std::string& fileName, void** address) {
     // scan symbol table for relative address
     if (symAddress < m_moduleBase) {
@@ -75,6 +75,7 @@ DbgUtilErr OsImageReader::searchSymbol(void* symAddress, std::string& symName,
 
     const OsSymbolInfo& symInfo = *itr;
     if (symInfo.contains(symOff)) {
+        symSize = symInfo.m_size;
         symName = symInfo.m_name;
         fileName = m_srcFileNames[symInfo.m_srcFileIndex];
         *address = (void*)(m_moduleBase + symInfo.m_offset);
@@ -83,6 +84,17 @@ DbgUtilErr OsImageReader::searchSymbol(void* symAddress, std::string& symName,
         return DBGUTIL_ERR_OK;
     }
     return DBGUTIL_ERR_NOT_FOUND;
+}
+
+DbgUtilErr OsImageReader::searchSymbol(const char* symbolName, void** symbolAddress) {
+    SymInfoMap::iterator itr = m_symInfoMap.find(symbolName);
+    if (itr == m_symInfoMap.end()) {
+        LOG_DEBUG(sLogger, "Symbol %s not found", symbolName);
+        return DBGUTIL_ERR_NOT_FOUND;
+    }
+
+    *symbolAddress = (void*)(m_moduleBase + itr->second->m_offset);
+    return DBGUTIL_ERR_OK;
 }
 
 DbgUtilErr OsImageReader::getSection(const char* name, OsImageSection& section) {

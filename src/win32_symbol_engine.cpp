@@ -188,6 +188,12 @@ DbgUtilErr Win32SymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
     return getSymbolModule(symAddress, symbolInfo);
 }
 
+DbgUtilErr Win32SymbolEngine::visitSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                                           SymbolInfoVisitor* visitor) {
+    // currently unsupported
+    return DBGUTIL_ERR_NOT_IMPLEMENTED;
+}
+
 void Win32SymbolEngine::walkThreadStack(HANDLE hThread, CONTEXT& context,
                                         StackFrameListener* listener) {
     STACKFRAME64 stackFrame = {};

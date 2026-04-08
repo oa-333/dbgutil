@@ -51,13 +51,44 @@ public:
     /**
      * @brief Searches for a symbol in the binary image file's symbol table (provided by linker).
      * @param symbolAddress The symbol address to search.
+     * @param[out] symSize The symbol size in bytes.
      * @param[out] symbolName The name of the resulting symbol (if symbol was found).
      * @param[out] fileName The file containing the symbol (if symbol was found).
      * @param[out] address The actual start address of the symbol.
      * @return DbgUtilErr The operation result.
      */
-    virtual DbgUtilErr searchSymbol(void* symbolAddress, std::string& symbolName,
+    virtual DbgUtilErr searchSymbol(void* symbolAddress, uint32_t& symSize, std::string& symbolName,
                                     std::string& fileName, void** address);
+
+    /**
+     * @brief Searches for a symbol by name (exact match).
+     *
+     * @param symbolName The symbol name to search.
+     * @param[out] symbolAddress The resulting symbol address (valid only if found).
+     * @return DbgUtilErr The operation result.
+     */
+    virtual DbgUtilErr searchSymbol(const char* symbolName, void** symbolAddress);
+
+    /**
+     * @brief Visits all symbols in the image.
+     * @tparam F The visitor function type. Expected signature is: "DbgUtilErr f(const char*
+     * symbolName, void* address, const char* fileName, uint64_t symbolSize, bool& shouldStop)".
+     * @param f The visitor function.
+     */
+    template <typename F>
+    inline DbgUtilErr forEachSymbol(F f) const {
+        DbgUtilErr rc = DBGUTIL_ERR_OK;
+        bool shouldStop = false;
+        for (const OsSymbolInfo& symInfo : m_symInfoSet) {
+            void* address = (void*)(m_moduleBase + symInfo.m_offset);
+            const char* fileName = m_srcFileNames[symInfo.m_srcFileIndex].c_str();
+            rc = f(symInfo.m_name.c_str(), address, fileName, symInfo.m_size, shouldStop);
+            if (rc != DBGUTIL_ERR_OK || shouldStop) {
+                break;
+            }
+        }
+        return rc;
+    }
 
     /**
      * @brief Retrieves a section by name.
@@ -155,6 +186,8 @@ protected:
 
     typedef std::vector<OsSymbolInfo> SymInfoSet;
     SymInfoSet m_symInfoSet;
+    typedef std::unordered_map<std::string, OsSymbolInfo*> SymInfoMap;
+    SymInfoMap m_symInfoMap;
     std::vector<std::string> m_srcFileNames;
 
     typedef std::unordered_map<std::string, OsImageSection> OsSectionMap;

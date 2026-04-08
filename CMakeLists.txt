@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
+include(ExternalProject)
 
 #############################################################
 # project definition
@@ -19,6 +20,42 @@ if (DEFINED CMAKE_CXX_STANDARD)
 else()
     message(STATUS "CXX standard not defined, dbgutil defaulting to cxx_std_11")
     target_compile_features(dbgutil PUBLIC cxx_std_11)
+endif()
+
+#############################################################
+# get libunwind on Linux
+#############################################################
+if (LINUX)
+    message(STATUS "Fetching libunwind from github")
+
+    set(LIBUNWIND_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/../libunwind")
+
+    # libunwind uses make for build, so we use ExternalProject_Add (and not FetchContent_Declare/MakeAvailable)
+    ExternalProject_Add(libunwind
+        GIT_REPOSITORY https://github.com/libunwind/libunwind.git
+        GIT_TAG v1.8.3
+        UPDATE_DISCONNECTED ON
+        CONFIGURE_COMMAND cd ../libunwind && autoreconf -i && ./configure --prefix=${LIBUNWIND_INSTALL_DIR}
+        BUILD_COMMAND cd ../libunwind && make -j
+        INSTALL_COMMAND cd ../libunwind && make install)
+
+    # Manually create the include dir if it doesn't exist yet (without this cmake fails)
+    file(MAKE_DIRECTORY "${LIBUNWIND_INSTALL_DIR}/include")
+
+    # use a mediating target so we can enforce build dependency
+    add_library(External::libunwind SHARED IMPORTED GLOBAL)
+    set_target_properties(External::libunwind PROPERTIES
+        IMPORTED_LOCATION "${LIBUNWIND_INSTALL_DIR}/lib/libunwind.so"
+        INTERFACE_INCLUDE_DIRECTORIES "${LIBUNWIND_INSTALL_DIR}/include"
+    )
+
+    # ensure the external build finishes before this target is used
+    add_dependencies(External::libunwind libunwind)
+
+    # now add project include/lib/link definitions
+    target_include_directories(dbgutil PRIVATE ${LIBUNWIND_INSTALL_DIR}/include)
+    target_link_directories(dbgutil PRIVATE ${LIBUNWIND_INSTALL_DIR}/lib)
+    target_link_libraries(dbgutil PRIVATE External::libunwind)
 endif()
 
 #############################################################
@@ -67,7 +104,6 @@ elseif(MINGW)
     target_link_libraries(dbgutil ws2_32 dbghelp psapi unwind)
     target_compile_options(dbgutil PRIVATE -Wall)
 else()
-    target_link_libraries(dbgutil unwind)
     target_compile_options(dbgutil PRIVATE -Wall)
     add_link_options(-rdynamic)
 endif()

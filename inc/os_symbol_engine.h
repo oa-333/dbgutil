@@ -2,6 +2,7 @@
 #define __OS_SYMBOL_ENGINE_H__
 
 #include <cinttypes>
+#include <list>
 #include <string>
 
 #include "dbg_util_def.h"
@@ -26,8 +27,8 @@ struct DBGUTIL_API SymbolInfo {
     /** @brief The column index of the symbol (Dwarf only). */
     uint32_t m_columnIndex;
 
-    /** @brief Alignment. */
-    uint32_t m_padding;
+    /** @brief Size of symbol in bytes. */
+    uint32_t m_symbolSize;
 
     /** @brief The name of the symbol. */
     std::string m_symbolName;
@@ -78,6 +79,27 @@ struct DBGUTIL_API SymbolInfo {
     }
 };
 
+/** @class Symbol info visitor for traversing symbols. */
+class DBGUTIL_API SymbolInfoVisitor {
+public:
+    virtual ~SymbolInfoVisitor() {}
+
+    /**
+     * @brief Visits a symbol.
+     *
+     * @param symbolInfo The symbol information.
+     * @param[out] shouldStop Set this to tru in order to stop traversing symbols.
+     * @return DbgUtilErr The visit operation result.
+     */
+    virtual DbgUtilErr onSymbolInfo(const SymbolInfo& symbolInfo, bool& shouldStop) = 0;
+
+protected:
+    SymbolInfoVisitor() {}
+    SymbolInfoVisitor(const SymbolInfoVisitor&) = delete;
+    SymbolInfoVisitor(SymbolInfoVisitor&&) = delete;
+    SymbolInfoVisitor& operator=(const SymbolInfoVisitor&) = delete;
+};
+
 /** @brief Parent interface for symbol engines. */
 class DBGUTIL_API OsSymbolEngine {
 public:
@@ -87,11 +109,51 @@ public:
     virtual ~OsSymbolEngine() {}
 
     /**
-     * @brief Retrieves symbol debug information (platform independent API).
+     * @brief Retrieves symbol debug information by symbol address (platform independent API).
      * @param symAddress The symbol address.
      * @param[out] symbolInfo The symbol information.
+     * @return Operation's result.
      */
     virtual DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) = 0;
+
+    /**
+     * @brief Retrieves symbol debug information by symbol name (platform independent API).
+     * @param symbolName The symbol name to search (exact match).
+     * @param moduleNameRegex Regular expression for limiting the searched modules.
+     * @param[out] symbolInfo The symbol information.
+     * @return Operation's result.
+     *
+     * @note Unless the module regular expression is specified, this call will may cause all modules
+     * to be loaded.
+     */
+    virtual DbgUtilErr getSymbolInfo(const char* symbolName, const char* moduleNameRegex,
+                                     SymbolInfo& symbolInfo);
+
+    /**
+     * @brief Searches for symbol debug information by symbol name regular expression (platform
+     * independent API).
+     * @param symbolRegex The symbol name regular expression.
+     * @param moduleNameRegex Regular expression for limiting the searched modules.
+     * @param[out] symbolInfoList The resulting list of matching symbol information.
+     * @param maxSymbolCount Optional limit on number of modules to return.
+     * @return Operation's result.
+     *
+     * @note Unless the module regular expression is specified, this call will cause all modules to
+     * be loaded. Also if the expected result list size is too big, consider using @ref visitSymbols
+     * instead.
+     */
+    virtual DbgUtilErr searchSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                                     std::list<SymbolInfo>& symbolInfoList,
+                                     size_t maxSymbolCount = SIZE_MAX);
+
+    /**
+     * @brief Traverses all symbols having a name that matches a regular expression. This variant
+     * can be used if @ref searchSymbols() may yield too many symbols at once.
+     * @param visitor The thread visitor.
+     * @return The operation result.
+     */
+    virtual DbgUtilErr visitSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                                    SymbolInfoVisitor* visitor) = 0;
 
 protected:
     OsSymbolEngine() {}
@@ -99,6 +161,25 @@ protected:
 
 /** @brief Retrieves the installed symbol engine implementation. */
 extern DBGUTIL_API OsSymbolEngine* getSymbolEngine();
+
+/** @brief Utility API for lambda syntax. */
+template <typename F>
+inline DbgUtilErr forEachSymbol(const char* symbolRegex, const char* moduleNameRegex, F f) {
+    struct Visitor final : public SymbolInfoVisitor {
+        Visitor(F f) : m_f(f) {}
+        Visitor() = delete;
+        Visitor(const Visitor&) = delete;
+        Visitor(Visitor&&) = delete;
+        Visitor& operator=(const Visitor&) = delete;
+        ~Visitor() final {}
+        DbgUtilErr onSymbolInfo(const SymbolInfo& symbolInfo, bool& shouldStop) {
+            return m_f(symbolInfo, shouldStop);
+        }
+        F m_f;
+    };
+    Visitor visitor(f);
+    return getSymbolEngine()->visitSymbols(symbolRegex, moduleNameRegex, &visitor);
+}
 
 }  // namespace dbgutil
 

@@ -118,18 +118,16 @@ public:
      */
     template <typename F>
     inline DbgUtilErr forEachModule(F f) {
+        DbgUtilErr rc = DBGUTIL_ERR_OK;
         std::shared_lock<std::shared_mutex> lock(m_lock);
         for (const OsModuleInfo& moduleInfo : m_moduleSet) {
             bool shouldStop = false;
             DbgUtilErr rc = f(moduleInfo, shouldStop);
-            if (rc != DBGUTIL_ERR_OK) {
-                return rc;
-            }
-            if (shouldStop) {
+            if (rc != DBGUTIL_ERR_OK || shouldStop) {
                 break;
             }
         }
-        return DBGUTIL_ERR_OK;
+        return rc;
     }
 
     /** @brief Refreshes the module list. */

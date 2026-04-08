@@ -35,6 +35,15 @@ public:
     DbgUtilErr getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) final;
 
     /**
+     * @brief Traverses all symbols having a name that matches a regular expression. This variant
+     * can be used if @ref searchSymbols() may yield too many symbols at once.
+     * @param visitor The thread visitor.
+     * @return The operation result.
+     */
+    DbgUtilErr visitSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                            SymbolInfoVisitor* visitor) final;
+
+    /**
      * @brief Dumps core file.
      * @param ExceptionInfo Pointer to the exception information object (opaque).
      */

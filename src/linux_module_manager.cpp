@@ -114,7 +114,8 @@ DbgUtilErr LinuxModuleManager::refreshOsModuleList(void* address /* = nullptr */
             continue;
         }
         if (rc != DBGUTIL_ERR_OK) {
-            return rc;
+            // unrecognized line format, nevertheless we keep trying
+            continue;
         }
         LOG_DEBUG(sLogger, "Collected module info: %p-%p %s", (void*)addrLo, (void*)addrHi,
                   imagePath.c_str());

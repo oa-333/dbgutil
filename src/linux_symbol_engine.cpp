@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <regex>
 #include <vector>
 
 #include "dbgutil_common.h"
@@ -66,7 +67,8 @@ DbgUtilErr LinuxSymbolEngine::collectSymbolInfo(SymbolModuleData* symModData, vo
     // first search in binary image
     // this way we can also get start address of symbol and compute byte offset
     DbgUtilErr rc = symModData->m_imageReader->searchSymbol(
-        symAddress, symbolInfo.m_symbolName, symbolInfo.m_fileName, &symbolInfo.m_startAddress);
+        symAddress, symbolInfo.m_symbolSize, symbolInfo.m_symbolName, symbolInfo.m_fileName,
+        &symbolInfo.m_startAddress);
     if (rc != DBGUTIL_ERR_OK) {
         LOG_DEBUG(sLogger, "Failed to find symbol %p in binary image: %s", symAddress,
                   errorToString(rc));
@@ -202,7 +204,7 @@ void LinuxSymbolEngine::prepareModuleData(
 }
 
 DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbolInfo) {
-    // search module with read-lock
+    // search module with read-lock in already loaded modules
     SymbolModuleData* symModData = nullptr;
     {
         std::shared_lock<std::shared_mutex> lock(m_lock);
@@ -232,11 +234,23 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
     }
 
     // insert an entry under write lock
+    symModData = getSymbolModule(moduleInfo, symAddress);
+    if (symModData == nullptr) {
+        return DBGUTIL_ERR_NOMEM;
+    }
+
+    // now all threads can collect symbol data concurrently
+    return collectSymbolInfo(symModData, symAddress, symbolInfo);
+}
+
+SymbolModuleData* LinuxSymbolEngine::getSymbolModule(const OsModuleInfo& moduleInfo,
+                                                     void* address) {
+    SymbolModuleData* symModData = nullptr;
     bool shouldWait = false;
     {
         std::unique_lock<std::shared_mutex> lock(m_lock);
         // handle race, in case another thread is doing the same thing
-        symModData = findSymbolModule(symAddress);
+        symModData = findSymbolModule(address);
         if (symModData != nullptr) {
             // just wait for the first thread to finish preparing the module data
             // but we do this wait outside lock scope
@@ -244,12 +258,15 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
         } else {
             // insert a half-baked module (no race, we are under write lock)
             symModData = new (std::nothrow) SymbolModuleData();
+            if (symModData == nullptr) {
+                return nullptr;
+            }
             symModData->m_moduleInfo = moduleInfo;
             m_symbolModuleSet.push_back(symModData);
             std::sort(m_symbolModuleSet.begin(), m_symbolModuleSet.end(),
                       SymbolModuleDataCompare());
-            // note entry is not ready yet, but other module data can be accessed while we prepare
-            // the module info object
+            // note entry is not ready yet, but other module data can be accessed while we
+            // prepare the module info object
         }
     }
 
@@ -260,8 +277,60 @@ DbgUtilErr LinuxSymbolEngine::getSymbolInfo(void* symAddress, SymbolInfo& symbol
         symModData->setReady();
     }
 
-    // now all threads can collect symbol data concurrently
-    return collectSymbolInfo(symModData, symAddress, symbolInfo);
+    return symModData;
+}
+
+DbgUtilErr LinuxSymbolEngine::visitSymbols(const char* symbolRegex, const char* moduleNameRegex,
+                                           SymbolInfoVisitor* visitor) {
+    // we need to traverse now all other modules, while limiting modules
+    // according to regular expression, is provided. We stop traversing modules if symbol was found
+    LOG_DEBUG(sLogger, "Searching for symbol %s", symbolRegex);
+
+    // first refresh module list
+    DbgUtilErr rc = getModuleManager()->refreshModuleList();
+    if (rc != DBGUTIL_ERR_OK) {
+        LOG_ERROR(sLogger, "Failed to refresh module list");
+        return rc;
+    }
+
+    // now traverse modules that match the module pattern
+    std::regex symbolPattern(symbolRegex);  // create once
+    std::regex modulePattern(moduleNameRegex);
+    rc = getModuleManager()->forEachModule([this, &symbolPattern, &modulePattern, visitor](
+                                               const OsModuleInfo& moduleInfo,
+                                               bool& shouldStop) -> DbgUtilErr {
+        DbgUtilErr rc = DBGUTIL_ERR_OK;
+        if (std::regex_match(moduleInfo.m_modulePath, modulePattern)) {
+            // search for symbol in module
+
+            // insert an entry under write lock
+            SymbolModuleData* symModData = getSymbolModule(moduleInfo, moduleInfo.m_loadAddress);
+            if (symModData == nullptr) {
+                return DBGUTIL_ERR_NOMEM;
+            }
+            rc = symModData->m_imageReader->forEachSymbol(
+                [this, symModData, visitor, &shouldStop, &symbolPattern](
+                    const char* symbolName, void* address, const char* fileName,
+                    uint64_t symbolSize, bool& innerShouldStop) -> DbgUtilErr {
+                    // check symbol matches pattern
+                    DbgUtilErr rc = DBGUTIL_ERR_OK;
+                    if (std::regex_match(symbolName, symbolPattern)) {
+                        // get full symbol info
+                        SymbolInfo symbolInfo;
+                        rc = collectSymbolInfo(symModData, address, symbolInfo);
+                        if (rc == DBGUTIL_ERR_OK) {
+                            rc = visitor->onSymbolInfo(symbolInfo, innerShouldStop);
+                            // stop also outer loop if needed
+                            shouldStop = innerShouldStop;
+                        }
+                    }
+                    return rc;
+                });
+        }
+        return rc;
+    });
+
+    return rc;
 }
 
 LinuxSymbolEngine::LinuxSymbolEngine() {}

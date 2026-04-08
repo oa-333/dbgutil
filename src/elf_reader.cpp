@@ -2,6 +2,8 @@
 
 #ifdef DBGUTIL_LINUX
 
+#include <cxxabi.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cinttypes>
@@ -56,6 +58,11 @@ DbgUtilErr ElfReader::readImage() {
     }
 
     rc = buildSymInfoSet();
+    if (rc != DBGUTIL_ERR_OK) {
+        return rc;
+    }
+
+    buildSymInfoMap();
     m_symTab.clear();
     return rc;
 }
@@ -470,6 +477,19 @@ DbgUtilErr ElfReader::buildSymInfoSet64(Elf64_Ehdr* hdr) {
     }
     std::sort(m_symInfoSet.begin(), m_symInfoSet.end());
     return DBGUTIL_ERR_OK;
+}
+
+void ElfReader::buildSymInfoMap() {
+    for (OsSymbolInfo& symbolInfo : m_symInfoSet) {
+        // we attempt to insert the demangled name, so user can search more easily
+        int status;
+        char* demangledName = abi::__cxa_demangle(symbolInfo.m_name.c_str(), nullptr, 0, &status);
+        if (status == 0 && demangledName != nullptr) {
+            m_symInfoMap.insert(SymInfoMap::value_type(demangledName, &symbolInfo));
+        } else {
+            m_symInfoMap.insert(SymInfoMap::value_type(symbolInfo.m_name, &symbolInfo));
+        }
+    }
 }
 
 void ElfReader::dumpSectionHeaders() {

@@ -62,6 +62,8 @@ private:
     DbgUtilErr buildSymInfoSet32(Elf32_Ehdr* hdr);
     DbgUtilErr buildSymInfoSet64(Elf64_Ehdr* hdr);
 
+    void buildSymInfoMap();
+
     void dumpSectionHeaders();
     void dumpSectionHeaders32();
     void dumpSectionHeaders64();
